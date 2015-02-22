@@ -14,8 +14,8 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _MORTAR_MATRIX_H
-#define _MORTAR_MATRIX_H
+#ifndef MORTAR_MATRIX_H
+#define MORTAR_MATRIX_H
 
 class Matrix {
 	public:

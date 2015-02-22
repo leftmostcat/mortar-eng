@@ -14,8 +14,8 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _MORTAR_MODEL_H
-#define _MORTAR_MODEL_H
+#ifndef MORTAR_MODEL_H
+#define MORTAR_MODEL_H
 
 #include <stdint.h>
 #include "matrix.h"

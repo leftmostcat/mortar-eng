@@ -14,8 +14,8 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _MORTAR_HGP_H
-#define _MORTAR_HGP_H
+#ifndef MORTAR_HGP_H
+#define MORTAR_HGP_H
 
 #include <stdint.h>
 #include "model.h"
