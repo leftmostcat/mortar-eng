@@ -340,6 +340,7 @@ void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix trans
 }
 
 void HGPModel::load(const char *path) {
+	/* Initial file read into memory. */
 	FILE *hgp = fopen(path, "rb");
 
 	if (fseek(hgp, 0, SEEK_END) == -1) {
@@ -354,10 +355,12 @@ void HGPModel::load(const char *path) {
 	fread(buf, 1, length, hgp);
 	fclose(hgp);
 
-	struct HGPHeader *file_header = (struct HGPHeader *)buf;
+	/* Locate file body and basic headers. */
 	char *body = buf + BODY_OFFSET;
+	struct HGPHeader *file_header = (struct HGPHeader *)buf;
 	struct HGPModelHeader *model_header = (struct HGPModelHeader *)OFFSET(file_header->model_header_offset);
 
+	/* Read vertex blocks into individual, indexed buffers. */
 	struct HGPVertexHeader *vertex_header = (struct HGPVertexHeader *)OFFSET(file_header->vertex_header_offset);
 	this->num_vertex_buffers = vertex_header->num_vertex_blocks;
 	this->vertex_buffers = (struct VertexBuffer *)calloc(this->num_vertex_buffers, sizeof(struct VertexBuffer));
@@ -369,6 +372,7 @@ void HGPModel::load(const char *path) {
 		memcpy(this->vertex_buffers[i].ptr, OFFSET(file_header->vertex_header_offset + vertex_header->blocks[i].offset), this->vertex_buffers[i].size);
 	}
 
+	/* Read inline DDS textures. */
 	struct HGPTextureHeader *texture_header = (struct HGPTextureHeader *)OFFSET(file_header->texture_header_offset);
 	this->num_textures = texture_header->num_textures;
 	this->textures = (Texture **)calloc(this->num_textures, sizeof(Texture *));
@@ -398,14 +402,12 @@ void HGPModel::load(const char *path) {
 			this->materials[i].texture_idx = material->texture_idx;
 	}
 
-	struct HGPLayerHeader *layer_headers = (struct HGPLayerHeader *)OFFSET(model_header->layer_header_offset);
+	/* Use the mesh tree to apply hierarchical transformations. */
+	struct HGPMeshTreeNode *tree_nodes = (struct HGPMeshTreeNode *)OFFSET(model_header->mesh_tree_offset);
 	Matrix *transform_matrices = (Matrix *)OFFSET(model_header->transformations_offset);
 	Matrix *static_transform_matrices = (Matrix *)OFFSET(model_header->static_transformations_offset);
-	struct HGPMeshTreeNode *tree_nodes = (struct HGPMeshTreeNode *)OFFSET(model_header->mesh_tree_offset);
-
 	Matrix *model_transforms = (Matrix *)calloc(model_header->num_meshes, sizeof(Matrix));
 
-	/* Use the mesh tree to apply hierarchical transformations. */
 	for (int i = 0; i < model_header->num_meshes; i++) {
 		model_transforms[i] = transform_matrices[i];
 
@@ -414,6 +416,8 @@ void HGPModel::load(const char *path) {
 	}
 
 	/* Break the layers down into meshes and add those to the model's list. */
+	struct HGPLayerHeader *layer_headers = (struct HGPLayerHeader *)OFFSET(model_header->layer_header_offset);
+
 	for (int i = 0; i < model_header->num_layers; i++) {
 		/* XXX: Use model configuration to specify layers by quality. */
 		if (i != 0 && i != 2)

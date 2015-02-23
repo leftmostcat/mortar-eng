@@ -75,13 +75,12 @@ void DDSTexture::init(void *texture_data) {
 
 	if (file_header->format.flags & DDS_HAS_FOURCC) {
 		switch (file_header->format.fourCC) {
-			case DDS_FORMAT_DXT1:
-				break;
 			case DDS_FORMAT_DXT3:
 				this->compressed = true;
 				this->format = GL_BGRA;
 				this->internal_format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
 
+				/* Read in mipmap levels one by one. */
 				for (int i = 0; i < file_header->num_levels; i++) {
 					this->levels[i].size = (((file_header->width >> i) + 3) / 4) * (((file_header->height >> i) + 3) / 4) * 16;
 
@@ -90,8 +89,6 @@ void DDSTexture::init(void *texture_data) {
 
 					offset += this->levels[i].size;
 				}
-				break;
-			case DDS_FORMAT_DXT5:
 				break;
 			default:
 				fprintf(stderr, "Unrecognized fourCC: %d\n", file_header->format.fourCC);
