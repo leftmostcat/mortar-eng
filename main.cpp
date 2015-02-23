@@ -22,14 +22,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "hgp.h"
+#include "matrix.h"
 
 #define GLSL(src) "#version 130\n" #src
 
 #define WIDTH 800
-#define HEIGHT 800
+#define HEIGHT 600
 
 const GLchar *vertex_source = GLSL(
-	uniform mat4 perspectiveMtx;
+	uniform mat4 projectionMtx;
+	uniform mat4 viewMtx;
+	uniform mat4 modelMtx;
 	uniform mat4 meshTransformMtx;
 
 	in vec3 position;
@@ -39,10 +42,8 @@ const GLchar *vertex_source = GLSL(
 
 	void main()
 	{
-		vec4 transformedPos = meshTransformMtx * vec4(position, 1.0);
-
 		fragTexCoord = texCoord;
-		gl_Position = transformedPos;
+		gl_Position = projectionMtx * viewMtx * modelMtx * meshTransformMtx * vec4(position, 1.0);
 	}
 );
 
@@ -125,6 +126,10 @@ int main(int argc, char **argv) {
 	GLint color_unif = glGetUniformLocation(shader_program, "materialColor");
 	GLint tex_unif = glGetUniformLocation(shader_program, "materialTex");
 	GLint has_tex_unif = glGetUniformLocation(shader_program, "hasTexture");
+
+	GLint projection_mtx_unif = glGetUniformLocation(shader_program, "projectionMtx");
+	GLint view_mtx_unif = glGetUniformLocation(shader_program, "viewMtx");
+	GLint model_mtx_unif = glGetUniformLocation(shader_program, "modelMtx");
 	GLint mesh_mtx_unif = glGetUniformLocation(shader_program, "meshTransformMtx");
 
 	GLint position_attr = glGetAttribLocation(shader_program, "position");
@@ -182,10 +187,21 @@ int main(int argc, char **argv) {
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glFrontFace(GL_CW);
+
+	/* Initialize transformation matrices. */
+	glm::mat4 proj = glm::perspective(45.0f, (float)WIDTH / HEIGHT, 1.0f, 10.0f);
+	glUniformMatrix4fv(projection_mtx_unif, 1, GL_FALSE, glm::value_ptr(proj));
+
+	glm::mat4 view = glm::lookAt(
+		glm::vec3(1.0f, 0.5f, -0.8f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f)
+	);
+	glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
+
+	glm::mat4 model = glm::mat4();
+	glUniformMatrix4fv(model_mtx_unif, 1, GL_FALSE, glm::value_ptr(model));
 
 	/* Main loop. */
 	while (!glfwWindowShouldClose(window)) {
