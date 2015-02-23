@@ -14,51 +14,30 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_MODEL_H
-#define MORTAR_MODEL_H
+#ifndef MORTAR_TEXTURE_H
+#define MORTAR_TEXTURE_H
 
-#include <stdint.h>
-#include "matrix.h"
-#include "texture.h"
+#include <GL/gl.h>
 
-class Model {
+class Texture {
 	public:
-		explicit Model();
-		virtual ~Model();
+		explicit Texture();
+		virtual ~Texture();
 
-		virtual void load(const char *path);
+		virtual void init(void *texture_data);
 
-		int num_vertex_buffers;
-		int num_chunks;
-		int num_textures;
-		int num_materials;
+		bool compressed;
+		GLenum format;
+		GLint internal_format;
+		int width;
+		int height;
 
-		struct VertexBuffer {
+		int num_levels;
+
+		struct Level {
 			int size;
-			int stride;
-			float *ptr;
-		} *vertex_buffers;
-
-		Texture **textures;
-
-		struct Material {
-			float red;
-			float green;
-			float blue;
-			float alpha;
-			int texture_idx;
-		} *materials;
-
-		struct Chunk {
-			int primitive_type;
-			int vertex_buffer_idx;
-			int material_idx;
-
-			Matrix transformation;
-
-			int num_elements;
-			uint16_t *element_buffer;
-		} *chunks;
+			void *data;
+		} *levels;
 };
 
 #endif

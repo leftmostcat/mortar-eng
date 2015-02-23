@@ -33,23 +33,33 @@ const GLchar *vertex_source = GLSL(
 	uniform mat4 meshTransformMtx;
 
 	in vec3 position;
+	in vec2 texCoord;
+
+	out vec2 fragTexCoord;
 
 	void main()
 	{
 		vec4 transformedPos = meshTransformMtx * vec4(position, 1.0);
 
+		fragTexCoord = texCoord;
 		gl_Position = transformedPos;
 	}
 );
 
 const GLchar *fragment_source = GLSL(
 	uniform vec4 materialColor;
+	uniform sampler2D materialTex;
+	uniform int hasTexture;
+
+	in vec2 fragTexCoord;
 
 	out vec4 outColor;
 
 	void main()
 	{
-		outColor = materialColor;
+		vec4 texColor = texture(materialTex, fragTexCoord);
+
+		outColor = mix(materialColor, texColor, hasTexture);
 	}
 );
 
@@ -77,9 +87,9 @@ static GLenum getGLPrimitiveType(int serial) {
 int main(int argc, char **argv) {
 	GLFWwindow *window;
 	Model *hgp;
-	GLuint *vao, *vbo, *ebo;
+	GLuint *vao, *vbo, *ebo, *tex;
 	GLuint vertex_shader, fragment_shader, shader_program;
-	GLint position_attr, normal_attr, color_attr, matrix_attr;
+	GLint position_attr, texcoord_attr, color_attr, tex_attr, mix_attr, matrix_attr;
 
 	if (argc < 2 || access(argv[1], R_OK) != 0) {
 		fprintf(stdout, "%s: please specify an HGP file to open\n", argv[0]);
@@ -118,6 +128,8 @@ int main(int argc, char **argv) {
 	glUseProgram(shader_program);
 
 	color_attr = glGetUniformLocation(shader_program, "materialColor");
+	tex_attr = glGetUniformLocation(shader_program, "materialTex");
+	mix_attr = glGetUniformLocation(shader_program, "hasTexture");
 	matrix_attr = glGetUniformLocation(shader_program, "meshTransformMtx");
 
 	/* Read in the specified HGP model. */
@@ -140,6 +152,24 @@ int main(int argc, char **argv) {
 		position_attr = glGetAttribLocation(shader_program, "position");
 		glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, hgp->vertex_buffers[i].stride, NULL);
 		glEnableVertexAttribArray(position_attr);
+
+		texcoord_attr = glGetAttribLocation(shader_program, "texCoord");
+		glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, hgp->vertex_buffers[i].stride, (GLvoid *)28);
+		glEnableVertexAttribArray(texcoord_attr);
+	}
+
+	tex = (GLuint *)calloc(hgp->num_textures, sizeof(GLuint));
+
+	glGenTextures(hgp->num_textures, tex);
+
+	for (int i = 0; i < hgp->num_textures; i++) {
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, tex[i]);
+
+		if (hgp->textures[i]->compressed)
+			glCompressedTexImage2D(GL_TEXTURE_2D, 0, hgp->textures[i]->internal_format, hgp->textures[i]->width, hgp->textures[i]->height, 0, hgp->textures[i]->levels[0].size, hgp->textures[i]->levels[0].data);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 
 	ebo = (GLuint *)calloc(hgp->num_chunks, sizeof(GLuint));
@@ -167,6 +197,14 @@ int main(int argc, char **argv) {
 			int mat_idx = hgp->chunks[i].material_idx;
 			GLenum prim_type = getGLPrimitiveType(hgp->chunks[i].primitive_type);
 
+			if (hgp->materials[mat_idx].texture_idx != -1) {
+				glUniform1i(tex_attr, hgp->materials[mat_idx].texture_idx);
+				glUniform1i(mix_attr, 1);
+			}
+			else {
+				glUniform1i(mix_attr, 0);
+			}
+
 			glUniform4f(color_attr, hgp->materials[mat_idx].red, hgp->materials[mat_idx].green, hgp->materials[mat_idx].blue, hgp->materials[mat_idx].alpha);
 			glUniformMatrix4fv(matrix_attr, 1, GL_FALSE, hgp->chunks[i].transformation.array16);
 
@@ -187,6 +225,8 @@ int main(int argc, char **argv) {
 	glDeleteProgram(shader_program);
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
+
+	glDeleteTextures(hgp->num_textures, tex);
 	glDeleteBuffers(hgp->num_chunks, ebo);
 	glDeleteBuffers(hgp->num_vertex_buffers, vbo);
 	glDeleteVertexArrays(hgp->num_vertex_buffers, vao);

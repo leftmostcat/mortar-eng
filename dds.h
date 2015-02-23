@@ -14,51 +14,14 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_MODEL_H
-#define MORTAR_MODEL_H
+#ifndef MORTAR_DDS_H
+#define MORTAR_DDS_H
 
-#include <stdint.h>
-#include "matrix.h"
 #include "texture.h"
 
-class Model {
+class DDSTexture : public Texture {
 	public:
-		explicit Model();
-		virtual ~Model();
-
-		virtual void load(const char *path);
-
-		int num_vertex_buffers;
-		int num_chunks;
-		int num_textures;
-		int num_materials;
-
-		struct VertexBuffer {
-			int size;
-			int stride;
-			float *ptr;
-		} *vertex_buffers;
-
-		Texture **textures;
-
-		struct Material {
-			float red;
-			float green;
-			float blue;
-			float alpha;
-			int texture_idx;
-		} *materials;
-
-		struct Chunk {
-			int primitive_type;
-			int vertex_buffer_idx;
-			int material_idx;
-
-			Matrix transformation;
-
-			int num_elements;
-			uint16_t *element_buffer;
-		} *chunks;
+		virtual void init(void *texture_data);
 };
 
 #endif

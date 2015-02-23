@@ -19,9 +19,13 @@
 
 Model::Model() {
 	this->num_vertex_buffers = 0;
+	this->num_textures = 0;
+	this->num_materials = 0;
 	this->num_chunks = 0;
 
 	this->vertex_buffers = NULL;
+	this->textures = NULL;
+	this->materials = NULL;
 	this->chunks = NULL;
 }
 
@@ -30,12 +34,19 @@ Model::~Model() {
 		free(this->vertex_buffers[i].ptr);
 	}
 
+	for (int i = 0; i < this->num_textures; i++) {
+		delete this->textures[i];
+	}
+
 	for (int i = 0; i < this->num_chunks; i++) {
 		free(this->chunks[i].element_buffer);
 	}
 
 	if (this->vertex_buffers)
 		free(this->vertex_buffers);
+
+	if (this->textures)
+		free(this->textures);
 
 	if (this->chunks)
 		free(this->chunks);

@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hgp.h"
+#include "dds.h"
 #include "matrix.h"
 
 #define BODY_OFFSET 0x30
@@ -124,6 +125,27 @@ struct HGPVertexHeader {
 		uint32_t id;
 		uint32_t offset;
 	} blocks[];
+};
+
+struct HGPTextureBlockHeader {
+	uint32_t offset;
+
+	uint32_t unk_0004;
+	uint32_t unk_0008;
+	uint32_t unk_000C;
+	uint32_t unk_0010;
+};
+
+struct HGPTextureHeader {
+	uint32_t texture_block_offset;
+	uint32_t texture_block_size;
+	uint32_t num_textures;
+
+	uint32_t unk_000C;
+	uint32_t unk_0010;
+	uint32_t unk_0014;
+	uint32_t unk_0018;
+	struct HGPTextureBlockHeader texture_block_headers[];
 };
 
 struct HGPLayerHeader {
@@ -235,7 +257,7 @@ struct HGPMaterial {
 
 	uint32_t alpha;
 
-	uint16_t texture_idx;
+	int16_t texture_idx;
 	uint16_t unk_007A;
 
 	uint32_t unk_007C;
@@ -347,6 +369,16 @@ void HGPModel::load(const char *path) {
 		memcpy(this->vertex_buffers[i].ptr, OFFSET(file_header->vertex_header_offset + vertex_header->blocks[i].offset), this->vertex_buffers[i].size);
 	}
 
+	struct HGPTextureHeader *texture_header = (struct HGPTextureHeader *)OFFSET(file_header->texture_header_offset);
+	this->num_textures = texture_header->num_textures;
+	this->textures = (Texture **)calloc(this->num_textures, sizeof(Texture *));
+
+	for (int i = 0; i < texture_header->num_textures; i++) {
+		this->textures[i] = new DDSTexture();
+		void *texture_data = (void *)OFFSET(file_header->texture_header_offset + texture_header->texture_block_offset + 12 + texture_header->texture_block_headers[i].offset);
+		this->textures[i]->init(texture_data);
+	}
+
 	/* Initialize per-model materials, consisting of a color and index to an in-model texture. */
 	struct HGPMaterialHeader *material_header = (struct HGPMaterialHeader *)OFFSET(file_header->material_header_offset);
 	this->num_materials = material_header->num_materials;
@@ -359,7 +391,11 @@ void HGPModel::load(const char *path) {
 		this->materials[i].green = material->green;
 		this->materials[i].blue = material->blue;
 		this->materials[i].alpha = material->alpha;
-		this->materials[i].texture_idx = material->texture_idx;
+
+		if (material->texture_idx != -1 && material->texture_idx & 0x8000)
+			this->materials[i].texture_idx = material->texture_idx & 0x7FFF;
+		else
+			this->materials[i].texture_idx = material->texture_idx;
 	}
 
 	struct HGPLayerHeader *layer_headers = (struct HGPLayerHeader *)OFFSET(model_header->layer_header_offset);
