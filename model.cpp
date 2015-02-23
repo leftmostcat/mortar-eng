@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include "model.h"
 
-Model::Model() {
+Model::Model(void) {
 	this->num_vertex_buffers = 0;
 	this->num_textures = 0;
 	this->num_materials = 0;
@@ -29,7 +29,7 @@ Model::Model() {
 	this->chunks = NULL;
 }
 
-Model::~Model() {
+Model::~Model(void) {
 	for (int i = 0; i < this->num_vertex_buffers; i++) {
 		free(this->vertex_buffers[i].ptr);
 	}

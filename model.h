@@ -23,8 +23,8 @@
 
 class Model {
 	public:
-		explicit Model();
-		virtual ~Model();
+		explicit Model(void);
+		virtual ~Model(void);
 
 		virtual void load(const char *path);
 

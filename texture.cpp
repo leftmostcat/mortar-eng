@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include "texture.h"
 
-Texture::Texture() {
+Texture::Texture(void) {
 	this->compressed = false;
 	this->format = GL_NONE;
 	this->internal_format = GL_NONE;
@@ -28,7 +28,7 @@ Texture::Texture() {
 	this->levels = NULL;
 }
 
-Texture::~Texture() {
+Texture::~Texture(void) {
 	for (int i = 0; i < this->num_levels; i++) {
 		free(this->levels[i].data);
 	}

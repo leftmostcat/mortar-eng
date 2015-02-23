@@ -21,8 +21,8 @@
 
 class Texture {
 	public:
-		explicit Texture();
-		virtual ~Texture();
+		explicit Texture(void);
+		virtual ~Texture(void);
 
 		virtual void init(void *texture_data);
 

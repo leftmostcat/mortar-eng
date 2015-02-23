@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
 
 	glGenBuffers(hgp->num_chunks, ebo);
 
-	/* Initialize an element buffer for each mesh. */
+	/* Initialize an element buffer for each chunk. */
 	for (int i = 0; i < hgp->num_chunks; i++) {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[i]);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * hgp->chunks[i].num_elements, hgp->chunks[i].element_buffer, GL_STATIC_DRAW);
@@ -230,6 +230,11 @@ int main(int argc, char **argv) {
 	glDeleteBuffers(hgp->num_chunks, ebo);
 	glDeleteBuffers(hgp->num_vertex_buffers, vbo);
 	glDeleteVertexArrays(hgp->num_vertex_buffers, vao);
+
+	free(vao);
+	free(vbo);
+	free(ebo);
+	free(tex);
 
 	delete hgp;
 	glfwTerminate();
