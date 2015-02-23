@@ -14,14 +14,18 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_DDS_H
-#define MORTAR_DDS_H
+#ifndef MORTAR_HGP_H
+#define MORTAR_HGP_H
 
-#include "texture.h"
+#include <stdint.h>
+#include "model.hpp"
 
-class DDSTexture : public Texture {
+class HGPModel : public Model {
 	public:
-		virtual void init(void *texture_data);
+		virtual void load(const char *path);
+
+	private:
+		void processMesh(char *body, uint32_t mesh_header_offset, Matrix transform);
 };
 
 #endif

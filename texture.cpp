@@ -15,7 +15,7 @@
  */
 
 #include <stdlib.h>
-#include "texture.h"
+#include "texture.hpp"
 
 Texture::Texture(void) {
 	this->compressed = false;

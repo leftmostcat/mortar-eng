@@ -15,7 +15,7 @@
  */
 
 #include <stdlib.h>
-#include "model.h"
+#include "model.hpp"
 
 Model::Model(void) {
 	this->num_vertex_buffers = 0;

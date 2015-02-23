@@ -21,8 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "hgp.h"
-#include "matrix.h"
+#include "hgp.hpp"
+#include "matrix.hpp"
 
 #define GLSL(src) "#version 130\n" #src
 

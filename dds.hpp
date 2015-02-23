@@ -14,25 +14,14 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include "matrix.hpp"
+#ifndef MORTAR_DDS_H
+#define MORTAR_DDS_H
 
-Matrix::Matrix() {
-	memset(this->array16, 0, 16 * sizeof(float));
-}
+#include "texture.hpp"
 
-Matrix Matrix::operator*(const Matrix &right) {
-	Matrix result;
+class DDSTexture : public Texture {
+	public:
+		virtual void init(void *texture_data);
+};
 
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			result.array4x4[i][j] = 0;
-
-			for (int k = 0; k < 4; k++) {
-				result.array4x4[i][j] += this->array4x4[i][k] * right.array4x4[k][j];
-			}
-		}
-	}
-
-	return result;
-}
+#endif

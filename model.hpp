@@ -14,18 +14,51 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_HGP_H
-#define MORTAR_HGP_H
+#ifndef MORTAR_MODEL_H
+#define MORTAR_MODEL_H
 
 #include <stdint.h>
-#include "model.h"
+#include "matrix.hpp"
+#include "texture.hpp"
 
-class HGPModel : public Model {
+class Model {
 	public:
+		explicit Model(void);
+		virtual ~Model(void);
+
 		virtual void load(const char *path);
 
-	private:
-		void processMesh(char *body, uint32_t mesh_header_offset, Matrix transform);
+		int num_vertex_buffers;
+		int num_chunks;
+		int num_textures;
+		int num_materials;
+
+		struct VertexBuffer {
+			int size;
+			int stride;
+			float *ptr;
+		} *vertex_buffers;
+
+		Texture **textures;
+
+		struct Material {
+			float red;
+			float green;
+			float blue;
+			float alpha;
+			int texture_idx;
+		} *materials;
+
+		struct Chunk {
+			int primitive_type;
+			int vertex_buffer_idx;
+			int material_idx;
+
+			Matrix transformation;
+
+			int num_elements;
+			uint16_t *element_buffer;
+		} *chunks;
 };
 
 #endif

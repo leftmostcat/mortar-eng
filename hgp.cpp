@@ -18,9 +18,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "hgp.h"
-#include "dds.h"
-#include "matrix.h"
+#include "hgp.hpp"
+#include "dds.hpp"
+#include "matrix.hpp"
 
 #define BODY_OFFSET 0x30
 #define OFFSET(off) (body + off)
