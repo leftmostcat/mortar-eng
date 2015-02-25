@@ -138,8 +138,8 @@ int main(int argc, char **argv) {
 	/* Read in the specified HGP model. */
 	Model hgp = HGPModel::HGPModel(argv[1]);
 
-	GLuint *vao = (GLuint *)calloc(hgp.getVertexBufferCount(), sizeof(GLuint));
-	GLuint *vbo = (GLuint *)calloc(hgp.getVertexBufferCount(), sizeof(GLuint));
+	GLuint *vao = new GLuint[hgp.getVertexBufferCount()];
+	GLuint *vbo = new GLuint[hgp.getVertexBufferCount()];
 
 	glGenVertexArrays(hgp.getVertexBufferCount(), vao);
 	glGenBuffers(hgp.getVertexBufferCount(), vbo);
@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* Initialize GL texture objects. */
-	GLuint *tex = (GLuint *)calloc(hgp.getTextureCount(), sizeof(GLuint));
+	GLuint *tex = new GLuint[hgp.getTextureCount()];
 
 	glGenTextures(hgp.getTextureCount(), tex);
 
@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* Initialize an element buffer for each chunk. */
-	GLuint *ebo = (GLuint *)calloc(hgp.getChunkCount(), sizeof(GLuint));
+	GLuint *ebo = new GLuint[hgp.getChunkCount()];
 
 	glGenBuffers(hgp.getChunkCount(), ebo);
 
@@ -257,10 +257,10 @@ int main(int argc, char **argv) {
 	glDeleteBuffers(hgp.getVertexBufferCount(), vbo);
 	glDeleteVertexArrays(hgp.getVertexBufferCount(), vao);
 
-	free(vao);
-	free(vbo);
-	free(ebo);
-	free(tex);
+	delete vao;
+	delete vbo;
+	delete ebo;
+	delete tex;
 
 	glfwTerminate();
 
