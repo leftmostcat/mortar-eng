@@ -168,10 +168,10 @@ int main(int argc, char **argv) {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
 
-		Texture *tex_obj = hgp->textures[i];
+		Texture texture = hgp->textures[i];
 
-		if (tex_obj->compressed)
-			glCompressedTexImage2D(GL_TEXTURE_2D, 0, tex_obj->internal_format, tex_obj->width, tex_obj->height, 0, tex_obj->levels[0].size, tex_obj->levels[0].data);
+		if (texture.compressed)
+			glCompressedTexImage2D(GL_TEXTURE_2D, 0, texture.internal_format, texture.width, texture.height, 0, texture.levels[0].size, texture.levels[0].data);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}

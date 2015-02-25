@@ -65,11 +65,10 @@ struct DDSHeader {
 	uint32_t reserved2;
 };
 
-void DDSTexture::init(void *texture_data) {
+DDSTexture::DDSTexture(void *texture_data) : Texture::Texture() {
 	struct DDSHeader *file_header = (struct DDSHeader *)texture_data;
 
-	this->levels = (struct Level *)calloc(file_header->num_levels, sizeof(struct Level));
-	this->num_levels = file_header->num_levels;
+	std::vector<Texture::Level> levels(file_header->num_levels);
 
 	int offset = 128;
 
@@ -82,12 +81,12 @@ void DDSTexture::init(void *texture_data) {
 
 				/* Read in mipmap levels one by one. */
 				for (int i = 0; i < file_header->num_levels; i++) {
-					this->levels[i].size = (((file_header->width >> i) + 3) / 4) * (((file_header->height >> i) + 3) / 4) * 16;
+					levels[i].size = (((file_header->width >> i) + 3) / 4) * (((file_header->height >> i) + 3) / 4) * 16;
 
-					this->levels[i].data = malloc(this->levels[i].size);
-					memcpy(this->levels[i].data, (char *)texture_data + offset, this->levels[i].size);
+					levels[i].data = new char[levels[i].size];
+					memcpy(levels[i].data, (char *)texture_data + offset, levels[i].size);
 
-					offset += this->levels[i].size;
+					offset += levels[i].size;
 				}
 				break;
 			default:
@@ -98,4 +97,5 @@ void DDSTexture::init(void *texture_data) {
 
 	this->width = file_header->width;
 	this->height = file_header->height;
+	this->levels = levels;
 }

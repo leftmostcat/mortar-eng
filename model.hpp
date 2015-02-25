@@ -57,7 +57,7 @@ class Model {
 			float *ptr;
 		} *vertex_buffers;
 
-		Texture **textures;
+		Texture *textures;
 
 		struct Chunk {
 			int primitive_type;

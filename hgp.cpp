@@ -265,12 +265,12 @@ void HGPModel::load(const char *path) {
 	/* Read inline DDS textures. */
 	struct HGPTextureHeader *texture_header = (struct HGPTextureHeader *)OFFSET(file_header->texture_header_offset);
 	this->num_textures = texture_header->num_textures;
-	this->textures = (Texture **)calloc(this->num_textures, sizeof(Texture *));
+	this->textures = (Texture *)calloc(this->num_textures, sizeof(Texture));
 
 	for (int i = 0; i < texture_header->num_textures; i++) {
-		this->textures[i] = new DDSTexture();
 		void *texture_data = (void *)OFFSET(file_header->texture_header_offset + texture_header->texture_block_offset + 12 + texture_header->texture_block_headers[i].offset);
-		this->textures[i]->init(texture_data);
+
+		this->textures[i] = DDSTexture::DDSTexture(texture_data);
 	}
 
 	/* Initialize per-model materials, consisting of a color and index to an in-model texture. */

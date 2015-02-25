@@ -17,14 +17,18 @@
 #ifndef MORTAR_TEXTURE_H
 #define MORTAR_TEXTURE_H
 
+#include <vector>
 #include <GL/gl.h>
 
 class Texture {
 	public:
-		explicit Texture(void);
-		virtual ~Texture(void);
+		explicit Texture();
 
-		virtual void init(void *texture_data);
+		class Level {
+			public:
+				int size;
+				char *data;
+		};
 
 		bool compressed;
 		GLenum format;
@@ -32,12 +36,7 @@ class Texture {
 		int width;
 		int height;
 
-		int num_levels;
-
-		struct Level {
-			int size;
-			void *data;
-		} *levels;
+		std::vector<Texture::Level> levels;
 };
 
 #endif

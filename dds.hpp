@@ -21,7 +21,7 @@
 
 class DDSTexture : public Texture {
 	public:
-		virtual void init(void *texture_data);
+		explicit DDSTexture(void *texture_data);
 };
 
 #endif

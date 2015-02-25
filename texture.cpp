@@ -17,23 +17,10 @@
 #include <stdlib.h>
 #include "texture.hpp"
 
-Texture::Texture(void) {
+Texture::Texture() {
 	this->compressed = false;
 	this->format = GL_NONE;
 	this->internal_format = GL_NONE;
 	this->width = 0;
 	this->height = 0;
-
-	this->num_levels = 0;
-	this->levels = NULL;
 }
-
-Texture::~Texture(void) {
-	for (int i = 0; i < this->num_levels; i++) {
-		free(this->levels[i].data);
-	}
-
-	free(this->levels);
-}
-
-void Texture::init(void *texture_data) {}

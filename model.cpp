@@ -32,10 +32,6 @@ Model::~Model() {
 		free(this->vertex_buffers[i].ptr);
 	}
 
-	for (int i = 0; i < this->num_textures; i++) {
-		delete this->textures[i];
-	}
-
 	for (int i = 0; i < this->num_chunks; i++) {
 		free(this->chunks[i].element_buffer);
 	}
