@@ -229,7 +229,7 @@ void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix trans
 	} while (mesh->next_offset && (mesh = (struct HGPMesh *)OFFSET(mesh->next_offset)));
 }
 
-void HGPModel::load(const char *path) {
+HGPModel::HGPModel(const char *path) : Model::Model() {
 	/* Initial file read into memory. */
 	FILE *hgp = fopen(path, "rb");
 

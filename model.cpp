@@ -27,25 +27,6 @@ Model::Model() {
 	this->chunks = NULL;
 }
 
-Model::~Model() {
-	for (int i = 0; i < this->num_vertex_buffers; i++) {
-		free(this->vertex_buffers[i].ptr);
-	}
-
-	for (int i = 0; i < this->num_chunks; i++) {
-		free(this->chunks[i].element_buffer);
-	}
-
-	if (this->vertex_buffers)
-		free(this->vertex_buffers);
-
-	if (this->textures)
-		free(this->textures);
-
-	if (this->chunks)
-		free(this->chunks);
-}
-
 void Model::setMaterials(std::vector<Model::Material> materials) {
 	this->materials = materials;
 }

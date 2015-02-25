@@ -22,7 +22,7 @@
 
 class HGPModel : public Model {
 	public:
-		virtual void load(const char *path);
+		HGPModel(const char *path);
 
 	private:
 		void processMesh(char *body, uint32_t mesh_header_offset, Matrix transform);

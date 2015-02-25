@@ -24,8 +24,7 @@
 
 class Model {
 	public:
-		explicit Model(void);
-		virtual ~Model(void);
+		explicit Model();
 
 		class Material {
 			public:
@@ -41,8 +40,6 @@ class Model {
 
 				int texture_idx;
 		};
-
-		virtual void load(const char *path) = 0;
 
 		void setMaterials(std::vector<Model::Material> materials);
 		Model::Material getMaterial(int i);
