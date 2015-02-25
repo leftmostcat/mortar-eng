@@ -66,44 +66,53 @@ struct DDSHeader {
 };
 
 DDSTexture::DDSTexture(Stream &stream) : Texture() {
-	stream.seek(0, SEEK_END);
-	long length = stream.tell();
-	stream.seek(0, SEEK_SET);
+	struct DDSHeader file_header;
 
-	char *texture_data = (char *)malloc(length);
-	for (int i = 0; i < length; i++)
-		texture_data[i] = stream.readUint8();
+	file_header.tag = stream.readUint32();
+	file_header.header_size = stream.readUint32();
+	file_header.flags = stream.readUint32();
+	file_header.height = stream.readUint32();
+	file_header.width = stream.readUint32();
 
-	struct DDSHeader *file_header = (struct DDSHeader *)texture_data;
+	/* Pitch and depth are currently unused. */
+	stream.seek(2 * sizeof(uint32_t), SEEK_CUR);
 
-	std::vector<Texture::Level> levels(file_header->num_levels);
+	file_header.num_levels = stream.readUint32();
 
-	int offset = 128;
+	stream.seek(11 * sizeof(uint32_t), SEEK_CUR);
 
-	if (file_header->format.flags & DDS_HAS_FOURCC) {
-		switch (file_header->format.fourCC) {
+	file_header.format.size = stream.readUint32();
+	file_header.format.flags = stream.readUint32();
+	file_header.format.fourCC = stream.readUint32();
+
+	std::vector<Texture::Level> levels(file_header.num_levels);
+
+	stream.seek(128, SEEK_SET);
+
+	if (file_header.format.flags & DDS_HAS_FOURCC) {
+		switch (file_header.format.fourCC) {
 			case DDS_FORMAT_DXT3:
 				this->compressed = true;
 				this->format = GL_BGRA;
 				this->internal_format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
 
 				/* Read in mipmap levels one by one. */
-				for (int i = 0; i < file_header->num_levels; i++) {
-					levels[i].size = (((file_header->width >> i) + 3) / 4) * (((file_header->height >> i) + 3) / 4) * 16;
+				for (int i = 0; i < file_header.num_levels; i++) {
+					levels[i].size = (((file_header.width >> i) + 3) / 4) * (((file_header.height >> i) + 3) / 4) * 16;
 
 					levels[i].data = new char[levels[i].size];
-					memcpy(levels[i].data, (char *)texture_data + offset, levels[i].size);
 
-					offset += levels[i].size;
+					for (int j = 0; j < levels[i].size; j++)
+						levels[i].data[j] = stream.readUint8();
 				}
 				break;
 			default:
-				fprintf(stderr, "Unrecognized fourCC: %d\n", file_header->format.fourCC);
+				fprintf(stderr, "Unrecognized fourCC: %d\n", file_header.format.fourCC);
 				return;
 		}
 	}
 
-	this->width = file_header->width;
-	this->height = file_header->height;
+	this->width = file_header.width;
+	this->height = file_header.height;
 	this->levels = levels;
 }
