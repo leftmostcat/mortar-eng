@@ -25,7 +25,7 @@ class HGPModel : public Model {
 		HGPModel(const char *path);
 
 	private:
-		void processMesh(char *body, uint32_t mesh_header_offset, Matrix transform);
+		void processMesh(char *body, uint32_t mesh_header_offset, Matrix transform, std::vector<Model::VertexBuffer> &vertexBuffers);
 };
 
 #endif

@@ -138,36 +138,38 @@ int main(int argc, char **argv) {
 	/* Read in the specified HGP model. */
 	Model hgp = HGPModel::HGPModel(argv[1]);
 
-	GLuint *vao = (GLuint *)calloc(hgp.num_vertex_buffers, sizeof(GLuint));
-	GLuint *vbo = (GLuint *)calloc(hgp.num_vertex_buffers, sizeof(GLuint));
+	GLuint *vao = (GLuint *)calloc(hgp.getVertexBufferCount(), sizeof(GLuint));
+	GLuint *vbo = (GLuint *)calloc(hgp.getVertexBufferCount(), sizeof(GLuint));
 
-	glGenVertexArrays(hgp.num_vertex_buffers, vao);
-	glGenBuffers(hgp.num_vertex_buffers, vbo);
+	glGenVertexArrays(hgp.getVertexBufferCount(), vao);
+	glGenBuffers(hgp.getVertexBufferCount(), vbo);
 
 	/* Initialize all vertex buffers. */
-	for (int i = 0; i < hgp.num_vertex_buffers; i++) {
+	for (int i = 0; i < hgp.getVertexBufferCount(); i++) {
 		glBindVertexArray(vao[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
 
-		glBufferData(GL_ARRAY_BUFFER, hgp.vertex_buffers[i].size, hgp.vertex_buffers[i].ptr, GL_STATIC_DRAW);
+		Model::VertexBuffer vertexBuffer = hgp.getVertexBuffer(i);
 
-		glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, hgp.vertex_buffers[i].stride, NULL);
+		glBufferData(GL_ARRAY_BUFFER, vertexBuffer.size, vertexBuffer.data, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, vertexBuffer.stride, NULL);
 		glEnableVertexAttribArray(position_attr);
 
-		glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, hgp.vertex_buffers[i].stride, (GLvoid *)28);
+		glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, vertexBuffer.stride, (GLvoid *)28);
 		glEnableVertexAttribArray(texcoord_attr);
 	}
 
 	/* Initialize GL texture objects. */
-	GLuint *tex = (GLuint *)calloc(hgp.num_textures, sizeof(GLuint));
+	GLuint *tex = (GLuint *)calloc(hgp.getTextureCount(), sizeof(GLuint));
 
-	glGenTextures(hgp.num_textures, tex);
+	glGenTextures(hgp.getTextureCount(), tex);
 
-	for (int i = 0; i < hgp.num_textures; i++) {
+	for (int i = 0; i < hgp.getTextureCount(); i++) {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
 
-		Texture texture = hgp.textures[i];
+		Texture texture = hgp.getTexture(i);
 
 		if (texture.compressed)
 			glCompressedTexImage2D(GL_TEXTURE_2D, 0, texture.internal_format, texture.width, texture.height, 0, texture.levels[0].size, texture.levels[0].data);
@@ -176,13 +178,16 @@ int main(int argc, char **argv) {
 	}
 
 	/* Initialize an element buffer for each chunk. */
-	GLuint *ebo = (GLuint *)calloc(hgp.num_chunks, sizeof(GLuint));
+	GLuint *ebo = (GLuint *)calloc(hgp.getChunkCount(), sizeof(GLuint));
 
-	glGenBuffers(hgp.num_chunks, ebo);
+	glGenBuffers(hgp.getChunkCount(), ebo);
 
-	for (int i = 0; i < hgp.num_chunks; i++) {
+	for (int i = 0; i < hgp.getChunkCount(); i++) {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[i]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * hgp.chunks[i].num_elements, hgp.chunks[i].element_buffer, GL_STATIC_DRAW);
+
+		Model::Chunk chunk = hgp.getChunk(i);
+
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * chunk.num_elements, chunk.element_buffer, GL_STATIC_DRAW);
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -206,11 +211,14 @@ int main(int argc, char **argv) {
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		for (int i = 0; i < hgp.num_chunks; i++) {
+		for (int i = 0; i < hgp.getChunkCount(); i++) {
+			Model::Chunk chunk = hgp.getChunk(i);
+
 			/* Get chunk-specific information for rendering. */
-			Model::Material material = hgp.getMaterial(hgp.chunks[i].material_idx);
-			int vb_idx = hgp.chunks[i].vertex_buffer_idx;
-			GLenum prim_type = getGLPrimitiveType(hgp.chunks[i].primitive_type);
+			Model::Material material = hgp.getMaterial(chunk.material_idx);
+			GLenum prim_type = getGLPrimitiveType(chunk.primitive_type);
+
+			int vb_idx = chunk.vertex_buffer_idx;
 
 			/* Ensure that fragment colors come from the right place. */
 			if (material.texture_idx != -1) {
@@ -223,12 +231,12 @@ int main(int argc, char **argv) {
 
 			/* Set per-chunk material color and transformation matrix. */
 			glUniform4fv(color_unif, 1, material.color);
-			glUniformMatrix4fv(mesh_mtx_unif, 1, GL_FALSE, hgp.chunks[i].transformation.array16);
+			glUniformMatrix4fv(mesh_mtx_unif, 1, GL_FALSE, chunk.transformation.array16);
 
 			/* Render the chunk. */
 			glBindVertexArray(vao[vb_idx]);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[i]);
-			glDrawElements(prim_type, hgp.chunks[i].num_elements, GL_UNSIGNED_SHORT, 0);
+			glDrawElements(prim_type, chunk.num_elements, GL_UNSIGNED_SHORT, 0);
 		}
 
 		glfwSwapBuffers(window);
@@ -244,10 +252,10 @@ int main(int argc, char **argv) {
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
 
-	glDeleteTextures(hgp.num_textures, tex);
-	glDeleteBuffers(hgp.num_chunks, ebo);
-	glDeleteBuffers(hgp.num_vertex_buffers, vbo);
-	glDeleteVertexArrays(hgp.num_vertex_buffers, vao);
+	glDeleteTextures(hgp.getTextureCount(), tex);
+	glDeleteBuffers(hgp.getChunkCount(), ebo);
+	glDeleteBuffers(hgp.getVertexBufferCount(), vbo);
+	glDeleteVertexArrays(hgp.getVertexBufferCount(), vao);
 
 	free(vao);
 	free(vbo);

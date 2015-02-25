@@ -17,14 +17,28 @@
 #include <stdlib.h>
 #include "model.hpp"
 
-Model::Model() {
-	this->num_vertex_buffers = 0;
-	this->num_textures = 0;
-	this->num_chunks = 0;
+void Model::setVertexBuffers(std::vector<Model::VertexBuffer> vertexBuffers) {
+	this->vertexBuffers = vertexBuffers;
+}
 
-	this->vertex_buffers = NULL;
-	this->textures = NULL;
-	this->chunks = NULL;
+Model::VertexBuffer Model::getVertexBuffer(int i) {
+	return this->vertexBuffers.at(i);
+}
+
+int Model::getVertexBufferCount() {
+	return this->vertexBuffers.size();
+}
+
+void Model::setTextures(std::vector<Texture> textures) {
+	this->textures = textures;
+}
+
+Texture Model::getTexture(int i) {
+	return this->textures.at(i);
+}
+
+int Model::getTextureCount() {
+	return this->textures.size();
 }
 
 void Model::setMaterials(std::vector<Model::Material> materials) {
@@ -33,4 +47,16 @@ void Model::setMaterials(std::vector<Model::Material> materials) {
 
 Model::Material Model::getMaterial(int i) {
 	return this->materials.at(i);
+}
+
+void Model::addChunk(Model::Chunk chunk) {
+	this->chunks.push_back(chunk);
+}
+
+Model::Chunk Model::getChunk(int i) {
+	return this->chunks.at(i);
+}
+
+int Model::getChunkCount() {
+	return this->chunks.size();
 }

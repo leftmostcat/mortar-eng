@@ -182,7 +182,7 @@ struct HGPMeshTreeNode {
 	uint32_t unk_0054[3];
 };
 
-void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix transform) {
+void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix transform, std::vector<Model::VertexBuffer> &vertexBuffers) {
 	if (!mesh_header_offset)
 		return;
 
@@ -194,38 +194,41 @@ void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix trans
 	struct HGPMesh *mesh = (struct HGPMesh *)OFFSET(mesh_header->mesh_offset);
 
 	do {
-		struct HGPChunk *chunk = (struct HGPChunk *)OFFSET(mesh->chunk_offset);
+		int stride = 0;
+
+		/* Vertex stride is specified per-mesh. */
+		switch (mesh->vertex_type) {
+			case 89:
+				stride = 36;
+				break;
+			case 93:
+				stride = 56;
+				break;
+			default:
+				fprintf(stderr, "Unknown vertex type %d\n", mesh->vertex_type);
+		}
+
+		int vertex_buffer_idx = mesh->vertex_buffer_idx - 1;
+
+		vertexBuffers[vertex_buffer_idx].stride = stride;
+
+		struct HGPChunk *chunk_data = (struct HGPChunk *)OFFSET(mesh->chunk_offset);
 
 		do {
-			int idx = this->num_chunks++;
-			/* XXX: Don't reallocate on each chunk. */
-			this->chunks = (struct Chunk *)realloc(this->chunks, sizeof(struct Chunk) * this->num_chunks);
+			Model::Chunk chunk = Model::Chunk();
 
-			this->chunks[idx].vertex_buffer_idx = mesh->vertex_buffer_idx - 1;
-			this->chunks[idx].material_idx = mesh->material_idx;
-			this->chunks[idx].primitive_type = chunk->primitive_type;
-			this->chunks[idx].num_elements = chunk->num_elements;
+			chunk.vertex_buffer_idx = vertex_buffer_idx;
+			chunk.material_idx = mesh->material_idx;
+			chunk.primitive_type = chunk_data->primitive_type;
+			chunk.num_elements = chunk_data->num_elements;
 
-			/* Vertex stride is specified per-mesh. */
-			/* XXX: We shouldn't set stride every chunk. */
-			switch (mesh->vertex_type) {
-				case 89:
-					this->vertex_buffers[this->chunks[idx].vertex_buffer_idx].stride = 36;
-					break;
-				case 93:
-					this->vertex_buffers[this->chunks[idx].vertex_buffer_idx].stride = 56;
-					break;
-				default:
-					this->vertex_buffers[this->chunks[idx].vertex_buffer_idx].stride = 0;
-					fprintf(stderr, "Unknown vertex type %d\n", mesh->vertex_type);
-			}
+			chunk.transformation = transform;
 
-			this->chunks[idx].transformation = transform;
+			chunk.element_buffer = new uint16_t[chunk_data->num_elements];
+			memcpy(chunk.element_buffer, OFFSET(chunk_data->elements_offset), chunk_data->num_elements * sizeof(uint16_t));
 
-			int element_buffer_size = chunk->num_elements * sizeof(uint16_t);
-			this->chunks[idx].element_buffer = (uint16_t *)malloc(element_buffer_size);
-			memcpy(this->chunks[idx].element_buffer, OFFSET(chunk->elements_offset), element_buffer_size);
-		} while (chunk->next_offset && (chunk = (struct HGPChunk *)OFFSET(chunk->next_offset)));
+			this->addChunk(chunk);
+		} while (chunk_data->next_offset && (chunk_data = (struct HGPChunk *)OFFSET(chunk_data->next_offset)));
 	} while (mesh->next_offset && (mesh = (struct HGPMesh *)OFFSET(mesh->next_offset)));
 }
 
@@ -250,28 +253,18 @@ HGPModel::HGPModel(const char *path) : Model::Model() {
 	struct HGPHeader *file_header = (struct HGPHeader *)buf;
 	struct HGPModelHeader *model_header = (struct HGPModelHeader *)OFFSET(file_header->model_header_offset);
 
-	/* Read vertex blocks into individual, indexed buffers. */
-	struct HGPVertexHeader *vertex_header = (struct HGPVertexHeader *)OFFSET(file_header->vertex_header_offset);
-	this->num_vertex_buffers = vertex_header->num_vertex_blocks;
-	this->vertex_buffers = (struct VertexBuffer *)calloc(this->num_vertex_buffers, sizeof(struct VertexBuffer));
-
-	for (int i = 0; i < vertex_header->num_vertex_blocks; i++) {
-		this->vertex_buffers[i].size = vertex_header->blocks[i].size;
-
-		this->vertex_buffers[i].ptr = (float *)malloc(this->vertex_buffers[i].size);
-		memcpy(this->vertex_buffers[i].ptr, OFFSET(file_header->vertex_header_offset + vertex_header->blocks[i].offset), this->vertex_buffers[i].size);
-	}
-
 	/* Read inline DDS textures. */
 	struct HGPTextureHeader *texture_header = (struct HGPTextureHeader *)OFFSET(file_header->texture_header_offset);
-	this->num_textures = texture_header->num_textures;
-	this->textures = (Texture *)calloc(this->num_textures, sizeof(Texture));
+
+	std::vector<Texture> textures(texture_header->num_textures);
 
 	for (int i = 0; i < texture_header->num_textures; i++) {
 		void *texture_data = (void *)OFFSET(file_header->texture_header_offset + texture_header->texture_block_offset + 12 + texture_header->texture_block_headers[i].offset);
 
-		this->textures[i] = DDSTexture::DDSTexture(texture_data);
+		textures[i] = DDSTexture::DDSTexture(texture_data);
 	}
+
+	this->setTextures(textures);
 
 	/* Initialize per-model materials, consisting of a color and index to an in-model texture. */
 	struct HGPMaterialHeader *material_header = (struct HGPMaterialHeader *)OFFSET(file_header->material_header_offset);
@@ -298,13 +291,26 @@ HGPModel::HGPModel(const char *path) : Model::Model() {
 	struct HGPMeshTreeNode *tree_nodes = (struct HGPMeshTreeNode *)OFFSET(model_header->mesh_tree_offset);
 	Matrix *transform_matrices = (Matrix *)OFFSET(model_header->transformations_offset);
 	Matrix *static_transform_matrices = (Matrix *)OFFSET(model_header->static_transformations_offset);
-	Matrix *model_transforms = (Matrix *)calloc(model_header->num_meshes, sizeof(Matrix));
+
+	std::vector<Matrix> modelTransforms(model_header->num_meshes);
 
 	for (int i = 0; i < model_header->num_meshes; i++) {
-		model_transforms[i] = transform_matrices[i];
+		modelTransforms[i] = transform_matrices[i];
 
 		if (tree_nodes[i].parent_idx != -1)
-			model_transforms[i] = model_transforms[i] * model_transforms[tree_nodes[i].parent_idx];
+			modelTransforms[i] = modelTransforms[i] * modelTransforms[tree_nodes[i].parent_idx];
+	}
+
+	/* Read vertex blocks into individual, indexed buffers. */
+	struct HGPVertexHeader *vertex_header = (struct HGPVertexHeader *)OFFSET(file_header->vertex_header_offset);
+
+	std::vector<Model::VertexBuffer> vertexBuffers(vertex_header->num_vertex_blocks);
+
+	for (int i = 0; i < vertex_header->num_vertex_blocks; i++) {
+		vertexBuffers[i].size = vertex_header->blocks[i].size;
+
+		vertexBuffers[i].data = new char[vertexBuffers[i].size];
+		memcpy(vertexBuffers[i].data, OFFSET(file_header->vertex_header_offset + vertex_header->blocks[i].offset), vertexBuffers[i].size);
 	}
 
 	/* Break the layers down into meshes and add those to the model's list. */
@@ -323,12 +329,15 @@ HGPModel::HGPModel(const char *path) : Model::Model() {
 				uint32_t *mesh_header_offsets = (uint32_t *)OFFSET(layer_headers[i].mesh_header_list_offsets[j]);
 
 				for (int k = 0; k < model_header->num_meshes; k++)
-					this->processMesh(body, mesh_header_offsets[k], model_transforms[k]);
+					this->processMesh(body, mesh_header_offsets[k], modelTransforms[k], vertexBuffers);
 			}
 			else
-				this->processMesh(body, layer_headers[i].mesh_header_list_offsets[j], static_transform_matrices[0] * model_transforms[0]);
+				this->processMesh(body, layer_headers[i].mesh_header_list_offsets[j], static_transform_matrices[0] * modelTransforms[0], vertexBuffers);
 		}
 	}
+
+	/* We have to do this after processing meshes, as stride is stored per-mesh. */
+	this->setVertexBuffers(vertexBuffers);
 
 	free(buf);
 }

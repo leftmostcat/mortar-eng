@@ -24,7 +24,12 @@
 
 class Model {
 	public:
-		explicit Model();
+		class VertexBuffer {
+			public:
+				int size;
+				int stride;
+				char *data;
+		};
 
 		class Material {
 			public:
@@ -41,34 +46,38 @@ class Model {
 				int texture_idx;
 		};
 
+		class Chunk {
+			public:
+				int primitive_type;
+				int vertex_buffer_idx;
+				int material_idx;
+
+				Matrix transformation;
+
+				int num_elements;
+				uint16_t *element_buffer;
+		};
+
+		void setVertexBuffers(std::vector<Model::VertexBuffer> vertexBuffers);
+		Model::VertexBuffer getVertexBuffer(int i);
+		int getVertexBufferCount();
+
+		void setTextures(std::vector<Texture> textures);
+		Texture getTexture(int i);
+		int getTextureCount();
+
 		void setMaterials(std::vector<Model::Material> materials);
 		Model::Material getMaterial(int i);
 
-		int num_vertex_buffers;
-		int num_chunks;
-		int num_textures;
-
-		struct VertexBuffer {
-			int size;
-			int stride;
-			float *ptr;
-		} *vertex_buffers;
-
-		Texture *textures;
-
-		struct Chunk {
-			int primitive_type;
-			int vertex_buffer_idx;
-			int material_idx;
-
-			Matrix transformation;
-
-			int num_elements;
-			uint16_t *element_buffer;
-		} *chunks;
+		void addChunk(Model::Chunk chunk);
+		Model::Chunk getChunk(int i);
+		int getChunkCount();
 
 	private:
+		std::vector<Model::VertexBuffer> vertexBuffers;
+		std::vector<Texture> textures;
 		std::vector<Model::Material> materials;
+		std::vector<Model::Chunk> chunks;
 };
 
 #endif
