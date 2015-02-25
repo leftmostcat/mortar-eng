@@ -65,7 +65,15 @@ struct DDSHeader {
 	uint32_t reserved2;
 };
 
-DDSTexture::DDSTexture(void *texture_data) : Texture::Texture() {
+DDSTexture::DDSTexture(Stream &stream) : Texture() {
+	stream.seek(0, SEEK_END);
+	long length = stream.tell();
+	stream.seek(0, SEEK_SET);
+
+	char *texture_data = (char *)malloc(length);
+	for (int i = 0; i < length; i++)
+		texture_data[i] = stream.readUint8();
+
 	struct DDSHeader *file_header = (struct DDSHeader *)texture_data;
 
 	std::vector<Texture::Level> levels(file_header->num_levels);

@@ -17,11 +17,12 @@
 #ifndef MORTAR_DDS_H
 #define MORTAR_DDS_H
 
+#include "stream.hpp"
 #include "texture.hpp"
 
 class DDSTexture : public Texture {
 	public:
-		explicit DDSTexture(void *texture_data);
+		explicit DDSTexture(Stream &stream);
 };
 
 #endif

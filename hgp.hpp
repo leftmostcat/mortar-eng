@@ -19,10 +19,11 @@
 
 #include <stdint.h>
 #include "model.hpp"
+#include "stream.hpp"
 
 class HGPModel : public Model {
 	public:
-		HGPModel(const char *path);
+		HGPModel(Stream &stream);
 
 	private:
 		void processMesh(char *body, uint32_t mesh_header_offset, Matrix transform, std::vector<Model::VertexBuffer> &vertexBuffers);

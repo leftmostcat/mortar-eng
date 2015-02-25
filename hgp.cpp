@@ -21,6 +21,7 @@
 #include "hgp.hpp"
 #include "dds.hpp"
 #include "matrix.hpp"
+#include "memorystream.hpp"
 
 #define BODY_OFFSET 0x30
 #define OFFSET(off) (body + off)
@@ -232,21 +233,15 @@ void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix trans
 	} while (mesh->next_offset && (mesh = (struct HGPMesh *)OFFSET(mesh->next_offset)));
 }
 
-HGPModel::HGPModel(const char *path) : Model::Model() {
+HGPModel::HGPModel(Stream &stream) : Model() {
 	/* Initial file read into memory. */
-	FILE *hgp = fopen(path, "rb");
-
-	if (fseek(hgp, 0, SEEK_END) == -1) {
-		int err = errno;
-		fprintf(stderr, "%s\n", strerror(err));
-		return;
-	}
-	long length = ftell(hgp);
-	rewind(hgp);
+	stream.seek(0, SEEK_END);
+	long length = stream.tell();
+	stream.seek(0, SEEK_SET);
 
 	char *buf = (char *)malloc(length);
-	fread(buf, 1, length, hgp);
-	fclose(hgp);
+	for (int i = 0; i < length; i++)
+		buf[i] = stream.readUint8();
 
 	/* Locate file body and basic headers. */
 	char *body = buf + BODY_OFFSET;
@@ -260,8 +255,16 @@ HGPModel::HGPModel(const char *path) : Model::Model() {
 
 	for (int i = 0; i < texture_header->num_textures; i++) {
 		void *texture_data = (void *)OFFSET(file_header->texture_header_offset + texture_header->texture_block_offset + 12 + texture_header->texture_block_headers[i].offset);
+		int length;
 
-		textures[i] = DDSTexture::DDSTexture(texture_data);
+		if (i < texture_header->num_textures - 1)
+			length = texture_header->texture_block_headers[i + 1].offset - texture_header->texture_block_headers[i].offset;
+		else
+			length = texture_header->texture_block_size - texture_header->texture_block_headers[i].offset;
+
+		MemoryStream ms = MemoryStream(texture_data, length);
+
+		textures[i] = DDSTexture::DDSTexture(ms);
 	}
 
 	this->setTextures(textures);

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "filestream.hpp"
 #include "hgp.hpp"
 #include "matrix.hpp"
 
@@ -136,7 +137,8 @@ int main(int argc, char **argv) {
 	GLint texcoord_attr = glGetAttribLocation(shader_program, "texCoord");
 
 	/* Read in the specified HGP model. */
-	Model hgp = HGPModel::HGPModel(argv[1]);
+	FileStream fs = FileStream(argv[1], "rb");
+	Model hgp = HGPModel(fs);
 
 	GLuint *vao = new GLuint[hgp.getVertexBufferCount()];
 	GLuint *vbo = new GLuint[hgp.getVertexBufferCount()];
