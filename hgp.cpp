@@ -37,11 +37,9 @@ struct HGPHeader {
 	uint32_t vertex_header_offset;
 	uint32_t model_header_offset;
 
-	uint32_t unk_001C;
-	uint32_t unk_0020;
+	uint32_t unk_001C[2];
 
-	uint16_t unk_0024;
-	uint16_t unk_0026;
+	uint16_t unk_0024[2];
 
 	uint32_t unk_0028;
 
@@ -49,11 +47,7 @@ struct HGPHeader {
 };
 
 struct HGPModelHeader {
-	uint32_t unk_0000;
-	uint32_t unk_0004;
-	uint32_t unk_0008;
-	uint32_t unk_000C;
-	uint32_t unk_0010;
+	uint32_t unk_0000[5];
 
 	uint32_t mesh_tree_offset;
 	uint32_t transformations_offset;
@@ -63,62 +57,30 @@ struct HGPModelHeader {
 
 	uint32_t layer_header_offset;
 
-	uint32_t unk_0028;
-	uint32_t unk_002C;
+	uint32_t unk_0028[2];
 
 	uint32_t strings_offset;
 
 	uint32_t unk_0034;
-
 	float unk_0038;
-
 	uint32_t unk_003C;
-
 	float unk_0040;
-
 	uint32_t unk_0044;
-
-	float unk_0048;
-	float unk_004C;
-	float unk_0050;
-	float unk_0054;
-	float unk_0058;
-	float unk_005C;
-	float unk_0060;
-	float unk_0064;
-	float unk_0068;
-
-	uint32_t unk_006C;
-	uint32_t unk_0070;
-	uint32_t unk_0074;
-	uint32_t unk_0078;
+	float unk_0048[9];
+	uint32_t unk_006C[4];
 
 	uint8_t num_meshes;
 	uint8_t unk_007D;
 	uint8_t num_layers;
 	uint8_t unk_007F;
 
-	uint32_t unk_0080;
-	uint32_t unk_0084;
-	uint32_t unk_0088;
-	uint32_t unk_008C;
-	uint32_t unk_0090;
-	uint32_t unk_0094;
-	uint32_t unk_0098;
-	uint32_t unk_009C;
-	uint32_t unk_00A0;
-	uint32_t unk_00A4;
-	uint32_t unk_00A8;
-	uint32_t unk_00AC;
-	uint32_t unk_00B0;
+	uint32_t unk_0080[13];
 };
 
 struct HGPVertexHeader {
 	uint32_t num_vertex_blocks;
 
-	uint32_t unk_0004;
-	uint32_t unk_0008;
-	uint32_t unk_000C;
+	uint32_t unk_0004[3];
 
 	struct {
 		uint32_t size;
@@ -130,10 +92,7 @@ struct HGPVertexHeader {
 struct HGPTextureBlockHeader {
 	uint32_t offset;
 
-	uint32_t unk_0004;
-	uint32_t unk_0008;
-	uint32_t unk_000C;
-	uint32_t unk_0010;
+	uint32_t unk_0004[4];
 };
 
 struct HGPTextureHeader {
@@ -141,10 +100,8 @@ struct HGPTextureHeader {
 	uint32_t texture_block_size;
 	uint32_t num_textures;
 
-	uint32_t unk_000C;
-	uint32_t unk_0010;
-	uint32_t unk_0014;
-	uint32_t unk_0018;
+	uint32_t unk_000C[4];
+
 	struct HGPTextureBlockHeader texture_block_headers[];
 };
 
@@ -154,9 +111,7 @@ struct HGPLayerHeader {
 };
 
 struct HGPMeshHeader {
-	uint32_t unk_0000;
-	uint32_t unk_0004;
-	uint32_t unk_0008;
+	uint32_t unk_0000[3];
 
 	uint32_t mesh_offset;
 
@@ -171,23 +126,15 @@ struct HGPMesh {
 	uint32_t material_idx;
 	uint32_t vertex_type;
 
-	uint32_t unk_0010;
-	uint32_t unk_0014;
-	uint32_t unk_0018;
+	uint32_t unk_0010[3];
 
 	uint32_t vertex_buffer_idx;
 
-	uint32_t unk_0020;
-	uint32_t unk_0024;
-	uint32_t unk_0028;
-	uint32_t unk_002C;
+	uint32_t unk_0020[4];
 
 	uint32_t chunk_offset;
 
-	uint32_t unk_0034;
-	uint32_t unk_0038;
-	uint32_t unk_003C;
-	uint32_t unk_0040;
+	uint32_t unk_0034[4];
 };
 
 struct HGPChunk {
@@ -199,22 +146,7 @@ struct HGPChunk {
 
 	uint32_t elements_offset;
 
-	uint32_t unk_0010;
-	uint32_t unk_0014;
-	uint32_t unk_0018;
-	uint32_t unk_001C;
-	uint32_t unk_0020;
-	uint32_t unk_0024;
-	uint32_t unk_0028;
-	uint32_t unk_002C;
-	uint32_t unk_0030;
-	uint32_t unk_0034;
-	uint32_t unk_0038;
-	uint32_t unk_003C;
-	uint32_t unk_0040;
-	uint32_t unk_0044;
-	uint32_t unk_0048;
-	uint32_t unk_004C;
+	uint32_t unk_0010[16];
 };
 
 struct HGPMaterialHeader {
@@ -223,73 +155,31 @@ struct HGPMaterialHeader {
 };
 
 struct HGPMaterial {
-	uint32_t unk_0000;
-	uint32_t unk_0004;
-	uint32_t unk_0008;
-	uint32_t unk_000C;
-	uint32_t unk_0010;
-	uint32_t unk_0014;
-	uint32_t unk_0018;
-	uint32_t unk_001C;
-	uint32_t unk_0020;
-	uint32_t unk_0024;
-	uint32_t unk_0028;
-	uint32_t unk_002C;
-	uint32_t unk_0030;
-	uint32_t unk_0034;
-	uint32_t unk_0038;
-	uint32_t unk_003C;
-	uint32_t unk_0040;
-	uint32_t unk_0044;
-	uint32_t unk_0048;
-	uint32_t unk_004C;
-	uint32_t unk_0050;
+	uint32_t unk_0000[21];
 
 	float red;
 	float green;
 	float blue;
 
-	uint32_t unk_0060;
-	uint32_t unk_0064;
-	uint32_t unk_0068;
-	uint32_t unk_006C;
-	uint32_t unk_0070;
+	uint32_t unk_0060[5];
 
 	uint32_t alpha;
 
 	int16_t texture_idx;
 	uint16_t unk_007A;
 
-	uint32_t unk_007C;
-	uint32_t unk_0080;
-	uint32_t unk_0084;
-	uint32_t unk_0088;
-	uint32_t unk_008C;
-	uint32_t unk_0090;
-	uint32_t unk_0094;
-	uint32_t unk_0098;
-	uint32_t unk_009C;
-	uint32_t unk_00A0;
-	uint32_t unk_00A4;
-	uint32_t unk_00A8;
-	uint32_t unk_00AC;
-	uint32_t unk_00B0;
+	uint32_t unk_007C[14];
 };
 
 struct HGPMeshTreeNode {
 	Matrix transformation_mtx;
 
-	float unk_0040[3];
-	float unk_004C;
+	float unk_0040[4];
 
 	int8_t parent_idx;
-	uint8_t unk_0051;
-	uint8_t unk_0052;
-	uint8_t unk_0053;
 
-	uint32_t unk_0054;
-	uint32_t unk_0058;
-	uint32_t unk_005C;
+	uint8_t unk_0051[3];
+	uint32_t unk_0054[3];
 };
 
 void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix transform) {
