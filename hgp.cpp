@@ -385,22 +385,24 @@ void HGPModel::load(const char *path) {
 
 	/* Initialize per-model materials, consisting of a color and index to an in-model texture. */
 	struct HGPMaterialHeader *material_header = (struct HGPMaterialHeader *)OFFSET(file_header->material_header_offset);
-	this->num_materials = material_header->num_materials;
-	this->materials = (struct Material *)calloc(this->num_materials, sizeof(struct Material));
+
+	std::vector<Model::Material> materials(material_header->num_materials);
 
 	for (int i = 0; i < material_header->num_materials; i++) {
 		struct HGPMaterial *material = (struct HGPMaterial *)OFFSET(material_header->material_offsets[i]);
 
-		this->materials[i].red = material->red;
-		this->materials[i].green = material->green;
-		this->materials[i].blue = material->blue;
-		this->materials[i].alpha = material->alpha;
+		materials[i].red = material->red;
+		materials[i].green = material->green;
+		materials[i].blue = material->blue;
+		materials[i].alpha = material->alpha;
 
 		if (material->texture_idx != -1 && material->texture_idx & 0x8000)
-			this->materials[i].texture_idx = material->texture_idx & 0x7FFF;
+			materials[i].texture_idx = material->texture_idx & 0x7FFF;
 		else
-			this->materials[i].texture_idx = material->texture_idx;
+			materials[i].texture_idx = material->texture_idx;
 	}
+
+	this->setMaterials(materials);
 
 	/* Use the mesh tree to apply hierarchical transformations. */
 	struct HGPMeshTreeNode *tree_nodes = (struct HGPMeshTreeNode *)OFFSET(model_header->mesh_tree_offset);

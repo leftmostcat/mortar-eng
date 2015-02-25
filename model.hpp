@@ -17,6 +17,7 @@
 #ifndef MORTAR_MODEL_H
 #define MORTAR_MODEL_H
 
+#include <vector>
 #include <stdint.h>
 #include "matrix.hpp"
 #include "texture.hpp"
@@ -26,12 +27,29 @@ class Model {
 		explicit Model(void);
 		virtual ~Model(void);
 
-		virtual void load(const char *path);
+		class Material {
+			public:
+				union {
+					struct {
+						float red;
+						float green;
+						float blue;
+						float alpha;
+					};
+					float color[4];
+				};
+
+				int texture_idx;
+		};
+
+		virtual void load(const char *path) = 0;
+
+		void setMaterials(std::vector<Model::Material> materials);
+		Model::Material getMaterial(int i);
 
 		int num_vertex_buffers;
 		int num_chunks;
 		int num_textures;
-		int num_materials;
 
 		struct VertexBuffer {
 			int size;
@@ -40,14 +58,6 @@ class Model {
 		} *vertex_buffers;
 
 		Texture **textures;
-
-		struct Material {
-			float red;
-			float green;
-			float blue;
-			float alpha;
-			int texture_idx;
-		} *materials;
 
 		struct Chunk {
 			int primitive_type;
@@ -59,6 +69,9 @@ class Model {
 			int num_elements;
 			uint16_t *element_buffer;
 		} *chunks;
+
+	private:
+		std::vector<Model::Material> materials;
 };
 
 #endif

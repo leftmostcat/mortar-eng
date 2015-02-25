@@ -209,13 +209,13 @@ int main(int argc, char **argv) {
 
 		for (int i = 0; i < hgp->num_chunks; i++) {
 			/* Get chunk-specific information for rendering. */
+			Model::Material material = hgp->getMaterial(hgp->chunks[i].material_idx);
 			int vb_idx = hgp->chunks[i].vertex_buffer_idx;
-			int mat_idx = hgp->chunks[i].material_idx;
 			GLenum prim_type = getGLPrimitiveType(hgp->chunks[i].primitive_type);
 
 			/* Ensure that fragment colors come from the right place. */
-			if (hgp->materials[mat_idx].texture_idx != -1) {
-				glUniform1i(tex_unif, hgp->materials[mat_idx].texture_idx);
+			if (material.texture_idx != -1) {
+				glUniform1i(tex_unif, material.texture_idx);
 				glUniform1i(has_tex_unif, 1);
 			}
 			else {
@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
 			}
 
 			/* Set per-chunk material color and transformation matrix. */
-			glUniform4f(color_unif, hgp->materials[mat_idx].red, hgp->materials[mat_idx].green, hgp->materials[mat_idx].blue, hgp->materials[mat_idx].alpha);
+			glUniform4fv(color_unif, 1, material.color);
 			glUniformMatrix4fv(mesh_mtx_unif, 1, GL_FALSE, hgp->chunks[i].transformation.array16);
 
 			/* Render the chunk. */

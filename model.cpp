@@ -17,19 +17,17 @@
 #include <stdlib.h>
 #include "model.hpp"
 
-Model::Model(void) {
+Model::Model() {
 	this->num_vertex_buffers = 0;
 	this->num_textures = 0;
-	this->num_materials = 0;
 	this->num_chunks = 0;
 
 	this->vertex_buffers = NULL;
 	this->textures = NULL;
-	this->materials = NULL;
 	this->chunks = NULL;
 }
 
-Model::~Model(void) {
+Model::~Model() {
 	for (int i = 0; i < this->num_vertex_buffers; i++) {
 		free(this->vertex_buffers[i].ptr);
 	}
@@ -52,4 +50,10 @@ Model::~Model(void) {
 		free(this->chunks);
 }
 
-void Model::load(const char *path) {}
+void Model::setMaterials(std::vector<Model::Material> materials) {
+	this->materials = materials;
+}
+
+Model::Material Model::getMaterial(int i) {
+	return this->materials.at(i);
+}
