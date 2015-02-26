@@ -20,9 +20,6 @@
 #include "matrix.hpp"
 #include "memorystream.hpp"
 
-#define BODY_OFFSET 0x30
-#define OFFSET(off) (body + off)
-
 struct HGPHeader {
 	uint32_t unk_0000;
 
@@ -181,6 +178,8 @@ struct HGPMeshTreeNode {
 	uint8_t unk_0051[3];
 	uint32_t unk_0054[3];
 };
+
+const int BODY_OFFSET = 0x30;
 
 static struct HGPMesh readMeshInfo(Stream &stream, uint32_t mesh_offset) {
 	stream.seek(BODY_OFFSET + mesh_offset, SEEK_SET);
