@@ -19,7 +19,6 @@
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include "filestream.hpp"
 #include "hgp.hpp"
@@ -233,7 +232,7 @@ int main(int argc, char **argv) {
 
 			/* Set per-chunk material color and transformation matrix. */
 			glUniform4fv(color_unif, 1, material.color);
-			glUniformMatrix4fv(mesh_mtx_unif, 1, GL_FALSE, chunk.transformation.array16);
+			glUniformMatrix4fv(mesh_mtx_unif, 1, GL_TRUE, glm::value_ptr(chunk.transformation));
 
 			/* Render the chunk. */
 			glBindVertexArray(vao[vb_idx]);

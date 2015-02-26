@@ -14,10 +14,7 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "hgp.hpp"
 #include "dds.hpp"
 #include "matrix.hpp"
@@ -175,7 +172,7 @@ struct HGPMaterial {
 };
 
 struct HGPMeshTreeNode {
-	Matrix transformation_mtx;
+	glm::mat4 transformation_mtx;
 
 	float unk_0040[4];
 
@@ -185,16 +182,15 @@ struct HGPMeshTreeNode {
 	uint32_t unk_0054[3];
 };
 
-static Matrix readMatrix(Stream &stream) {
-	Matrix mtx;
+static glm::mat4 readMatrix(Stream &stream) {
 	float mtx_array[16];
 
-	for (int i = 0; i < 16; i++)
-		mtx_array[i] = stream.readFloat();
+	/* D3DMATRIX is row-major and we need column-major for OpenGL, so read funny. */
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+			mtx_array[i + j * 4] = stream.readFloat();
 
-	memcpy(mtx.array16, mtx_array, 16 * sizeof(float));
-
-	return mtx;
+	return glm::make_mat4(mtx_array);
 }
 
 static struct HGPMesh readMeshInfo(Stream &stream, uint32_t mesh_offset) {
@@ -235,7 +231,7 @@ static struct HGPChunk readChunkInfo(Stream &stream, uint32_t chunk_offset) {
 	return chunk;
 }
 
-void HGPModel::processMesh(Stream &stream, uint32_t mesh_header_offset, Matrix transform, std::vector<Model::VertexBuffer> &vertexBuffers) {
+void HGPModel::processMesh(Stream &stream, uint32_t mesh_header_offset, glm::mat4 transform, std::vector<Model::VertexBuffer> &vertexBuffers) {
 	if (!mesh_header_offset)
 		return;
 
@@ -451,13 +447,13 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	}
 
 	/* Use the mesh tree to apply hierarchical transformations. */
-	std::vector<Matrix> modelTransforms(model_header.num_meshes);
+	std::vector<glm::mat4> modelTransforms(model_header.num_meshes);
 
 	stream.seek(BODY_OFFSET + model_header.transformations_offset, SEEK_SET);
 
 	for (int i = 0; i < model_header.num_meshes; i++) {
 		int offset = i * 16 * sizeof(float);
-		Matrix transformMtx = readMatrix(stream);
+		glm::mat4 transformMtx = readMatrix(stream);
 
 		modelTransforms[i] = transformMtx;
 
@@ -496,7 +492,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 
 	/* Read in information necessary for processing layers and meshes. */
 	stream.seek(BODY_OFFSET + model_header.static_transformation_offset, SEEK_SET);
-	Matrix static_transform_matrix = readMatrix(stream);
+	glm::mat4 static_transform_matrix = readMatrix(stream);
 
 	stream.seek(BODY_OFFSET + model_header.layer_header_offset, SEEK_SET);
 	struct HGPLayerHeader *layer_headers = new struct HGPLayerHeader[model_header.layer_header_offset];

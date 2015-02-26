@@ -21,16 +21,4 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-class Matrix {
-	public:
-		explicit Matrix();
-
-		Matrix operator*(const Matrix &right);
-
-		union {
-			float array16[16];
-			float array4x4[4][4];
-		};
-};
-
 #endif

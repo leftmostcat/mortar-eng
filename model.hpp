@@ -52,7 +52,7 @@ class Model {
 				int vertex_buffer_idx;
 				int material_idx;
 
-				Matrix transformation;
+				glm::mat4 transformation;
 
 				int num_elements;
 				uint16_t *element_buffer;
