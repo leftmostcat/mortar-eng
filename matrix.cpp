@@ -14,14 +14,15 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_MATRIX_H
-#define MORTAR_MATRIX_H
+#include "matrix.hpp"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include "stream.hpp"
+glm::mat4 readMatrix(Stream &stream) {
+	float mtx_array[16];
 
-glm::mat4 readMatrix(Stream &stream);
+	/* D3DMATRIX is row-major and we need column-major for OpenGL, so read funny. */
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+			mtx_array[i + j * 4] = stream.readFloat();
 
-#endif
+	return glm::make_mat4(mtx_array);
+}

@@ -182,17 +182,6 @@ struct HGPMeshTreeNode {
 	uint32_t unk_0054[3];
 };
 
-static glm::mat4 readMatrix(Stream &stream) {
-	float mtx_array[16];
-
-	/* D3DMATRIX is row-major and we need column-major for OpenGL, so read funny. */
-	for (int i = 0; i < 4; i++)
-		for (int j = 0; j < 4; j++)
-			mtx_array[i + j * 4] = stream.readFloat();
-
-	return glm::make_mat4(mtx_array);
-}
-
 static struct HGPMesh readMeshInfo(Stream &stream, uint32_t mesh_offset) {
 	stream.seek(BODY_OFFSET + mesh_offset, SEEK_SET);
 	struct HGPMesh mesh;
