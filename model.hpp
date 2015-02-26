@@ -28,7 +28,7 @@ class Model {
 			public:
 				int size;
 				int stride;
-				char *data;
+				uint8_t *data;
 		};
 
 		class Material {

@@ -52,7 +52,7 @@ struct HGPModelHeader {
 
 	uint32_t mesh_tree_offset;
 	uint32_t transformations_offset;
-	uint32_t static_transformations_offset;
+	uint32_t static_transformation_offset;
 
 	uint32_t unk_0020;
 
@@ -78,16 +78,18 @@ struct HGPModelHeader {
 	uint32_t unk_0080[13];
 };
 
+struct HGPVertexBlock {
+	uint32_t size;
+	uint32_t id;
+	uint32_t offset;
+};
+
 struct HGPVertexHeader {
 	uint32_t num_vertex_blocks;
 
 	uint32_t unk_0004[3];
 
-	struct {
-		uint32_t size;
-		uint32_t id;
-		uint32_t offset;
-	} blocks[];
+	struct HGPVertexBlock *blocks;
 };
 
 struct HGPTextureBlockHeader {
@@ -103,7 +105,7 @@ struct HGPTextureHeader {
 
 	uint32_t unk_000C[4];
 
-	struct HGPTextureBlockHeader texture_block_headers[];
+	struct HGPTextureBlockHeader *texture_block_headers;
 };
 
 struct HGPLayerHeader {
@@ -152,7 +154,7 @@ struct HGPChunk {
 
 struct HGPMaterialHeader {
 	uint32_t num_materials;
-	uint32_t material_offsets[];
+	uint32_t *material_offsets;
 };
 
 struct HGPMaterial {
@@ -183,22 +185,78 @@ struct HGPMeshTreeNode {
 	uint32_t unk_0054[3];
 };
 
-void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix transform, std::vector<Model::VertexBuffer> &vertexBuffers) {
+static Matrix readMatrix(Stream &stream) {
+	Matrix mtx;
+	float mtx_array[16];
+
+	for (int i = 0; i < 16; i++)
+		mtx_array[i] = stream.readFloat();
+
+	memcpy(mtx.array16, mtx_array, 16 * sizeof(float));
+
+	return mtx;
+}
+
+static struct HGPMesh readMeshInfo(Stream &stream, uint32_t mesh_offset) {
+	stream.seek(BODY_OFFSET + mesh_offset, SEEK_SET);
+	struct HGPMesh mesh;
+
+	mesh.next_offset = stream.readUint32();
+
+	stream.seek(sizeof(uint32_t), SEEK_CUR);
+
+	mesh.material_idx = stream.readUint32();
+	mesh.vertex_type = stream.readUint32();
+
+	stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
+
+	mesh.vertex_buffer_idx = stream.readUint32();
+
+	stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
+
+	mesh.chunk_offset = stream.readUint32();
+
+	return mesh;
+}
+
+static struct HGPChunk readChunkInfo(Stream &stream, uint32_t chunk_offset) {
+	stream.seek(BODY_OFFSET + chunk_offset, SEEK_SET);
+	struct HGPChunk chunk;
+
+	chunk.next_offset = stream.readUint32();
+	chunk.primitive_type = stream.readUint32();
+
+	chunk.num_elements = stream.readUint16();
+
+	stream.seek(sizeof(uint16_t), SEEK_CUR);
+
+	chunk.elements_offset = stream.readUint32();
+
+	return chunk;
+}
+
+void HGPModel::processMesh(Stream &stream, uint32_t mesh_header_offset, Matrix transform, std::vector<Model::VertexBuffer> &vertexBuffers) {
 	if (!mesh_header_offset)
 		return;
 
-	struct HGPMeshHeader *mesh_header = (struct HGPMeshHeader *)OFFSET(mesh_header_offset);
+	stream.seek(BODY_OFFSET + mesh_header_offset, SEEK_SET);
+	struct HGPMeshHeader mesh_header;
 
-	if (!mesh_header->mesh_offset)
+	stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
+
+	mesh_header.mesh_offset = stream.readUint32();
+
+	if (!mesh_header.mesh_offset)
 		return;
 
-	struct HGPMesh *mesh = (struct HGPMesh *)OFFSET(mesh_header->mesh_offset);
+	struct HGPMesh mesh = readMeshInfo(stream, mesh_header.mesh_offset);
+	bool processNextMesh;
 
 	do {
 		int stride = 0;
 
 		/* Vertex stride is specified per-mesh. */
-		switch (mesh->vertex_type) {
+		switch (mesh.vertex_type) {
 			case 89:
 				stride = 36;
 				break;
@@ -206,120 +264,252 @@ void HGPModel::processMesh(char *body, uint32_t mesh_header_offset, Matrix trans
 				stride = 56;
 				break;
 			default:
-				fprintf(stderr, "Unknown vertex type %d\n", mesh->vertex_type);
+				fprintf(stderr, "Unknown vertex type %d\n", mesh.vertex_type);
 		}
 
-		int vertex_buffer_idx = mesh->vertex_buffer_idx - 1;
+		int vertex_buffer_idx = mesh.vertex_buffer_idx - 1;
 
 		vertexBuffers[vertex_buffer_idx].stride = stride;
 
-		struct HGPChunk *chunk_data = (struct HGPChunk *)OFFSET(mesh->chunk_offset);
+		struct HGPChunk chunk_data = readChunkInfo(stream, mesh.chunk_offset);
+		bool processNextChunk;
 
 		do {
 			Model::Chunk chunk = Model::Chunk();
 
 			chunk.vertex_buffer_idx = vertex_buffer_idx;
-			chunk.material_idx = mesh->material_idx;
-			chunk.primitive_type = chunk_data->primitive_type;
-			chunk.num_elements = chunk_data->num_elements;
+			chunk.material_idx = mesh.material_idx;
+			chunk.primitive_type = chunk_data.primitive_type;
+			chunk.num_elements = chunk_data.num_elements;
 
 			chunk.transformation = transform;
 
-			chunk.element_buffer = new uint16_t[chunk_data->num_elements];
-			memcpy(chunk.element_buffer, OFFSET(chunk_data->elements_offset), chunk_data->num_elements * sizeof(uint16_t));
+			chunk.element_buffer = new uint16_t[chunk_data.num_elements];
+
+			stream.seek(BODY_OFFSET + chunk_data.elements_offset, SEEK_SET);
+
+			for (int i = 0; i < chunk_data.num_elements; i++)
+				chunk.element_buffer[i] = stream.readUint16();
 
 			this->addChunk(chunk);
-		} while (chunk_data->next_offset && (chunk_data = (struct HGPChunk *)OFFSET(chunk_data->next_offset)));
-	} while (mesh->next_offset && (mesh = (struct HGPMesh *)OFFSET(mesh->next_offset)));
+
+			processNextChunk = false;
+			if (chunk_data.next_offset) {
+				chunk_data = readChunkInfo(stream, chunk_data.next_offset);
+				processNextChunk = true;
+			}
+		} while (processNextChunk);
+
+		processNextMesh = false;
+		if (mesh.next_offset) {
+			mesh = readMeshInfo(stream, mesh.next_offset);
+			processNextMesh = true;
+		}
+	} while (processNextMesh);
 }
 
 HGPModel::HGPModel(Stream &stream) : Model() {
-	/* Initial file read into memory. */
-	stream.seek(0, SEEK_END);
-	long length = stream.tell();
+	/* Read in HGP header at the top of the file. */
 	stream.seek(0, SEEK_SET);
+	struct HGPHeader file_header;
 
-	char *buf = (char *)malloc(length);
-	for (int i = 0; i < length; i++)
-		buf[i] = stream.readUint8();
+	stream.seek(4, SEEK_CUR);
 
-	/* Locate file body and basic headers. */
-	char *body = buf + BODY_OFFSET;
-	struct HGPHeader *file_header = (struct HGPHeader *)buf;
-	struct HGPModelHeader *model_header = (struct HGPModelHeader *)OFFSET(file_header->model_header_offset);
+	file_header.strings_offset = stream.readUint32();
+	file_header.texture_header_offset = stream.readUint32();
+	file_header.material_header_offset = stream.readUint32();
+
+	stream.seek(sizeof(uint32_t), SEEK_CUR);
+
+	file_header.vertex_header_offset = stream.readUint32();
+	file_header.model_header_offset = stream.readUint32();
+
+	/* Read in additional model information. */
+	stream.seek(BODY_OFFSET + file_header.model_header_offset, SEEK_SET);
+	struct HGPModelHeader model_header;
+
+	stream.seek(5 * sizeof(uint32_t), SEEK_CUR);
+
+	model_header.mesh_tree_offset = stream.readUint32();
+	model_header.transformations_offset = stream.readUint32();
+	model_header.static_transformation_offset = stream.readUint32();
+
+	stream.seek(sizeof(uint32_t), SEEK_CUR);
+
+	model_header.layer_header_offset = stream.readUint32();
+
+	stream.seek(2 * sizeof(uint32_t), SEEK_CUR);
+
+	model_header.strings_offset = stream.readUint32();
+
+	stream.seek(sizeof(uint32_t), SEEK_CUR);
+	stream.seek(sizeof(float), SEEK_CUR);
+	stream.seek(sizeof(uint32_t), SEEK_CUR);
+	stream.seek(sizeof(float), SEEK_CUR);
+	stream.seek(sizeof(uint32_t), SEEK_CUR);
+	stream.seek(9 * sizeof(float), SEEK_CUR);
+	stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
+
+	model_header.num_meshes = stream.readUint8();
+
+	stream.seek(sizeof(uint8_t), SEEK_CUR);
+
+	model_header.num_layers = stream.readUint8();
+
+	/* Read texture block information. */
+	stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
+	struct HGPTextureHeader texture_header;
+
+	texture_header.texture_block_offset = stream.readUint32();
+	texture_header.texture_block_size = stream.readUint32();
+	texture_header.num_textures = stream.readUint32();
+
+	stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
+	texture_header.texture_block_headers = new struct HGPTextureBlockHeader[texture_header.num_textures];
+
+	for (int i = 0; i < texture_header.num_textures; i++) {
+		texture_header.texture_block_headers[i].offset = stream.readUint32();
+
+		stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
+	}
 
 	/* Read inline DDS textures. */
-	struct HGPTextureHeader *texture_header = (struct HGPTextureHeader *)OFFSET(file_header->texture_header_offset);
+	std::vector<Texture> textures(texture_header.num_textures);
 
-	std::vector<Texture> textures(texture_header->num_textures);
+	for (int i = 0; i < texture_header.num_textures; i++) {
+		stream.seek(BODY_OFFSET + file_header.texture_header_offset + 12 + texture_header.texture_block_offset, SEEK_SET);
+		stream.seek(texture_header.texture_block_headers[i].offset, SEEK_CUR);
 
-	for (int i = 0; i < texture_header->num_textures; i++) {
-		void *texture_data = (void *)OFFSET(file_header->texture_header_offset + texture_header->texture_block_offset + 12 + texture_header->texture_block_headers[i].offset);
-		int length;
+		size_t size;
 
-		if (i < texture_header->num_textures - 1)
-			length = texture_header->texture_block_headers[i + 1].offset - texture_header->texture_block_headers[i].offset;
+		/* A rough maximum for file size is calculated from per-texture offsets. */
+		if (i < texture_header.num_textures - 1)
+			size = texture_header.texture_block_headers[i + 1].offset - texture_header.texture_block_headers[i].offset;
 		else
-			length = texture_header->texture_block_size - texture_header->texture_block_headers[i].offset;
+			size = texture_header.texture_block_size - texture_header.texture_block_headers[i].offset;
 
-		MemoryStream ms = MemoryStream(texture_data, length);
+		uint8_t *texture_data = new uint8_t[size];
+		for (int j = 0; j < size; j++)
+			texture_data[j] = stream.readUint8();
+
+		MemoryStream ms = MemoryStream(texture_data, size);
 
 		textures[i] = DDSTexture::DDSTexture(ms);
 	}
 
 	this->setTextures(textures);
 
+	stream.seek(BODY_OFFSET + file_header.material_header_offset, SEEK_SET);
+	struct HGPMaterialHeader material_header;
+
+	material_header.num_materials = stream.readUint32();
+
+	material_header.material_offsets = new uint32_t[material_header.num_materials];
+
+	for (int i = 0; i < material_header.num_materials; i++)
+		material_header.material_offsets[i] = stream.readUint32();
+
+	std::vector<Model::Material> materials(material_header.num_materials);
+
 	/* Initialize per-model materials, consisting of a color and index to an in-model texture. */
-	struct HGPMaterialHeader *material_header = (struct HGPMaterialHeader *)OFFSET(file_header->material_header_offset);
+	for (int i = 0; i < material_header.num_materials; i++) {
+		stream.seek(BODY_OFFSET + material_header.material_offsets[i], SEEK_SET);
 
-	std::vector<Model::Material> materials(material_header->num_materials);
+		stream.seek(21 * sizeof(uint32_t), SEEK_CUR);
 
-	for (int i = 0; i < material_header->num_materials; i++) {
-		struct HGPMaterial *material = (struct HGPMaterial *)OFFSET(material_header->material_offsets[i]);
+		materials[i].red = stream.readFloat();
+		materials[i].green = stream.readFloat();
+		materials[i].blue = stream.readFloat();
 
-		materials[i].red = material->red;
-		materials[i].green = material->green;
-		materials[i].blue = material->blue;
-		materials[i].alpha = material->alpha;
+		stream.seek(5 * sizeof(uint32_t), SEEK_CUR);
 
-		if (material->texture_idx != -1 && material->texture_idx & 0x8000)
-			materials[i].texture_idx = material->texture_idx & 0x7FFF;
+		materials[i].alpha = stream.readFloat();
+
+		int16_t texture_idx = stream.readInt16();
+
+		if (texture_idx != -1 && texture_idx & 0x8000)
+			materials[i].texture_idx = texture_idx & 0x7FFF;
 		else
-			materials[i].texture_idx = material->texture_idx;
+			materials[i].texture_idx = texture_idx;
 	}
 
 	this->setMaterials(materials);
 
+	/* Read mesh tree. */
+	stream.seek(BODY_OFFSET + model_header.mesh_tree_offset, SEEK_SET);
+	struct HGPMeshTreeNode *tree_nodes = new struct HGPMeshTreeNode[model_header.num_meshes];
+
+	for (int i = 0; i < model_header.num_meshes; i++) {
+		tree_nodes[i].transformation_mtx = readMatrix(stream);
+
+		stream.seek(4 * sizeof(float), SEEK_CUR);
+
+		tree_nodes[i].parent_idx = stream.readInt8();
+
+		stream.seek(3 * sizeof(uint8_t), SEEK_CUR);
+		stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
+	}
+
 	/* Use the mesh tree to apply hierarchical transformations. */
-	struct HGPMeshTreeNode *tree_nodes = (struct HGPMeshTreeNode *)OFFSET(model_header->mesh_tree_offset);
-	Matrix *transform_matrices = (Matrix *)OFFSET(model_header->transformations_offset);
-	Matrix *static_transform_matrices = (Matrix *)OFFSET(model_header->static_transformations_offset);
+	std::vector<Matrix> modelTransforms(model_header.num_meshes);
 
-	std::vector<Matrix> modelTransforms(model_header->num_meshes);
+	stream.seek(BODY_OFFSET + model_header.transformations_offset, SEEK_SET);
 
-	for (int i = 0; i < model_header->num_meshes; i++) {
-		modelTransforms[i] = transform_matrices[i];
+	for (int i = 0; i < model_header.num_meshes; i++) {
+		int offset = i * 16 * sizeof(float);
+		Matrix transformMtx = readMatrix(stream);
+
+		modelTransforms[i] = transformMtx;
 
 		if (tree_nodes[i].parent_idx != -1)
 			modelTransforms[i] = modelTransforms[i] * modelTransforms[tree_nodes[i].parent_idx];
 	}
 
+	/* Read the vertex information header. */
+	stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
+	struct HGPVertexHeader vertex_header;
+
+	vertex_header.num_vertex_blocks = stream.readUint32();
+
+	stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
+
+	vertex_header.blocks = new struct HGPVertexBlock[vertex_header.num_vertex_blocks];
+
+	for (int i = 0; i < vertex_header.num_vertex_blocks; i++) {
+		vertex_header.blocks[i].size = stream.readUint32();
+		vertex_header.blocks[i].id = stream.readUint32();
+		vertex_header.blocks[i].offset= stream.readUint32();
+	}
+
 	/* Read vertex blocks into individual, indexed buffers. */
-	struct HGPVertexHeader *vertex_header = (struct HGPVertexHeader *)OFFSET(file_header->vertex_header_offset);
+	std::vector<Model::VertexBuffer> vertexBuffers(vertex_header.num_vertex_blocks);
 
-	std::vector<Model::VertexBuffer> vertexBuffers(vertex_header->num_vertex_blocks);
+	for (int i = 0; i < vertex_header.num_vertex_blocks; i++) {
+		vertexBuffers[i].size = vertex_header.blocks[i].size;
 
-	for (int i = 0; i < vertex_header->num_vertex_blocks; i++) {
-		vertexBuffers[i].size = vertex_header->blocks[i].size;
+		stream.seek(BODY_OFFSET + file_header.vertex_header_offset + vertex_header.blocks[i].offset, SEEK_SET);
+		vertexBuffers[i].data = new uint8_t[vertexBuffers[i].size];
 
-		vertexBuffers[i].data = new char[vertexBuffers[i].size];
-		memcpy(vertexBuffers[i].data, OFFSET(file_header->vertex_header_offset + vertex_header->blocks[i].offset), vertexBuffers[i].size);
+		for (int j = 0; j < vertexBuffers[i].size; j++)
+			vertexBuffers[i].data[j] = stream.readUint8();
+	}
+
+	/* Read in information necessary for processing layers and meshes. */
+	stream.seek(BODY_OFFSET + model_header.static_transformation_offset, SEEK_SET);
+	Matrix static_transform_matrix = readMatrix(stream);
+
+	stream.seek(BODY_OFFSET + model_header.layer_header_offset, SEEK_SET);
+	struct HGPLayerHeader *layer_headers = new struct HGPLayerHeader[model_header.layer_header_offset];
+
+	for (int i = 0; i < model_header.num_layers; i++) {
+		layer_headers[i].name_offset = stream.readUint32();
+
+		for (int j = 0; j < 4; j++)
+			layer_headers[i].mesh_header_list_offsets[j] = stream.readUint32();
 	}
 
 	/* Break the layers down into meshes and add those to the model's list. */
-	struct HGPLayerHeader *layer_headers = (struct HGPLayerHeader *)OFFSET(model_header->layer_header_offset);
-
-	for (int i = 0; i < model_header->num_layers; i++) {
+	for (int i = 0; i < model_header.num_layers; i++) {
 		/* XXX: Use model configuration to specify layers by quality. */
 		if (i != 0 && i != 2)
 			continue;
@@ -329,18 +519,20 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 				continue;
 
 			if (j % 2 == 0) {
-				uint32_t *mesh_header_offsets = (uint32_t *)OFFSET(layer_headers[i].mesh_header_list_offsets[j]);
+				stream.seek(BODY_OFFSET + layer_headers[i].mesh_header_list_offsets[j], SEEK_SET);
+				uint32_t *mesh_header_offsets = new uint32_t[model_header.num_meshes];
 
-				for (int k = 0; k < model_header->num_meshes; k++)
-					this->processMesh(body, mesh_header_offsets[k], modelTransforms[k], vertexBuffers);
+				for (int k = 0; k < model_header.num_meshes; k++)
+					mesh_header_offsets[k] = stream.readUint32();
+
+				for (int k = 0; k < model_header.num_meshes; k++)
+					this->processMesh(stream, mesh_header_offsets[k], modelTransforms[k], vertexBuffers);
 			}
 			else
-				this->processMesh(body, layer_headers[i].mesh_header_list_offsets[j], static_transform_matrices[0] * modelTransforms[0], vertexBuffers);
+				this->processMesh(stream, layer_headers[i].mesh_header_list_offsets[j], static_transform_matrix * modelTransforms[0], vertexBuffers);
 		}
 	}
 
 	/* We have to do this after processing meshes, as stride is stored per-mesh. */
 	this->setVertexBuffers(vertexBuffers);
-
-	free(buf);
 }

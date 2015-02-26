@@ -26,7 +26,7 @@ class HGPModel : public Model {
 		HGPModel(Stream &stream);
 
 	private:
-		void processMesh(char *body, uint32_t mesh_header_offset, Matrix transform, std::vector<Model::VertexBuffer> &vertexBuffers);
+		void processMesh(Stream &stream, uint32_t mesh_header_offset, Matrix transform, std::vector<Model::VertexBuffer> &vertexBuffers);
 };
 
 #endif
