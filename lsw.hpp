@@ -76,7 +76,7 @@ namespace Mortar {
 
 			uint32_t unk_0010[3];
 
-			uint32_t vertex_buffer_idx;
+			uint32_t vertex_block_idx;
 
 			uint32_t unk_0020[4];
 
