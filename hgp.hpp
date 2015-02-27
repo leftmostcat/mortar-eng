@@ -17,16 +17,12 @@
 #ifndef MORTAR_HGP_H
 #define MORTAR_HGP_H
 
-#include <stdint.h>
 #include "model.hpp"
 #include "stream.hpp"
 
 class HGPModel : public Model {
 	public:
 		HGPModel(Stream &stream);
-
-	private:
-		void processMesh(Stream &stream, uint32_t mesh_header_offset, glm::mat4 transform, std::vector<Model::VertexBuffer> &vertexBuffers);
 };
 
 #endif
