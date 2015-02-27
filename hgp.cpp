@@ -17,8 +17,11 @@
 #include <stdio.h>
 #include "hgp.hpp"
 #include "dds.hpp"
+#include "lsw.hpp"
 #include "matrix.hpp"
 #include "memorystream.hpp"
+
+using namespace Mortar;
 
 struct HGPHeader {
 	uint32_t unk_0000;
@@ -72,102 +75,6 @@ struct HGPModelHeader {
 	uint32_t unk_0080[13];
 };
 
-struct HGPVertexBlock {
-	uint32_t size;
-	uint32_t id;
-	uint32_t offset;
-};
-
-struct HGPVertexHeader {
-	uint32_t num_vertex_blocks;
-
-	uint32_t unk_0004[3];
-
-	struct HGPVertexBlock *blocks;
-};
-
-struct HGPTextureBlockHeader {
-	uint32_t offset;
-
-	uint32_t unk_0004[4];
-};
-
-struct HGPTextureHeader {
-	uint32_t texture_block_offset;
-	uint32_t texture_block_size;
-	uint32_t num_textures;
-
-	uint32_t unk_000C[4];
-
-	struct HGPTextureBlockHeader *texture_block_headers;
-};
-
-struct HGPLayerHeader {
-	uint32_t name_offset;
-	uint32_t mesh_header_list_offsets[4];
-};
-
-struct HGPMeshHeader {
-	uint32_t unk_0000[3];
-
-	uint32_t mesh_offset;
-
-	uint32_t unk_0010;
-};
-
-struct HGPMesh {
-	uint32_t next_offset;
-
-	uint32_t unk_0004;
-
-	uint32_t material_idx;
-	uint32_t vertex_type;
-
-	uint32_t unk_0010[3];
-
-	uint32_t vertex_buffer_idx;
-
-	uint32_t unk_0020[4];
-
-	uint32_t chunk_offset;
-
-	uint32_t unk_0034[4];
-};
-
-struct HGPChunk {
-	uint32_t next_offset;
-	uint32_t primitive_type;
-
-	uint16_t num_elements;
-	uint16_t unk_000A;
-
-	uint32_t elements_offset;
-
-	uint32_t unk_0010[16];
-};
-
-struct HGPMaterialHeader {
-	uint32_t num_materials;
-	uint32_t *material_offsets;
-};
-
-struct HGPMaterial {
-	uint32_t unk_0000[21];
-
-	float red;
-	float green;
-	float blue;
-
-	uint32_t unk_0060[5];
-
-	uint32_t alpha;
-
-	int16_t texture_idx;
-	uint16_t unk_007A;
-
-	uint32_t unk_007C[14];
-};
-
 struct HGPMeshTreeNode {
 	glm::mat4 transformation_mtx;
 
@@ -179,118 +86,7 @@ struct HGPMeshTreeNode {
 	uint32_t unk_0054[3];
 };
 
-const int BODY_OFFSET = 0x30;
-
-static struct HGPMesh readMeshInfo(Stream &stream, uint32_t mesh_offset) {
-	stream.seek(BODY_OFFSET + mesh_offset, SEEK_SET);
-	struct HGPMesh mesh;
-
-	mesh.next_offset = stream.readUint32();
-
-	stream.seek(sizeof(uint32_t), SEEK_CUR);
-
-	mesh.material_idx = stream.readUint32();
-	mesh.vertex_type = stream.readUint32();
-
-	stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
-
-	mesh.vertex_buffer_idx = stream.readUint32();
-
-	stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
-
-	mesh.chunk_offset = stream.readUint32();
-
-	return mesh;
-}
-
-static struct HGPChunk readChunkInfo(Stream &stream, uint32_t chunk_offset) {
-	stream.seek(BODY_OFFSET + chunk_offset, SEEK_SET);
-	struct HGPChunk chunk;
-
-	chunk.next_offset = stream.readUint32();
-	chunk.primitive_type = stream.readUint32();
-
-	chunk.num_elements = stream.readUint16();
-
-	stream.seek(sizeof(uint16_t), SEEK_CUR);
-
-	chunk.elements_offset = stream.readUint32();
-
-	return chunk;
-}
-
-void HGPModel::processMesh(Stream &stream, uint32_t mesh_header_offset, glm::mat4 transform, std::vector<Model::VertexBuffer> &vertexBuffers) {
-	if (!mesh_header_offset)
-		return;
-
-	stream.seek(BODY_OFFSET + mesh_header_offset, SEEK_SET);
-	struct HGPMeshHeader mesh_header;
-
-	stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
-
-	mesh_header.mesh_offset = stream.readUint32();
-
-	if (!mesh_header.mesh_offset)
-		return;
-
-	struct HGPMesh mesh = readMeshInfo(stream, mesh_header.mesh_offset);
-	bool processNextMesh;
-
-	do {
-		int stride = 0;
-
-		/* Vertex stride is specified per-mesh. */
-		switch (mesh.vertex_type) {
-			case 89:
-				stride = 36;
-				break;
-			case 93:
-				stride = 56;
-				break;
-			default:
-				fprintf(stderr, "Unknown vertex type %d\n", mesh.vertex_type);
-		}
-
-		int vertex_buffer_idx = mesh.vertex_buffer_idx - 1;
-
-		vertexBuffers[vertex_buffer_idx].stride = stride;
-
-		struct HGPChunk chunk_data = readChunkInfo(stream, mesh.chunk_offset);
-		bool processNextChunk;
-
-		do {
-			Model::Chunk chunk = Model::Chunk();
-
-			chunk.vertex_buffer_idx = vertex_buffer_idx;
-			chunk.material_idx = mesh.material_idx;
-			chunk.primitive_type = chunk_data.primitive_type;
-			chunk.num_elements = chunk_data.num_elements;
-
-			chunk.transformation = transform;
-
-			chunk.element_buffer = new uint16_t[chunk_data.num_elements];
-
-			stream.seek(BODY_OFFSET + chunk_data.elements_offset, SEEK_SET);
-
-			for (int i = 0; i < chunk_data.num_elements; i++)
-				chunk.element_buffer[i] = stream.readUint16();
-
-			this->addChunk(chunk);
-
-			processNextChunk = false;
-			if (chunk_data.next_offset) {
-				chunk_data = readChunkInfo(stream, chunk_data.next_offset);
-				processNextChunk = true;
-			}
-		} while (processNextChunk);
-
-		processNextMesh = false;
-		if (mesh.next_offset) {
-			mesh = readMeshInfo(stream, mesh.next_offset);
-			processNextMesh = true;
-		}
-	} while (processNextMesh);
-}
+const uint32_t BODY_OFFSET = 0x30;
 
 HGPModel::HGPModel(Stream &stream) : Model() {
 	/* Read in HGP header at the top of the file. */
@@ -342,14 +138,14 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 
 	/* Read texture block information. */
 	stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
-	struct HGPTextureHeader texture_header;
+	struct LSW::TextureHeader texture_header;
 
 	texture_header.texture_block_offset = stream.readUint32();
 	texture_header.texture_block_size = stream.readUint32();
 	texture_header.num_textures = stream.readUint32();
 
 	stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
-	texture_header.texture_block_headers = new struct HGPTextureBlockHeader[texture_header.num_textures];
+	texture_header.texture_block_headers = new struct LSW::TextureBlockHeader[texture_header.num_textures];
 
 	for (int i = 0; i < texture_header.num_textures; i++) {
 		texture_header.texture_block_headers[i].offset = stream.readUint32();
@@ -384,7 +180,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	this->setTextures(textures);
 
 	stream.seek(BODY_OFFSET + file_header.material_header_offset, SEEK_SET);
-	struct HGPMaterialHeader material_header;
+	struct LSW::MaterialHeader material_header;
 
 	material_header.num_materials = stream.readUint32();
 
@@ -451,13 +247,13 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 
 	/* Read the vertex information header. */
 	stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
-	struct HGPVertexHeader vertex_header;
+	struct LSW::VertexHeader vertex_header;
 
 	vertex_header.num_vertex_blocks = stream.readUint32();
 
 	stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
 
-	vertex_header.blocks = new struct HGPVertexBlock[vertex_header.num_vertex_blocks];
+	vertex_header.blocks = new struct LSW::VertexBlock[vertex_header.num_vertex_blocks];
 
 	for (int i = 0; i < vertex_header.num_vertex_blocks; i++) {
 		vertex_header.blocks[i].size = stream.readUint32();
@@ -483,7 +279,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	glm::mat4 static_transform_matrix = readMatrix(stream);
 
 	stream.seek(BODY_OFFSET + model_header.layer_header_offset, SEEK_SET);
-	struct HGPLayerHeader *layer_headers = new struct HGPLayerHeader[model_header.layer_header_offset];
+	struct LSW::LayerHeader *layer_headers = new struct LSW::LayerHeader[model_header.layer_header_offset];
 
 	for (int i = 0; i < model_header.num_layers; i++) {
 		layer_headers[i].name_offset = stream.readUint32();
@@ -510,10 +306,10 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 					mesh_header_offsets[k] = stream.readUint32();
 
 				for (int k = 0; k < model_header.num_meshes; k++)
-					this->processMesh(stream, mesh_header_offsets[k], modelTransforms[k], vertexBuffers);
+					LSW::processMesh(stream, BODY_OFFSET, mesh_header_offsets[k], modelTransforms[k], this, vertexBuffers);
 			}
 			else
-				this->processMesh(stream, layer_headers[i].mesh_header_list_offsets[j], static_transform_matrix * modelTransforms[0], vertexBuffers);
+				LSW::processMesh(stream, BODY_OFFSET, layer_headers[i].mesh_header_list_offsets[j], static_transform_matrix * modelTransforms[0], this, vertexBuffers);
 		}
 	}
 
