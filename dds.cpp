@@ -98,7 +98,7 @@ DDSTexture::DDSTexture(Stream &stream) : Texture() {
 				for (int i = 0; i < file_header.num_levels; i++) {
 					levels[i].size = (((file_header.width >> i) + 3) / 4) * (((file_header.height >> i) + 3) / 4) * 16;
 
-					levels[i].data = new char[levels[i].size];
+					levels[i].data = new uint8_t[levels[i].size];
 
 					for (int j = 0; j < levels[i].size; j++)
 						levels[i].data[j] = stream.readUint8();

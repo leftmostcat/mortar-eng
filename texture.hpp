@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <GL/gl.h>
+#include <stdint.h>
 
 class Texture {
 	public:
@@ -27,7 +28,7 @@ class Texture {
 		class Level {
 			public:
 				int size;
-				char *data;
+				uint8_t *data;
 		};
 
 		bool compressed;
