@@ -49,13 +49,23 @@ class Model {
 		class Chunk {
 			public:
 				int primitive_type;
-				int vertex_buffer_idx;
-				int material_idx;
-
-				glm::mat4 transformation;
 
 				int num_elements;
 				uint16_t *element_buffer;
+		};
+
+		class Mesh {
+			public:
+				int material_idx;
+				int vertex_buffer_idx;
+
+				std::vector<Chunk> chunks;
+		};
+
+		class Object {
+			public:
+				std::vector<Mesh> meshes;
+				glm::mat4 transformation;
 		};
 
 		void setVertexBuffers(std::vector<Model::VertexBuffer> vertexBuffers);
@@ -69,15 +79,15 @@ class Model {
 		void setMaterials(std::vector<Model::Material> materials);
 		Model::Material getMaterial(int i);
 
-		void addChunk(Model::Chunk chunk);
-		Model::Chunk getChunk(int i);
-		int getChunkCount();
+		void setObjects(std::vector<Object> objects);
+		Object &getObject(int i);
+		int getObjectCount();
 
 	private:
 		std::vector<Model::VertexBuffer> vertexBuffers;
 		std::vector<Texture> textures;
 		std::vector<Model::Material> materials;
-		std::vector<Model::Chunk> chunks;
+		std::vector<Object> objects;
 };
 
 #endif

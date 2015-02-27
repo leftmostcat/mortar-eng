@@ -119,7 +119,7 @@ namespace Mortar {
 			uint32_t unk_007C[14];
 		};
 
-		void processMesh(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, glm::mat4 transform, Model *model, std::vector<Model::VertexBuffer> &vertexBuffers);
+		std::vector<Model::Mesh> processMesh(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers);
 	}
 }
 

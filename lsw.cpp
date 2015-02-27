@@ -56,9 +56,11 @@ static struct Chunk readChunkInfo(Stream &stream, const uint32_t body_offset, ui
 	return chunk;
 }
 
-void Mortar::LSW::processMesh(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, glm::mat4 transform, Model *model, std::vector<Model::VertexBuffer> &vertexBuffers) {
+std::vector<Model::Mesh> Mortar::LSW::processMesh(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers) {
+	std::vector<Model::Mesh> meshes;
+
 	if (!mesh_header_offset)
-		return;
+		return meshes;
 
 	stream.seek(body_offset + mesh_header_offset, SEEK_SET);
 	struct MeshHeader mesh_header;
@@ -68,16 +70,18 @@ void Mortar::LSW::processMesh(Stream &stream, const uint32_t body_offset, uint32
 	mesh_header.mesh_offset = stream.readUint32();
 
 	if (!mesh_header.mesh_offset)
-		return;
+		return meshes;
 
-	struct Mesh mesh = readMeshInfo(stream, body_offset, mesh_header.mesh_offset);
+	struct Mesh mesh_data = readMeshInfo(stream, body_offset, mesh_header.mesh_offset);
 	bool processNextMesh;
 
 	do {
+		Model::Mesh mesh;
+
 		int stride = 0;
 
 		/* Vertex stride is specified per-mesh. */
-		switch (mesh.vertex_type) {
+		switch (mesh_data.vertex_type) {
 			case 89:
 				stride = 36;
 				break;
@@ -85,25 +89,22 @@ void Mortar::LSW::processMesh(Stream &stream, const uint32_t body_offset, uint32
 				stride = 56;
 				break;
 			default:
-				fprintf(stderr, "Unknown vertex type %d\n", mesh.vertex_type);
+				fprintf(stderr, "Unknown vertex type %d\n", mesh_data.vertex_type);
 		}
 
-		int vertex_block_idx = mesh.vertex_block_idx - 1;
+		mesh.vertex_buffer_idx = mesh_data.vertex_block_idx - 1;
+		mesh.material_idx = mesh_data.material_idx;
 
-		vertexBuffers[vertex_block_idx].stride = stride;
+		vertexBuffers[mesh.vertex_buffer_idx].stride = stride;
 
-		struct Chunk chunk_data = readChunkInfo(stream, body_offset, mesh.chunk_offset);
+		struct Chunk chunk_data = readChunkInfo(stream, body_offset, mesh_data.chunk_offset);
 		bool processNextChunk;
 
 		do {
-			Model::Chunk chunk = Model::Chunk();
+			Model::Chunk chunk;
 
-			chunk.vertex_buffer_idx = vertex_block_idx;
-			chunk.material_idx = mesh.material_idx;
 			chunk.primitive_type = chunk_data.primitive_type;
 			chunk.num_elements = chunk_data.num_elements;
-
-			chunk.transformation = transform;
 
 			chunk.element_buffer = new uint16_t[chunk_data.num_elements];
 
@@ -112,9 +113,9 @@ void Mortar::LSW::processMesh(Stream &stream, const uint32_t body_offset, uint32
 			for (int i = 0; i < chunk_data.num_elements; i++)
 				chunk.element_buffer[i] = stream.readUint16();
 
-			model->addChunk(chunk);
-
 			processNextChunk = false;
+			mesh.chunks.push_back(chunk);
+
 			if (chunk_data.next_offset) {
 				chunk_data = readChunkInfo(stream, body_offset, chunk_data.next_offset);
 				processNextChunk = true;
@@ -122,9 +123,13 @@ void Mortar::LSW::processMesh(Stream &stream, const uint32_t body_offset, uint32
 		} while (processNextChunk);
 
 		processNextMesh = false;
-		if (mesh.next_offset) {
-			mesh = readMeshInfo(stream, body_offset, mesh.next_offset);
+		meshes.push_back(mesh);
+
+		if (mesh_data.next_offset) {
+			mesh_data = readMeshInfo(stream, body_offset, mesh_data.next_offset);
 			processNextMesh = true;
 		}
 	} while (processNextMesh);
+
+	return meshes;
 }

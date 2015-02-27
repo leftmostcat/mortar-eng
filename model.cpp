@@ -49,14 +49,14 @@ Model::Material Model::getMaterial(int i) {
 	return this->materials.at(i);
 }
 
-void Model::addChunk(Model::Chunk chunk) {
-	this->chunks.push_back(chunk);
+void Model::setObjects(std::vector<Model::Object> objects) {
+	this->objects = objects;
 }
 
-Model::Chunk Model::getChunk(int i) {
-	return this->chunks.at(i);
+Model::Object &Model::getObject(int i) {
+	return this->objects[i];
 }
 
-int Model::getChunkCount() {
-	return this->chunks.size();
+int Model::getObjectCount() {
+	return this->objects.size();
 }

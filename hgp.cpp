@@ -288,6 +288,8 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 			layer_headers[i].mesh_header_list_offsets[j] = stream.readUint32();
 	}
 
+	std::vector<Model::Object> objects;
+
 	/* Break the layers down into meshes and add those to the model's list. */
 	for (int i = 0; i < model_header.num_layers; i++) {
 		/* XXX: Use model configuration to specify layers by quality. */
@@ -305,13 +307,27 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 				for (int k = 0; k < model_header.num_meshes; k++)
 					mesh_header_offsets[k] = stream.readUint32();
 
-				for (int k = 0; k < model_header.num_meshes; k++)
-					LSW::processMesh(stream, BODY_OFFSET, mesh_header_offsets[k], modelTransforms[k], this, vertexBuffers);
+				for (int k = 0; k < model_header.num_meshes; k++) {
+					Model::Object object;
+
+					object.meshes = LSW::processMesh(stream, BODY_OFFSET, mesh_header_offsets[k], vertexBuffers);
+					object.transformation = modelTransforms[k];
+
+					objects.push_back(object);
+				}
 			}
-			else
-				LSW::processMesh(stream, BODY_OFFSET, layer_headers[i].mesh_header_list_offsets[j], static_transform_matrix * modelTransforms[0], this, vertexBuffers);
+			else {
+				Model::Object object;
+
+				object.meshes = LSW::processMesh(stream, BODY_OFFSET, layer_headers[i].mesh_header_list_offsets[j], vertexBuffers);
+				object.transformation = static_transform_matrix * modelTransforms[0];
+
+				objects.push_back(object);
+			}
 		}
 	}
+
+	this->setObjects(objects);
 
 	/* We have to do this after processing meshes, as stride is stored per-mesh. */
 	this->setVertexBuffers(vertexBuffers);
