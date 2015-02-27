@@ -87,23 +87,27 @@ GLModel::GLModel(Model model, GLuint shaderProgram) {
 	for (int i = 0; i < model.getObjectCount(); i++) {
 		Model::Object object = model.getObject(i);
 
-		for (int j = 0; j < object.mesh.chunks.size(); j++) {
-			Model::Chunk chunk = object.mesh.chunks[j];
-			RenderObject renderObject;
+		for (int j = 0; j < object.meshes.size(); j++) {
+			Model::Mesh mesh = object.meshes[j];
 
-			glGenBuffers(1, &renderObject.elementBuffer);
+			for (int k = 0; k < mesh.chunks.size(); k++) {
+				Model::Chunk chunk = mesh.chunks[k];
+				RenderObject renderObject;
 
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderObject.elementBuffer);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * chunk.num_elements, chunk.element_buffer, GL_STATIC_DRAW);
+				glGenBuffers(1, &renderObject.elementBuffer);
 
-			renderObject.vertexArray = this->vertexArrayIds[object.mesh.vertex_buffer_idx];
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderObject.elementBuffer);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * chunk.num_elements, chunk.element_buffer, GL_STATIC_DRAW);
 
-			renderObject.primitiveType = getGLPrimitiveType(chunk.primitive_type);
-			renderObject.elementCount = chunk.num_elements;
-			renderObject.transformation = object.transformation;
-			renderObject.material = model.getMaterial(object.mesh.material_idx);
+				renderObject.vertexArray = this->vertexArrayIds[mesh.vertex_buffer_idx];
 
-			this->renderObjects.push_back(renderObject);
+				renderObject.primitiveType = getGLPrimitiveType(chunk.primitive_type);
+				renderObject.elementCount = chunk.num_elements;
+				renderObject.transformation = object.transformation;
+				renderObject.material = model.getMaterial(mesh.material_idx);
+
+				this->renderObjects.push_back(renderObject);
+			}
 		}
 	}
 }
