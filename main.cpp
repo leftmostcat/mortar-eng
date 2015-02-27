@@ -19,9 +19,11 @@
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include "filestream.hpp"
 #include "hgp.hpp"
+#include "nup.hpp"
 #include "glmodel.hpp"
 #include "matrix.hpp"
 
@@ -67,7 +69,7 @@ const GLchar *fragment_source = GLSL(
 
 int main(int argc, char **argv) {
 	if (argc < 2 || access(argv[1], R_OK) != 0) {
-		fprintf(stdout, "%s: please specify an HGP file to open\n", argv[0]);
+		fprintf(stdout, "%s: please specify a model file to open\n", argv[0]);
 		return -1;
 	}
 
@@ -112,11 +114,16 @@ int main(int argc, char **argv) {
 	GLint model_mtx_unif = glGetUniformLocation(shader_program, "modelMtx");
 	GLint mesh_mtx_unif = glGetUniformLocation(shader_program, "meshTransformMtx");
 
-	/* Read in the specified HGP model. */
+	/* Read in the specified model. */
 	FileStream fs = FileStream(argv[1], "rb");
-	Model hgp = HGPModel(fs);
+	Model model;
 
-	GLModel glModel = GLModel(hgp, shader_program);
+	if (strcasestr(argv[1], ".hgp"))
+		model = HGPModel(fs);
+	else if (strcasestr(argv[1], ".nup"))
+		model = NUPModel(fs);
+
+	GLModel glModel = GLModel(model, shader_program);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -132,8 +139,8 @@ int main(int argc, char **argv) {
 	);
 	glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
 
-	glm::mat4 model = glm::mat4();
-	glUniformMatrix4fv(model_mtx_unif, 1, GL_FALSE, glm::value_ptr(model));
+	glm::mat4 modelMatrix = glm::mat4();
+	glUniformMatrix4fv(model_mtx_unif, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
 	/* Main loop. */
 	while (!glfwWindowShouldClose(window)) {
