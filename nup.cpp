@@ -130,7 +130,7 @@ NUPModel::NUPModel(Stream &stream) : Model() {
 
 		MemoryStream ms = MemoryStream(texture_data, size);
 
-		textures[i] = DDSTexture::DDSTexture(ms);
+		textures[i] = DDSTexture(ms);
 	}
 
 	this->setTextures(textures);
