@@ -236,7 +236,6 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	stream.seek(BODY_OFFSET + model_header.transformations_offset, SEEK_SET);
 
 	for (int i = 0; i < model_header.num_meshes; i++) {
-		int offset = i * 16 * sizeof(float);
 		glm::mat4 transformMtx = readMatrix(stream);
 
 		modelTransforms[i] = transformMtx;
@@ -245,7 +244,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 			modelTransforms[i] = modelTransforms[i] * modelTransforms[tree_nodes[i].parent_idx];
 	}
 
-	delete tree_nodes;
+	delete [] tree_nodes;
 
 	/* Read the vertex information header. */
 	stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
@@ -318,7 +317,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 					objects.push_back(object);
 				}
 
-				delete mesh_header_offsets;
+				delete [] mesh_header_offsets;
 			}
 			else {
 				Model::Object object;
@@ -331,7 +330,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 		}
 	}
 
-	delete layer_headers;
+	delete [] layer_headers;
 
 	this->setObjects(objects);
 
