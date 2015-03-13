@@ -22,6 +22,8 @@ static struct Mesh readMeshInfo(Stream &stream, const uint32_t body_offset, uint
 	stream.seek(body_offset + mesh_offset, SEEK_SET);
 	struct Mesh mesh;
 
+	memset(&mesh, 0, sizeof(struct Mesh));
+
 	mesh.next_offset = stream.readUint32();
 
 	stream.seek(sizeof(uint32_t), SEEK_CUR);
@@ -43,6 +45,8 @@ static struct Mesh readMeshInfo(Stream &stream, const uint32_t body_offset, uint
 static struct Chunk readChunkInfo(Stream &stream, const uint32_t body_offset, uint32_t chunk_offset) {
 	stream.seek(body_offset + chunk_offset, SEEK_SET);
 	struct Chunk chunk;
+
+	memset(&chunk, 0, sizeof(struct Chunk));
 
 	chunk.next_offset = stream.readUint32();
 	chunk.primitive_type = stream.readUint32();
