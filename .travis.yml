@@ -26,3 +26,19 @@ script:
 
 after_script:
         - popd
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "n7yIlZrM4O/ECtPgmWlUZr4PiqW8JqkhWF8yJCrV+gzOttXajFVfoNYVyG3mSPd74M8VNcEM8CACMKrGP30tqs71nDMv63CUi5JvE/jIgp931bwJM7FnuWonLTK6GCO1SkWeT01OaakGSLMu0oxXq2oPbwQ0PkfKtkYCJpxwJN0="
+
+addons:
+  coverity_scan:
+    project:
+      name: "leftmostcat/mortar-eng"
+      description: "A reimplementation of the TT Games LEGO® game engine."
+    notification_email: leftmostcat@gmail.com
+    build_command_prepend: "cd build && cmake .."
+    build_command: "make"
+    branch_pattern: coverity_scan
