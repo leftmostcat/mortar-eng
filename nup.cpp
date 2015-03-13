@@ -213,6 +213,8 @@ NUPModel::NUPModel(Stream &stream) : Model() {
 		meshes[i] = LSW::processMesh(stream, BODY_OFFSET, mesh_header_offsets[i], vertexBuffers);
 	}
 
+	delete mesh_header_offsets;
+
 	/* We have to do this after processing meshes, as stride is stored per-mesh. */
 	this->setVertexBuffers(vertexBuffers);
 
@@ -244,6 +246,8 @@ NUPModel::NUPModel(Stream &stream) : Model() {
 
 		objects[i].meshes = meshes[objects_data[i].mesh_idx];
 	}
+
+	delete objects_data;
 
 	this->setObjects(objects);
 }

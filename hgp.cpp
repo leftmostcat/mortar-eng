@@ -245,6 +245,8 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 			modelTransforms[i] = modelTransforms[i] * modelTransforms[tree_nodes[i].parent_idx];
 	}
 
+	delete tree_nodes;
+
 	/* Read the vertex information header. */
 	stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
 	struct LSW::VertexHeader vertex_header;
@@ -315,6 +317,8 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 
 					objects.push_back(object);
 				}
+
+				delete mesh_header_offsets;
 			}
 			else {
 				Model::Object object;
@@ -326,6 +330,8 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 			}
 		}
 	}
+
+	delete layer_headers;
 
 	this->setObjects(objects);
 
