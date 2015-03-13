@@ -37,8 +37,7 @@ addons:
   coverity_scan:
     project:
       name: "leftmostcat/mortar-eng"
-      description: "A reimplementation of the TT Games LEGO® game engine."
     notification_email: leftmostcat@gmail.com
-    build_command_prepend: "cd build && cmake .."
+    build_command_prepend: "cd build && make clean"
     build_command: "make"
     branch_pattern: coverity_scan
