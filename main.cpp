@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -35,7 +35,6 @@
 const GLchar *vertex_source = GLSL(
 	uniform mat4 projectionMtx;
 	uniform mat4 viewMtx;
-	uniform mat4 modelMtx;
 	uniform mat4 meshTransformMtx;
 
 	in vec3 position;
@@ -46,7 +45,7 @@ const GLchar *vertex_source = GLSL(
 	void main()
 	{
 		fragTexCoord = texCoord;
-		gl_Position = projectionMtx * viewMtx * modelMtx * meshTransformMtx * vec4(position, 1.0);
+		gl_Position = projectionMtx * viewMtx * meshTransformMtx * vec4(position, 1.0);
 	}
 );
 
@@ -111,7 +110,6 @@ int main(int argc, char **argv) {
 
 	GLint projection_mtx_unif = glGetUniformLocation(shader_program, "projectionMtx");
 	GLint view_mtx_unif = glGetUniformLocation(shader_program, "viewMtx");
-	GLint model_mtx_unif = glGetUniformLocation(shader_program, "modelMtx");
 	GLint mesh_mtx_unif = glGetUniformLocation(shader_program, "meshTransformMtx");
 
 	/* Read in the specified model. */
@@ -138,9 +136,6 @@ int main(int argc, char **argv) {
 		glm::vec3(0.0f, 1.0f, 0.0f)
 	);
 	glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
-
-	glm::mat4 modelMatrix = glm::mat4();
-	glUniformMatrix4fv(model_mtx_unif, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
 	/* Main loop. */
 	while (!glfwWindowShouldClose(window)) {
