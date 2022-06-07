@@ -1,8 +1,11 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 project(mortar)
 
-find_package(OpenGL)
-find_package(PkgConfig)
+set(OpenGL_GL_PREFERENCE GLVND)
+
+find_package(OpenGL REQUIRED)
+find_package(glm REQUIRED)
+find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(GLFW3 REQUIRED glfw3)
 
