@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include "filestream.hpp"
 #include "hgp.hpp"
+#include "log.hpp"
 #include "nup.hpp"
 #include "glmodel.hpp"
 #include "matrix.hpp"
@@ -66,18 +67,35 @@ const GLchar *fragment_source = GLSL(
 	}
 );
 
+void glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
+	DEBUG("gl error: %s", message);
+}
+
+void checkCompileStatus(GLuint shader) {
+	int success;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		char infoLog[512];
+		glGetShaderInfoLog(shader, 512, NULL, infoLog);
+		DEBUG("failed to compile shader: %s", infoLog);
+		exit(-1);
+	}
+}
+
 int main(int argc, char **argv) {
-	if (argc < 2) {
-		fprintf(stdout, "%s: please specify a model file to open\n", argv[0]);
+	if (argc < 2 || access(argv[1], R_OK) != 0) {
+		DEBUG("no model specified");
 		return -1;
 	}
 
 	if (SDL_Init(SDL_INIT_VIDEO)) {
+		DEBUG("failed to initialize SDL");
 		return -1;
 	}
 
 	SDL_Window *window = SDL_CreateWindow("Mortar Engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
 	if (!window) {
+		DEBUG("failed to create window");
 		SDL_Quit();
 		return -1;
 	}
@@ -87,20 +105,36 @@ int main(int argc, char **argv) {
 
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(glDebugCallback, nullptr);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, nullptr, GL_TRUE);
+
 	/* Compile and link shaders. */
 	GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex_shader, 1, &vertex_source, NULL);
 	glCompileShader(vertex_shader);
+	checkCompileStatus(vertex_shader);
 
 	GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragment_shader, 1, &fragment_source, NULL);
 	glCompileShader(fragment_shader);
+	checkCompileStatus(fragment_shader);
 
 	GLuint shader_program = glCreateProgram();
 	glAttachShader(shader_program, vertex_shader);
 	glAttachShader(shader_program, fragment_shader);
 	glBindFragDataLocation(shader_program, 0, "outColor");
 	glLinkProgram(shader_program);
+
+	int success;
+	glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+	if (!success) {
+		char infoLog[512];
+		glGetProgramInfoLog(shader_program, 512, NULL, infoLog);
+		DEBUG("failed to link shaders: %s", infoLog);
+		exit(-1);
+	}
 
 	glUseProgram(shader_program);
 
@@ -117,10 +151,14 @@ int main(int argc, char **argv) {
 	FileStream fs = FileStream(argv[1], "rb");
 	Model model;
 
-	if (strcasestr(argv[1], ".hgp"))
+	if (strcasestr(argv[1], ".hgp")) {
+		DEBUG("Loading HGP model %s", argv[1]);
 		model = HGPModel(fs);
-	else if (strcasestr(argv[1], ".nup"))
+	}
+	else if (strcasestr(argv[1], ".nup")) {
+		DEBUG("Loading NUP model %s", argv[1]);
 		model = NUPModel(fs);
+	}
 
 	GLModel glModel = GLModel(model, shader_program);
 

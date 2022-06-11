@@ -52,4 +52,18 @@ class GLModel {
 		std::vector<RenderObject> renderObjects;
 };
 
+inline const char *getErrorString(GLenum err) {
+	if (err == GL_INVALID_ENUM) {
+		return "GL_INVALID_ENUM";
+	} else if (err == GL_INVALID_VALUE) {
+		return "GL_INVALID_VALUE";
+	} else if (err == GL_INVALID_OPERATION) {
+		return "GL_INVALID_OPERATION";
+	} else if (err == GL_INVALID_FRAMEBUFFER_OPERATION) {
+		return "GL_INVALID_FRAMEBUFFER_OPERATION";
+	} else {
+		return "unknown error";
+	}
+}
+
 #endif

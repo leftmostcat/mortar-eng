@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "hgp.hpp"
 #include "dds.hpp"
+#include "log.hpp"
 #include "lsw.hpp"
 #include "matrix.hpp"
 #include "memorystream.hpp"

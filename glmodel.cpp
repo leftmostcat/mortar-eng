@@ -86,6 +86,8 @@ GLModel::GLModel(Model model, GLuint shaderProgram) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 
+	DEBUG("model has %d textures", model.getTextureCount());
+
 	/* Initialize an element buffer for each face. */
 	for (int i = 0; i < model.getObjectCount(); i++) {
 		Model::Object object = model.getObject(i);
@@ -113,6 +115,8 @@ GLModel::GLModel(Model model, GLuint shaderProgram) {
 			}
 		}
 	}
+
+	DEBUG("model has %d objects for render", model.getObjectCount());
 }
 
 GLModel::~GLModel() {
