@@ -49,6 +49,7 @@ GLModel::GLModel(Model model, GLuint shaderProgram) {
 	glGenBuffers(this->vertexBufferCount, this->vertexBufferIds);
 
 	GLint positionAttr = glGetAttribLocation(shaderProgram, "position");
+	GLint colorAttr = glGetAttribLocation(shaderProgram, "color");
 	GLint texcoordAttr = glGetAttribLocation(shaderProgram, "texCoord");
 
 	for (int i = 0; i < model.getVertexBufferCount(); i++) {
@@ -59,8 +60,11 @@ GLModel::GLModel(Model model, GLuint shaderProgram) {
 
 		glBufferData(GL_ARRAY_BUFFER, vertexBuffer.size, vertexBuffer.data, GL_STATIC_DRAW);
 
-		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, vertexBuffer.stride, NULL);
+		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, vertexBuffer.stride, (GLvoid *)0);
 		glEnableVertexAttribArray(positionAttr);
+
+		glVertexAttribPointer(colorAttr, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, vertexBuffer.stride, (GLvoid *)24);
+		glEnableVertexAttribArray(colorAttr);
 
 		glVertexAttribPointer(texcoordAttr, 2, GL_FLOAT, GL_FALSE, vertexBuffer.stride, (GLvoid *)28);
 		glEnableVertexAttribArray(texcoordAttr);

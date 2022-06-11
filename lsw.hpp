@@ -103,7 +103,11 @@ namespace Mortar {
 		};
 
 		struct Material {
-			uint32_t unk_0000[21];
+			uint32_t unk_0000[16];
+
+			uint32_t flags;
+
+			uint32_t unk_0044[4];
 
 			float red;
 			float green;

@@ -28,7 +28,7 @@
 #include "glmodel.hpp"
 #include "matrix.hpp"
 
-#define GLSL(src) "#version 130\n" #src
+#define GLSL(src) "#version 150\n" #src
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -38,24 +38,35 @@ const GLchar *vertex_source = GLSL(
 	uniform mat4 viewMtx;
 	uniform mat4 meshTransformMtx;
 
+	uniform vec4 materialColor;
+	uniform vec2 colorMultipliers;
+
 	in vec3 position;
+	in vec4 color;
 	in vec2 texCoord;
 
 	out vec2 fragTexCoord;
+	out vec4 fragColor;
 
 	void main()
 	{
 		fragTexCoord = texCoord;
+
+		vec3 adjustedVertColor = colorMultipliers.x * vec3(color.xyz);
+		vec3 adjustedMatColor = colorMultipliers.y * vec3(materialColor.xyz);
+
+		fragColor = vec4(materialColor.xyz, color.w);
+
 		gl_Position = projectionMtx * viewMtx * meshTransformMtx * vec4(position, 1.0);
 	}
 );
 
 const GLchar *fragment_source = GLSL(
-	uniform vec4 materialColor;
 	uniform sampler2D materialTex;
 	uniform int hasTexture;
 
 	in vec2 fragTexCoord;
+	in vec4 fragColor;
 
 	out vec4 outColor;
 
@@ -63,7 +74,9 @@ const GLchar *fragment_source = GLSL(
 	{
 		vec4 texColor = texture(materialTex, fragTexCoord);
 
-		outColor = mix(materialColor, texColor, hasTexture);
+		vec4 combinedColor = (texColor * fragColor) * 2;
+
+		outColor = mix(fragColor, combinedColor, hasTexture);
 	}
 );
 
@@ -102,6 +115,7 @@ int main(int argc, char **argv) {
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 
@@ -139,13 +153,15 @@ int main(int argc, char **argv) {
 	glUseProgram(shader_program);
 
 	/* Pull out attribute and uniform locations. */
-	GLint color_unif = glGetUniformLocation(shader_program, "materialColor");
 	GLint tex_unif = glGetUniformLocation(shader_program, "materialTex");
 	GLint has_tex_unif = glGetUniformLocation(shader_program, "hasTexture");
 
 	GLint projection_mtx_unif = glGetUniformLocation(shader_program, "projectionMtx");
 	GLint view_mtx_unif = glGetUniformLocation(shader_program, "viewMtx");
 	GLint mesh_mtx_unif = glGetUniformLocation(shader_program, "meshTransformMtx");
+
+	GLint color_unif = glGetUniformLocation(shader_program, "materialColor");
+	GLint multipliers_unif = glGetUniformLocation(shader_program, "colorMultipliers");
 
 	/* Read in the specified model. */
 	FileStream fs = FileStream(argv[1], "rb");
@@ -184,19 +200,34 @@ int main(int argc, char **argv) {
 		for (int i = 0; i < glModel.renderObjects.size(); i++) {
 			GLModel::RenderObject renderObject = glModel.renderObjects[i];
 
+			float adjustedColor[4];
+			memcpy(adjustedColor, renderObject.material.color, 4 * sizeof(float));
+
 			/* Ensure that fragment colors come from the right place. */
 			if (renderObject.material.texture_idx != -1) {
 				glUniform1i(tex_unif, renderObject.material.texture_idx);
 				glUniform1i(has_tex_unif, 1);
+
+				for (int i = 0; i < 3; i++) {
+					adjustedColor[i] *= 0.5f;
+				}
 			}
 			else {
 				glUniform1i(has_tex_unif, 0);
 			}
 
+			float colorMultipliers[2] = {0.0f, 0.5f};
+			if (renderObject.material.flags & Model::Material::USE_VERTEX_COLOR) {
+				colorMultipliers[0] = 1.0f;
+				colorMultipliers[1] = 0.0f;
+			}
+
+			glUniform2fv(multipliers_unif, 1, colorMultipliers);
+
 			glBindVertexArray(renderObject.vertexArray);
 
-			/* Set per-chunk material color and transformation matrix. */
-			glUniform4fv(color_unif, 1, renderObject.material.color);
+			/* Set per-face material color and transformation matrix. */
+			glUniform4fv(color_unif, 1, adjustedColor);
 			glUniformMatrix4fv(mesh_mtx_unif, 1, GL_TRUE, glm::value_ptr(renderObject.transformation));
 
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderObject.elementBuffer);

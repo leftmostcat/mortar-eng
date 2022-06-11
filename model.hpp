@@ -33,6 +33,10 @@ class Model {
 
 		class Material {
 			public:
+				enum {
+					USE_VERTEX_COLOR = 0b1,
+				};
+
 				union {
 					struct {
 						float red;
@@ -44,6 +48,8 @@ class Model {
 				};
 
 				int texture_idx;
+
+				int flags;
 		};
 
 		class Face {

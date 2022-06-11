@@ -195,14 +195,24 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	/* Initialize per-model materials, consisting of a color and index to an in-model texture. */
 	for (int i = 0; i < material_header.num_materials; i++) {
 		stream.seek(BODY_OFFSET + material_header.material_offsets[i], SEEK_SET);
+		int old = stream.tell();
 
-		stream.seek(21 * sizeof(uint32_t), SEEK_CUR);
+		stream.seek(0x40, SEEK_CUR);
+
+		uint32_t flags = stream.readUint32();
+
+		materials[i].flags = 0;
+		if (flags & 0x40000) {
+			materials[i].flags |= Model::Material::USE_VERTEX_COLOR;
+		}
+
+		stream.seek(0x10, SEEK_CUR);
 
 		materials[i].red = stream.readFloat();
 		materials[i].green = stream.readFloat();
 		materials[i].blue = stream.readFloat();
 
-		stream.seek(5 * sizeof(uint32_t), SEEK_CUR);
+		stream.seek(0x14, SEEK_CUR);
 
 		materials[i].alpha = stream.readFloat();
 
@@ -295,7 +305,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	/* Break the layers down into meshes and add those to the model's list. */
 	for (int i = 0; i < model_header.num_layers; i++) {
 		/* XXX: Use model configuration to specify layers by quality. */
-		if (i != 0 && i != 2)
+		if (i != 0 && i != 1)
 			continue;
 
 		for (int j = 0; j < 4; j++) {
