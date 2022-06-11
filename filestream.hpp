@@ -17,6 +17,7 @@
 #ifndef MORTAR_FILESTREAM_H
 #define MORTAR_FILESTREAM_H
 
+#include <SDL2/SDL_rwops.h>
 #include "stream.hpp"
 
 class FileStream : public Stream {
@@ -31,6 +32,7 @@ class FileStream : public Stream {
 		virtual void *read(size_t size);
 
 		FILE *fp;
+		SDL_RWops *rw;
 };
 
 #endif

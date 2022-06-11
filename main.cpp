@@ -17,7 +17,7 @@
 #define GL_GLEXT_PROTOTYPES
 
 #include <GL/gl.h>
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -67,24 +67,25 @@ const GLchar *fragment_source = GLSL(
 );
 
 int main(int argc, char **argv) {
-	if (argc < 2 || access(argv[1], R_OK) != 0) {
+	if (argc < 2) {
 		fprintf(stdout, "%s: please specify a model file to open\n", argv[0]);
 		return -1;
 	}
 
-	if (!glfwInit())
-		return -1;
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
-
-	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Mortar Engine", NULL, NULL);
-	if (!window) {
-		glfwTerminate();
+	if (SDL_Init(SDL_INIT_VIDEO)) {
 		return -1;
 	}
 
-	glfwMakeContextCurrent(window);
+	SDL_Window *window = SDL_CreateWindow("Mortar Engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+	if (!window) {
+		SDL_Quit();
+		return -1;
+	}
+
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
+	SDL_GLContext context = SDL_GL_CreateContext(window);
 
 	/* Compile and link shaders. */
 	GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -138,7 +139,8 @@ int main(int argc, char **argv) {
 	glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
 
 	/* Main loop. */
-	while (!glfwWindowShouldClose(window)) {
+	bool shouldClose = false;
+	while (!shouldClose) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		for (int i = 0; i < glModel.renderObjects.size(); i++) {
@@ -163,11 +165,13 @@ int main(int argc, char **argv) {
 			glDrawElements(renderObject.primitiveType, renderObject.elementCount, GL_UNSIGNED_SHORT, 0);
 		}
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		SDL_GL_SwapWindow(window);
 
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-			glfwSetWindowShouldClose(window, GL_TRUE);
+		SDL_Event event;
+		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_q)) {
+				shouldClose = true;
+			}
 		}
 	}
 
@@ -176,7 +180,7 @@ int main(int argc, char **argv) {
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
 
-	glfwTerminate();
+	SDL_Quit();
 
 	return 0;
 }

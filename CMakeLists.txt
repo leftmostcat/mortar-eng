@@ -6,8 +6,7 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(GLFW3 REQUIRED glfw3)
+find_package(SDL2 REQUIRED)
 
 set(SRCS
 	main.cpp
@@ -25,4 +24,4 @@ set(SRCS
 	)
 
 add_executable(mortar ${SRCS})
-target_link_libraries(mortar ${OPENGL_LIBRARIES} ${GLFW3_LIBRARIES} ${GLFW3_STATIC_LIBRARIES})
+target_link_libraries(mortar ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES})

@@ -17,25 +17,25 @@
 #include "filestream.hpp"
 
 FileStream::FileStream(const char *path, const char *mode) : Stream::Stream() {
-	this->fp = fopen(path, mode);
+	this->rw = SDL_RWFromFile(path, mode);
 }
 
 FileStream::~FileStream() {
-	fclose(fp);
+	SDL_RWclose(this->rw);
 }
 
 void FileStream::seek(long offset, int whence) {
-	fseek(this->fp, offset, whence);
+	SDL_RWseek(this->rw, offset, whence);
 }
 
 long FileStream::tell() {
-	return ftell(this->fp);
+	return SDL_RWtell(this->rw);
 }
 
 void *FileStream::read(size_t size) {
 	uint8_t *ptr = new uint8_t[size];
 
-	fread(ptr, 1, size, this->fp);
+	SDL_RWread(this->rw, ptr, size, 1);
 
 	return (void *)ptr;
 }
