@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -46,7 +46,7 @@ class Model {
 				int texture_idx;
 		};
 
-		class Chunk {
+		class Face {
 			public:
 				int primitive_type;
 
@@ -59,7 +59,7 @@ class Model {
 				int material_idx;
 				int vertex_buffer_idx;
 
-				std::vector<Chunk> chunks;
+				std::vector<Face> faces;
 		};
 
 		class Object {

@@ -9,12 +9,13 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "glmodel.hpp"
+#include "log.hpp"
 
 static GLenum getGLPrimitiveType(int prim_type) {
 	GLenum gl_prim_type = GL_POINTS;
@@ -65,6 +66,8 @@ GLModel::GLModel(Model model, GLuint shaderProgram) {
 		glEnableVertexAttribArray(texcoordAttr);
 	}
 
+	DEBUG("model has %d vertex buffers", model.getVertexBufferCount());
+
 	/* Initialize GL texture objects. */
 	this->textureIds = new GLuint[model.getTextureCount()];
 	this->textureCount = model.getTextureCount();
@@ -83,26 +86,26 @@ GLModel::GLModel(Model model, GLuint shaderProgram) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 
-	/* Initialize an element buffer for each chunk. */
+	/* Initialize an element buffer for each face. */
 	for (int i = 0; i < model.getObjectCount(); i++) {
 		Model::Object object = model.getObject(i);
 
 		for (int j = 0; j < object.meshes.size(); j++) {
 			Model::Mesh mesh = object.meshes[j];
 
-			for (int k = 0; k < mesh.chunks.size(); k++) {
-				Model::Chunk chunk = mesh.chunks[k];
+			for (int k = 0; k < mesh.faces.size(); k++) {
+				Model::Face face = mesh.faces[k];
 				RenderObject renderObject;
 
 				glGenBuffers(1, &renderObject.elementBuffer);
 
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderObject.elementBuffer);
-				glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * chunk.num_elements, chunk.element_buffer, GL_STATIC_DRAW);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * face.num_elements, face.element_buffer, GL_STATIC_DRAW);
 
 				renderObject.vertexArray = this->vertexArrayIds[mesh.vertex_buffer_idx];
 
-				renderObject.primitiveType = getGLPrimitiveType(chunk.primitive_type);
-				renderObject.elementCount = chunk.num_elements;
+				renderObject.primitiveType = getGLPrimitiveType(face.primitive_type);
+				renderObject.elementCount = face.num_elements;
 				renderObject.transformation = object.transformation;
 				renderObject.material = model.getMaterial(mesh.material_idx);
 

@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -311,7 +311,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 				for (int k = 0; k < model_header.num_meshes; k++) {
 					Model::Object object;
 
-					object.meshes = LSW::processMesh(stream, BODY_OFFSET, mesh_header_offsets[k], vertexBuffers);
+					object.meshes = LSW::processMeshHeader(stream, BODY_OFFSET, mesh_header_offsets[k], vertexBuffers);
 					object.transformation = modelTransforms[k];
 
 					objects.push_back(object);
@@ -322,7 +322,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 			else {
 				Model::Object object;
 
-				object.meshes = LSW::processMesh(stream, BODY_OFFSET, layer_headers[i].mesh_header_list_offsets[j], vertexBuffers);
+				object.meshes = LSW::processMeshHeader(stream, BODY_OFFSET, layer_headers[i].mesh_header_list_offsets[j], vertexBuffers);
 				object.transformation = static_transform_matrix * modelTransforms[0];
 
 				objects.push_back(object);

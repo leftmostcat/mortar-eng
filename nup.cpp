@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -210,7 +210,7 @@ NUPModel::NUPModel(Stream &stream) : Model() {
 		mesh_header_offsets[i] = stream.readUint32();
 
 	for (int i = 0; i < model_header.num_meshes; i++) {
-		meshes[i] = LSW::processMesh(stream, BODY_OFFSET, mesh_header_offsets[i], vertexBuffers);
+		meshes[i] = LSW::processMeshHeader(stream, BODY_OFFSET, mesh_header_offsets[i], vertexBuffers);
 	}
 
 	delete [] mesh_header_offsets;

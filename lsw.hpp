@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -80,12 +80,12 @@ namespace Mortar {
 
 			uint32_t unk_0020[4];
 
-			uint32_t chunk_offset;
+			uint32_t face_offset;
 
 			uint32_t unk_0034[4];
 		};
 
-		struct Chunk {
+		struct Face {
 			uint32_t next_offset;
 			uint32_t primitive_type;
 
@@ -119,7 +119,7 @@ namespace Mortar {
 			uint32_t unk_007C[14];
 		};
 
-		std::vector<Model::Mesh> processMesh(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers);
+		std::vector<Model::Mesh> processMeshHeader(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers);
 	}
 }
 

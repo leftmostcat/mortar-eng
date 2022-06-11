@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -37,30 +37,30 @@ static struct Mesh readMeshInfo(Stream &stream, const uint32_t body_offset, uint
 
 	stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
 
-	mesh.chunk_offset = stream.readUint32();
+	mesh.face_offset = stream.readUint32();
 
 	return mesh;
 }
 
-static struct Chunk readChunkInfo(Stream &stream, const uint32_t body_offset, uint32_t chunk_offset) {
-	stream.seek(body_offset + chunk_offset, SEEK_SET);
-	struct Chunk chunk;
+static struct Face readFaceInfo(Stream &stream, const uint32_t body_offset, uint32_t face_offset) {
+	stream.seek(body_offset + face_offset, SEEK_SET);
+	struct Face face;
 
-	memset(&chunk, 0, sizeof(struct Chunk));
+	memset(&face, 0, sizeof(struct Face));
 
-	chunk.next_offset = stream.readUint32();
-	chunk.primitive_type = stream.readUint32();
+	face.next_offset = stream.readUint32();
+	face.primitive_type = stream.readUint32();
 
-	chunk.num_elements = stream.readUint16();
+	face.num_elements = stream.readUint16();
 
 	stream.seek(sizeof(uint16_t), SEEK_CUR);
 
-	chunk.elements_offset = stream.readUint32();
+	face.elements_offset = stream.readUint32();
 
-	return chunk;
+	return face;
 }
 
-std::vector<Model::Mesh> Mortar::LSW::processMesh(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers) {
+std::vector<Model::Mesh> Mortar::LSW::processMeshHeader(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers) {
 	std::vector<Model::Mesh> meshes;
 
 	if (!mesh_header_offset)
@@ -101,30 +101,30 @@ std::vector<Model::Mesh> Mortar::LSW::processMesh(Stream &stream, const uint32_t
 
 		vertexBuffers[mesh.vertex_buffer_idx].stride = stride;
 
-		struct Chunk chunk_data = readChunkInfo(stream, body_offset, mesh_data.chunk_offset);
-		bool processNextChunk;
+		struct Face face_data = readFaceInfo(stream, body_offset, mesh_data.face_offset);
+		bool processNextFace;
 
 		do {
-			Model::Chunk chunk;
+			Model::Face face;
 
-			chunk.primitive_type = chunk_data.primitive_type;
-			chunk.num_elements = chunk_data.num_elements;
+			face.primitive_type = face_data.primitive_type;
+			face.num_elements = face_data.num_elements;
 
-			chunk.element_buffer = new uint16_t[chunk_data.num_elements];
+			face.element_buffer = new uint16_t[face_data.num_elements];
 
-			stream.seek(body_offset + chunk_data.elements_offset, SEEK_SET);
+			stream.seek(body_offset + face_data.elements_offset, SEEK_SET);
 
-			for (int i = 0; i < chunk_data.num_elements; i++)
-				chunk.element_buffer[i] = stream.readUint16();
+			for (int i = 0; i < face_data.num_elements; i++)
+				face.element_buffer[i] = stream.readUint16();
 
-			processNextChunk = false;
-			mesh.chunks.push_back(chunk);
+			processNextFace = false;
+			mesh.faces.push_back(face);
 
-			if (chunk_data.next_offset) {
-				chunk_data = readChunkInfo(stream, body_offset, chunk_data.next_offset);
-				processNextChunk = true;
+			if (face_data.next_offset) {
+				face_data = readFaceInfo(stream, body_offset, face_data.next_offset);
+				processNextFace = true;
 			}
-		} while (processNextChunk);
+		} while (processNextFace);
 
 		processNextMesh = false;
 		meshes.push_back(mesh);
