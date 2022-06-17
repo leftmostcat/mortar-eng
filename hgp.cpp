@@ -14,9 +14,11 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glm/gtx/string_cast.hpp>
 #include <stdio.h>
-#include "hgp.hpp"
+
 #include "dds.hpp"
+#include "hgp.hpp"
 #include "log.hpp"
 #include "lsw.hpp"
 #include "matrix.hpp"
@@ -66,7 +68,10 @@ struct HGPModelHeader {
 	float unk_0040;
 	uint32_t unk_0044;
 	float unk_0048[9];
-	uint32_t unk_006C[4];
+	uint32_t unk_006C;
+
+	uint32_t count_0070;
+	uint32_t unk_0074;
 
 	uint8_t num_meshes;
 	uint8_t unk_007D;
@@ -129,13 +134,38 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	stream.seek(sizeof(float), SEEK_CUR);
 	stream.seek(sizeof(uint32_t), SEEK_CUR);
 	stream.seek(9 * sizeof(float), SEEK_CUR);
-	stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
+	stream.seek(1 * sizeof(uint32_t), SEEK_CUR);
+
+	uint32_t count_0070 = stream.readUint32();
+	uint32_t unk_0074 = stream.readUint32();
+	stream.seek(1 * sizeof(uint32_t), SEEK_CUR);
 
 	model_header.num_meshes = stream.readUint8();
 
 	stream.seek(sizeof(uint8_t), SEEK_CUR);
 
 	model_header.num_layers = stream.readUint8();
+
+	stream.seek(BODY_OFFSET + unk_0074, SEEK_SET);
+
+	uint32_t *string_offsets = (uint32_t *)calloc(count_0070, sizeof(uint32_t));
+	uint32_t *string2_offsets = (uint32_t *)calloc(count_0070, sizeof(uint32_t));
+
+	for (int i = 0; i < count_0070; i++) {
+		stream.seek(6 * sizeof(uint32_t), SEEK_CUR);
+		string_offsets[i] = stream.readUint32();
+		string2_offsets[i] = stream.readUint32();
+	}
+
+	for (int i = 0; i < count_0070; i++) {
+		stream.seek(BODY_OFFSET + file_header.strings_offset + string_offsets[i], SEEK_SET);
+		char *foo = stream.readString();
+
+		stream.seek(BODY_OFFSET + file_header.strings_offset + string2_offsets[i], SEEK_SET);
+		char *bar = stream.readString();
+
+		DEBUG("unk_0074 %d strings %s, %s", i, foo, bar);
+	}
 
 	/* Read texture block information. */
 	stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
@@ -199,14 +229,22 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 
 		stream.seek(0x40, SEEK_CUR);
 
-		uint32_t flags = stream.readUint32();
+		materials[i].rawFlags = stream.readUint32();
+		materials[i].rawMoreFlags = stream.readUint32();
 
 		materials[i].flags = 0;
-		if (flags & 0x40000) {
+
+		if (materials[i].rawFlags & 0x40000) {
 			materials[i].flags |= Model::Material::USE_VERTEX_COLOR;
 		}
 
-		stream.seek(0x10, SEEK_CUR);
+		uint8_t alphaFlags = materials[i].rawFlags & 0xf;
+		if (alphaFlags) {
+			DEBUG("material %d has alpha, %d", i, alphaFlags);
+			materials[i].flags |= Model::Material::ENABLE_ALPHA_BLEND;
+		}
+
+		stream.seek(0xc, SEEK_CUR);
 
 		materials[i].red = stream.readFloat();
 		materials[i].green = stream.readFloat();
@@ -222,6 +260,10 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 			materials[i].texture_idx = texture_idx & 0x7FFF;
 		else
 			materials[i].texture_idx = texture_idx;
+
+		stream.seek(35, SEEK_CUR);
+
+		materials[i].rawEffectType = stream.readUint8();
 	}
 
 	this->setMaterials(materials);
@@ -288,7 +330,10 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 
 	/* Read in information necessary for processing layers and meshes. */
 	stream.seek(BODY_OFFSET + model_header.static_transformation_offset, SEEK_SET);
-	glm::mat4 static_transform_matrix = readMatrix(stream);
+	glm::mat4 *skinMatrices = (glm::mat4 *)calloc(model_header.num_meshes, sizeof(glm::mat4));
+	for (int i = 0; i < model_header.num_meshes; i++) {
+		skinMatrices[i] = readMatrix(stream);
+	}
 
 	stream.seek(BODY_OFFSET + model_header.layer_header_offset, SEEK_SET);
 	struct LSW::LayerHeader *layer_headers = new struct LSW::LayerHeader[model_header.layer_header_offset];
@@ -305,7 +350,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	/* Break the layers down into meshes and add those to the model's list. */
 	for (int i = 0; i < model_header.num_layers; i++) {
 		/* XXX: Use model configuration to specify layers by quality. */
-		if (i != 0 && i != 1)
+		if (i != 0 && i != 2)
 			continue;
 
 		for (int j = 0; j < 4; j++) {
@@ -323,6 +368,7 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 					Model::Object object;
 
 					object.meshes = LSW::processMeshHeader(stream, BODY_OFFSET, mesh_header_offsets[k], vertexBuffers);
+
 					object.transformation = modelTransforms[k];
 
 					objects.push_back(object);
@@ -334,7 +380,8 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 				Model::Object object;
 
 				object.meshes = LSW::processMeshHeader(stream, BODY_OFFSET, layer_headers[i].mesh_header_list_offsets[j], vertexBuffers);
-				object.transformation = static_transform_matrix * modelTransforms[0];
+
+				object.transformation = skinMatrices[0] * modelTransforms[0];
 
 				objects.push_back(object);
 			}
@@ -342,6 +389,53 @@ HGPModel::HGPModel(Stream &stream) : Model() {
 	}
 
 	delete [] layer_headers;
+
+	for (int p = 0; p < objects.size(); p++) {
+		for (int q = 0; q < objects[p].meshes.size(); q++) {
+			for (int f = 0; f < objects[p].meshes[q].faces.size(); f++) {
+				DEBUG("face with %d elements", objects[p].meshes[q].faces[f].num_elements);
+				DEBUG("  MATERIAL_IDX: %d", objects[p].meshes[q].faces[f].materialIdx);
+
+				Model::Material material = getMaterial(objects[p].meshes[q].faces[f].materialIdx);
+				uint32_t rawFlags = material.rawFlags;
+
+				DEBUG("    EFFECT TYPE 0x%x", material.rawEffectType);
+				DEBUG("    HAS TEXTURE: %s", material.texture_idx != -1 ? "true" : "false");
+
+				DEBUG("  RAW FLAGS: 0x%.8x", rawFlags);
+				DEBUG("    ATST: 0x%.1x", rawFlags >> 0x14 & 7);
+				DEBUG("    AFAIL: 0x%.1x", material.rawMoreFlags & 3);
+				DEBUG("    COLOR TYPE: 0x%.1x", material.rawFlags & 0x40000);
+				DEBUG("    LIGHTING: 0x%.1x", rawFlags & 0x30000);
+				DEBUG("    ALPHA STATE: 0x%.1x", rawFlags & 0xf);
+				DEBUG("    ALPHA REF: 0x%.3x", (rawFlags >> 0x17 & 0xff) << 1);
+				DEBUG("    DEPTH STATE: 0x%.1x", rawFlags >> 0xe & 3);
+
+				if (objects[p].meshes[q].skinned) {
+					if (objects[p].meshes[q].blended) {
+						DEBUG("WARNING: blended, skinned geometry is not implemented");
+					}
+
+					// Unblended, skinned geometry
+					objects[p].meshes[q].faces[f].shaderType = SKIN;
+				} else if ((material.rawFlags & 0x30000) != 2) {
+					// Dynamic lighting is enabled
+					objects[p].meshes[q].faces[f].shaderType = BASIC;
+				} else {
+					switch (objects[p].meshes[q].rawVertexType) {
+						case 0x59:
+							objects[p].meshes[q].faces[f].shaderType = UNLIT;
+							break;
+						default:
+							DEBUG("unimplemented vertex type");
+							break;
+					}
+				}
+
+				DEBUG("  SHADER TYPE: %d", objects[p].meshes[q].faces[f].shaderType);
+			}
+		}
+	}
 
 	this->setObjects(objects);
 

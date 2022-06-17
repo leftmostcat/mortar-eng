@@ -21,7 +21,9 @@
 
 #include <vector>
 #include <GL/gl.h>
+
 #include "model.hpp"
+#include "shader.hpp"
 
 class GLModel {
 	public:
@@ -37,9 +39,11 @@ class GLModel {
 				glm::mat4 transformation;
 
 				Model::Material material;
+
+				Shader shaderType;
 		};
 
-		GLModel(Model model, GLuint shaderProgram);
+		GLModel(Model model, EffectManager *effectManager);
 		~GLModel();
 
 		GLuint *vertexArrayIds;
@@ -50,6 +54,7 @@ class GLModel {
 		int textureCount;
 
 		std::vector<RenderObject> renderObjects;
+		std::vector<RenderObject> alphaRenderObjects;
 };
 
 inline const char *getErrorString(GLenum err) {

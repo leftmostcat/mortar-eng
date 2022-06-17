@@ -21,78 +21,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <vector>
+
 #include "filestream.hpp"
 #include "hgp.hpp"
 #include "log.hpp"
 #include "nup.hpp"
 #include "glmodel.hpp"
 #include "matrix.hpp"
-
-#define GLSL(src) "#version 150\n" #src
+#include "shader.hpp"
 
 #define WIDTH 800
 #define HEIGHT 600
 
-const GLchar *vertex_source = GLSL(
-	uniform mat4 projectionMtx;
-	uniform mat4 viewMtx;
-	uniform mat4 meshTransformMtx;
-
-	uniform vec4 materialColor;
-	uniform vec2 colorMultipliers;
-
-	in vec3 position;
-	in vec4 color;
-	in vec2 texCoord;
-
-	out vec2 fragTexCoord;
-	out vec4 fragColor;
-
-	void main()
-	{
-		fragTexCoord = texCoord;
-
-		vec3 adjustedVertColor = colorMultipliers.x * vec3(color.xyz);
-		vec3 adjustedMatColor = colorMultipliers.y * vec3(materialColor.xyz);
-
-		fragColor = vec4(materialColor.xyz, color.w);
-
-		gl_Position = projectionMtx * viewMtx * meshTransformMtx * vec4(position, 1.0);
-	}
-);
-
-const GLchar *fragment_source = GLSL(
-	uniform sampler2D materialTex;
-	uniform int hasTexture;
-
-	in vec2 fragTexCoord;
-	in vec4 fragColor;
-
-	out vec4 outColor;
-
-	void main()
-	{
-		vec4 texColor = texture(materialTex, fragTexCoord);
-
-		vec4 combinedColor = (texColor * fragColor) * 2;
-
-		outColor = mix(fragColor, combinedColor, hasTexture);
-	}
-);
-
 void glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
 	DEBUG("gl error: %s", message);
-}
-
-void checkCompileStatus(GLuint shader) {
-	int success;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		char infoLog[512];
-		glGetShaderInfoLog(shader, 512, NULL, infoLog);
-		DEBUG("failed to compile shader: %s", infoLog);
-		exit(-1);
-	}
+	exit(-1);
 }
 
 int main(int argc, char **argv) {
@@ -114,54 +59,21 @@ int main(int argc, char **argv) {
 	}
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(glDebugCallback, nullptr);
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, nullptr, GL_TRUE);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+	glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_ERROR, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
+	glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_ERROR, GL_DEBUG_SEVERITY_MEDIUM, 0, nullptr, GL_TRUE);
 
-	/* Compile and link shaders. */
-	GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex_shader, 1, &vertex_source, NULL);
-	glCompileShader(vertex_shader);
-	checkCompileStatus(vertex_shader);
-
-	GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment_shader, 1, &fragment_source, NULL);
-	glCompileShader(fragment_shader);
-	checkCompileStatus(fragment_shader);
-
-	GLuint shader_program = glCreateProgram();
-	glAttachShader(shader_program, vertex_shader);
-	glAttachShader(shader_program, fragment_shader);
-	glBindFragDataLocation(shader_program, 0, "outColor");
-	glLinkProgram(shader_program);
-
-	int success;
-	glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
-	if (!success) {
-		char infoLog[512];
-		glGetProgramInfoLog(shader_program, 512, NULL, infoLog);
-		DEBUG("failed to link shaders: %s", infoLog);
+	EffectManager effectManager = EffectManager();
+	if (effectManager.Initialize() == -1) {
 		exit(-1);
 	}
-
-	glUseProgram(shader_program);
-
-	/* Pull out attribute and uniform locations. */
-	GLint tex_unif = glGetUniformLocation(shader_program, "materialTex");
-	GLint has_tex_unif = glGetUniformLocation(shader_program, "hasTexture");
-
-	GLint projection_mtx_unif = glGetUniformLocation(shader_program, "projectionMtx");
-	GLint view_mtx_unif = glGetUniformLocation(shader_program, "viewMtx");
-	GLint mesh_mtx_unif = glGetUniformLocation(shader_program, "meshTransformMtx");
-
-	GLint color_unif = glGetUniformLocation(shader_program, "materialColor");
-	GLint multipliers_unif = glGetUniformLocation(shader_program, "colorMultipliers");
 
 	/* Read in the specified model. */
 	FileStream fs = FileStream(argv[1], "rb");
@@ -176,21 +88,19 @@ int main(int argc, char **argv) {
 		model = NUPModel(fs);
 	}
 
-	GLModel glModel = GLModel(model, shader_program);
+	GLModel glModel = GLModel(model, &effectManager);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	/* Initialize transformation matrices. */
-	glm::mat4 proj = glm::perspective(45.0f, (float)WIDTH / HEIGHT, 1.0f, 10.0f);
-	glUniformMatrix4fv(projection_mtx_unif, 1, GL_FALSE, glm::value_ptr(proj));
+	glm::mat4 proj = glm::perspective(45.0f, (float)WIDTH / HEIGHT, 0.5f, 10.0f);
 
 	glm::mat4 view = glm::lookAt(
-		glm::vec3(1.0f, 0.5f, -0.8f),
+		glm::vec3(0.3f, 0.4f, 0.6f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 1.0f, 0.0f)
 	);
-	glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
 
 	/* Main loop. */
 	bool shouldClose = false;
@@ -199,6 +109,29 @@ int main(int argc, char **argv) {
 
 		for (int i = 0; i < glModel.renderObjects.size(); i++) {
 			GLModel::RenderObject renderObject = glModel.renderObjects[i];
+
+			GLuint shaderProgram = effectManager.GetShaderProgram(renderObject.shaderType);
+			glUseProgram(shaderProgram);
+
+			// /* Pull out attribute and uniform locations. */
+			GLint tex_unif = glGetUniformLocation(shaderProgram, "materialTex");
+			GLint has_tex_unif = glGetUniformLocation(shaderProgram, "hasTexture");
+
+			GLint projection_mtx_unif = glGetUniformLocation(shaderProgram, "projectionMtx");
+			GLint view_mtx_unif = glGetUniformLocation(shaderProgram, "viewMtx");
+			GLint mesh_mtx_unif = glGetUniformLocation(shaderProgram, "meshTransformMtx");
+
+			GLint color_unif = glGetUniformLocation(shaderProgram, "materialColor");
+			GLint multipliers_unif = glGetUniformLocation(shaderProgram, "colorMultipliers");
+
+			GLint alphaAnimUVUnif = glGetUniformLocation(shaderProgram, "alphaAnimUV");
+
+			// if (renderObject.shaderType == UNLIT) {
+			// 	glUniform2fv(alphaAnimUVUnif, 1, renderObject.material.alphaAnimUV);
+			// }
+
+			glUniformMatrix4fv(projection_mtx_unif, 1, GL_FALSE, glm::value_ptr(proj));
+			glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
 
 			float adjustedColor[4];
 			memcpy(adjustedColor, renderObject.material.color, 4 * sizeof(float));
@@ -216,11 +149,14 @@ int main(int argc, char **argv) {
 				glUniform1i(has_tex_unif, 0);
 			}
 
-			float colorMultipliers[2] = {0.0f, 0.5f};
-			if (renderObject.material.flags & Model::Material::USE_VERTEX_COLOR) {
-				colorMultipliers[0] = 1.0f;
-				colorMultipliers[1] = 0.0f;
-			}
+			float colorMultipliers[2] = {1.0f, 1.0f};
+			// if (renderObject.material.flags & Model::Material::USE_VERTEX_COLOR) {
+			// 	colorMultipliers[0] = 1.0f;
+			// 	colorMultipliers[1] = 0.0f;
+			// }
+
+			glDisable(GL_BLEND);
+			glDisable(GL_ALPHA_TEST);
 
 			glUniform2fv(multipliers_unif, 1, colorMultipliers);
 
@@ -234,6 +170,77 @@ int main(int argc, char **argv) {
 			glDrawElements(renderObject.primitiveType, renderObject.elementCount, GL_UNSIGNED_SHORT, 0);
 		}
 
+		for (int i = 0; i < glModel.alphaRenderObjects.size(); i++) {
+			GLModel::RenderObject renderObject = glModel.alphaRenderObjects[i];
+
+			GLuint shaderProgram = effectManager.GetShaderProgram(renderObject.shaderType);
+			glUseProgram(shaderProgram);
+
+			// /* Pull out attribute and uniform locations. */
+			GLint tex_unif = glGetUniformLocation(shaderProgram, "materialTex");
+			GLint has_tex_unif = glGetUniformLocation(shaderProgram, "hasTexture");
+
+			GLint projection_mtx_unif = glGetUniformLocation(shaderProgram, "projectionMtx");
+			GLint view_mtx_unif = glGetUniformLocation(shaderProgram, "viewMtx");
+			GLint mesh_mtx_unif = glGetUniformLocation(shaderProgram, "meshTransformMtx");
+
+			GLint color_unif = glGetUniformLocation(shaderProgram, "materialColor");
+			GLint multipliers_unif = glGetUniformLocation(shaderProgram, "colorMultipliers");
+
+			GLint alphaAnimUVUnif = glGetUniformLocation(shaderProgram, "alphaAnimUV");
+
+			// if (renderObject.shaderType == UNLIT) {
+			// 	glUniform2fv(alphaAnimUVUnif, 1, renderObject.material.alphaAnimUV);
+			// }
+
+			glUniformMatrix4fv(projection_mtx_unif, 1, GL_FALSE, glm::value_ptr(proj));
+			glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
+
+			float adjustedColor[4];
+			memcpy(adjustedColor, renderObject.material.color, 4 * sizeof(float));
+
+			/* Ensure that fragment colors come from the right place. */
+			if (renderObject.material.texture_idx != -1) {
+				glUniform1i(tex_unif, renderObject.material.texture_idx);
+				glUniform1i(has_tex_unif, 1);
+
+				for (int i = 0; i < 3; i++) {
+					adjustedColor[i] *= 0.5f;
+				}
+			}
+			else {
+				glUniform1i(has_tex_unif, 0);
+			}
+
+			float colorMultipliers[2] = {1.0f, 1.0f};
+			// if (renderObject.material.flags & Model::Material::USE_VERTEX_COLOR) {
+			// 	colorMultipliers[0] = 1.0f;
+			// 	colorMultipliers[1] = 0.0f;
+			// }
+
+			glEnable(GL_BLEND);
+			glEnable(GL_ALPHA_TEST);
+			glBlendEquation(GL_FUNC_ADD);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glAlphaFunc(GL_GEQUAL, (float)((renderObject.material.rawFlags >> 0x17 & 0xff) << 1) / 255.0);
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+			glDepthMask(GL_FALSE);
+
+			glUniform2fv(multipliers_unif, 1, colorMultipliers);
+
+			glBindVertexArray(renderObject.vertexArray);
+
+			/* Set per-face material color and transformation matrix. */
+			glUniform4fv(color_unif, 1, adjustedColor);
+			glUniformMatrix4fv(mesh_mtx_unif, 1, GL_TRUE, glm::value_ptr(renderObject.transformation));
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderObject.elementBuffer);
+			glDrawElements(renderObject.primitiveType, renderObject.elementCount, GL_UNSIGNED_SHORT, 0);
+
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			glDepthMask(GL_TRUE);
+		}
+
 		SDL_GL_SwapWindow(window);
 
 		SDL_Event event;
@@ -243,11 +250,6 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-
-	/* Final cleanup. */
-	glDeleteProgram(shader_program);
-	glDeleteShader(vertex_shader);
-	glDeleteShader(fragment_shader);
 
 	SDL_Quit();
 

@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "dds.hpp"
+#include "log.hpp"
 
 #define MKTAG(a, b, c, d) ((uint32_t)((a) | ((b) << 8) | ((c) << 16) | ((d) << 24)))
 
@@ -103,6 +104,8 @@ DDSTexture::DDSTexture(Stream &stream) : Texture() {
 					for (int j = 0; j < levels[i].size; j++)
 						levels[i].data[j] = stream.readUint8();
 				}
+
+				DEBUG("texture has %d levels", file_header.num_levels);
 				break;
 			default:
 				fprintf(stderr, "Unrecognized fourCC: %d\n", file_header.format.fourCC);

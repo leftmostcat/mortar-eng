@@ -19,7 +19,9 @@
 
 #include <vector>
 #include <stdint.h>
+
 #include "matrix.hpp"
+#include "shader.hpp"
 #include "texture.hpp"
 
 class Model {
@@ -35,6 +37,7 @@ class Model {
 			public:
 				enum {
 					USE_VERTEX_COLOR = 0b1,
+					ENABLE_ALPHA_BLEND = 0b10,
 				};
 
 				union {
@@ -50,20 +53,34 @@ class Model {
 				int texture_idx;
 
 				int flags;
+				uint32_t rawFlags;
+				uint32_t rawMoreFlags;
+
+				uint32_t rawEffectType;
 		};
 
 		class Face {
 			public:
 				int primitive_type;
+				uint stride;
+				int materialIdx;
+				glm::mat4 transform;
+				Shader shaderType;
 
 				int num_elements;
 				uint16_t *element_buffer;
+				uint32_t vertex_buffer_idx;
+
+				uint32_t rawVertexType;
 		};
 
 		class Mesh {
 			public:
 				int material_idx;
 				int vertex_buffer_idx;
+				int rawVertexType;
+				bool skinned;
+				bool blended;
 
 				std::vector<Face> faces;
 		};
@@ -89,11 +106,15 @@ class Model {
 		Object &getObject(int i);
 		int getObjectCount();
 
+		Face &getFace(int i);
+		int getFaceCount();
+
 	private:
 		std::vector<Model::VertexBuffer> vertexBuffers;
 		std::vector<Texture> textures;
 		std::vector<Model::Material> materials;
 		std::vector<Object> objects;
+		std::vector<Face> faces;
 };
 
 #endif

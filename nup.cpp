@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include "dds.hpp"
+#include "log.hpp"
 #include "lsw.hpp"
 #include "memorystream.hpp"
 #include "nup.hpp"
@@ -248,6 +249,53 @@ NUPModel::NUPModel(Stream &stream) : Model() {
 	}
 
 	delete [] objects_data;
+
+	for (int p = 0; p < objects.size(); p++) {
+		for (int q = 0; q < objects[p].meshes.size(); q++) {
+			for (int f = 0; f < objects[p].meshes[q].faces.size(); f++) {
+				DEBUG("face with %d elements", objects[p].meshes[q].faces[f].num_elements);
+				DEBUG("  MATERIAL_IDX: %d", objects[p].meshes[q].faces[f].materialIdx);
+
+				Model::Material material = getMaterial(objects[p].meshes[q].faces[f].materialIdx);
+				uint32_t rawFlags = material.rawFlags;
+
+				DEBUG("    EFFECT TYPE 0x%x", material.rawEffectType);
+				DEBUG("    HAS TEXTURE: %s", material.texture_idx != -1 ? "true" : "false");
+
+				DEBUG("  RAW FLAGS: 0x%.8x", rawFlags);
+				DEBUG("    ATST: 0x%.1x", rawFlags >> 0x14 & 7);
+				DEBUG("    AFAIL: 0x%.1x", material.rawMoreFlags & 3);
+				DEBUG("    COLOR TYPE: 0x%.1x", material.rawFlags & 0x40000);
+				DEBUG("    LIGHTING: 0x%.1x", rawFlags & 0x30000);
+				DEBUG("    ALPHA STATE: 0x%.1x", rawFlags & 0xf);
+				DEBUG("    ALPHA REF: 0x%.3x", (rawFlags >> 0x17 & 0xff) << 1);
+				DEBUG("    DEPTH STATE: 0x%.1x", rawFlags >> 0xe & 3);
+
+				if (objects[p].meshes[q].skinned) {
+					if (objects[p].meshes[q].blended) {
+						DEBUG("WARNING: blended, skinned geometry is not implemented");
+					}
+
+					// Unblended, skinned geometry
+					objects[p].meshes[q].faces[f].shaderType = SKIN;
+				} else if ((material.rawFlags & 0x30000) != 2) {
+					// Dynamic lighting is enabled
+					objects[p].meshes[q].faces[f].shaderType = BASIC;
+				} else {
+					switch (objects[p].meshes[q].rawVertexType) {
+						case 0x59:
+							objects[p].meshes[q].faces[f].shaderType = UNLIT;
+							break;
+						default:
+							DEBUG("unimplemented vertex type");
+							break;
+					}
+				}
+
+				DEBUG("  SHADER TYPE: %d", objects[p].meshes[q].faces[f].shaderType);
+			}
+		}
+	}
 
 	this->setObjects(objects);
 }

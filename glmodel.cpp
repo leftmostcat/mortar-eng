@@ -14,8 +14,11 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <vector>
+
 #include "glmodel.hpp"
 #include "log.hpp"
+#include "shader.hpp"
 
 static GLenum getGLPrimitiveType(int prim_type) {
 	GLenum gl_prim_type = GL_POINTS;
@@ -38,36 +41,20 @@ static GLenum getGLPrimitiveType(int prim_type) {
 	return gl_prim_type;
 }
 
-GLModel::GLModel(Model model, GLuint shaderProgram) {
+GLModel::GLModel(Model model, EffectManager *effectManager) {
 	/* Initialize all vertex buffers. */
-	this->vertexArrayIds = new GLuint[model.getVertexBufferCount()];
 	this->vertexBufferIds = new GLuint[model.getVertexBufferCount()];
 
 	this->vertexBufferCount = model.getVertexBufferCount();
 
-	glGenVertexArrays(this->vertexBufferCount, this->vertexArrayIds);
 	glGenBuffers(this->vertexBufferCount, this->vertexBufferIds);
 
-	GLint positionAttr = glGetAttribLocation(shaderProgram, "position");
-	GLint colorAttr = glGetAttribLocation(shaderProgram, "color");
-	GLint texcoordAttr = glGetAttribLocation(shaderProgram, "texCoord");
-
 	for (int i = 0; i < model.getVertexBufferCount(); i++) {
-		glBindVertexArray(this->vertexArrayIds[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, this->vertexBufferIds[i]);
 
 		Model::VertexBuffer vertexBuffer = model.getVertexBuffer(i);
 
 		glBufferData(GL_ARRAY_BUFFER, vertexBuffer.size, vertexBuffer.data, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, vertexBuffer.stride, (GLvoid *)0);
-		glEnableVertexAttribArray(positionAttr);
-
-		glVertexAttribPointer(colorAttr, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, vertexBuffer.stride, (GLvoid *)24);
-		glEnableVertexAttribArray(colorAttr);
-
-		glVertexAttribPointer(texcoordAttr, 2, GL_FLOAT, GL_FALSE, vertexBuffer.stride, (GLvoid *)28);
-		glEnableVertexAttribArray(texcoordAttr);
 	}
 
 	DEBUG("model has %d vertex buffers", model.getVertexBufferCount());
@@ -92,31 +79,92 @@ GLModel::GLModel(Model model, GLuint shaderProgram) {
 
 	DEBUG("model has %d textures", model.getTextureCount());
 
-	/* Initialize an element buffer for each face. */
-	for (int i = 0; i < model.getObjectCount(); i++) {
-		Model::Object object = model.getObject(i);
+	/* Initialize an element buffer and vertex array for each face. */
+	this->vertexArrayIds = new GLuint[model.getFaceCount()];
+	glGenVertexArrays(model.getFaceCount(), this->vertexArrayIds);
 
-		for (int j = 0; j < object.meshes.size(); j++) {
-			Model::Mesh mesh = object.meshes[j];
+	for (int i = 0; i < model.getFaceCount(); i++) {
+		Model::Face face = model.getFace(i);
+		RenderObject renderObject;
 
-			for (int k = 0; k < mesh.faces.size(); k++) {
-				Model::Face face = mesh.faces[k];
-				RenderObject renderObject;
+		glBindBuffer(GL_ARRAY_BUFFER, this->vertexBufferIds[face.vertex_buffer_idx]);
+		glBindVertexArray(vertexArrayIds[i]);
 
-				glGenBuffers(1, &renderObject.elementBuffer);
+		GLuint shaderProgram;
 
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderObject.elementBuffer);
-				glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * face.num_elements, face.element_buffer, GL_STATIC_DRAW);
+		GLint positionAttr;
+		GLint normalAttr;
+		GLint colorAttr;
+		GLint texcoordAttr;
 
-				renderObject.vertexArray = this->vertexArrayIds[mesh.vertex_buffer_idx];
+		switch (face.shaderType) {
+			case UNLIT:
+			case BASIC:
+				shaderProgram = effectManager->GetShaderProgram(UNLIT);
 
-				renderObject.primitiveType = getGLPrimitiveType(face.primitive_type);
-				renderObject.elementCount = face.num_elements;
-				renderObject.transformation = object.transformation;
-				renderObject.material = model.getMaterial(mesh.material_idx);
+				positionAttr = glGetAttribLocation(shaderProgram, "position");
+				normalAttr = glGetAttribLocation(shaderProgram, "normal");
+				colorAttr = glGetAttribLocation(shaderProgram, "color");
+				texcoordAttr = glGetAttribLocation(shaderProgram, "texCoord");
 
-				this->renderObjects.push_back(renderObject);
-			}
+				glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, face.stride, (GLvoid *)0);
+				glEnableVertexAttribArray(positionAttr);
+
+				if (normalAttr != -1) {
+					glVertexAttribPointer(normalAttr, 3, GL_FLOAT, GL_TRUE, face.stride, (GLvoid *)12);
+					glEnableVertexAttribArray(normalAttr);
+				}
+
+				glVertexAttribPointer(colorAttr, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, face.stride, (GLvoid *)24);
+				glEnableVertexAttribArray(colorAttr);
+
+				glVertexAttribPointer(texcoordAttr, 2, GL_FLOAT, GL_FALSE, face.stride, (GLvoid *)28);
+				glEnableVertexAttribArray(texcoordAttr);
+				break;
+			case SKIN:
+				shaderProgram = effectManager->GetShaderProgram(SKIN);
+
+				positionAttr = glGetAttribLocation(shaderProgram, "position");
+				normalAttr = glGetAttribLocation(shaderProgram, "normal");
+				colorAttr = glGetAttribLocation(shaderProgram, "color");
+				texcoordAttr = glGetAttribLocation(shaderProgram, "texCoord");
+
+				glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, face.stride, (GLvoid *)0);
+				glEnableVertexAttribArray(positionAttr);
+
+				glVertexAttribPointer(normalAttr, 3, GL_FLOAT, GL_TRUE, face.stride, (GLvoid *)32);
+				glEnableVertexAttribArray(normalAttr);
+
+				glVertexAttribPointer(colorAttr, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, face.stride, (GLvoid *)44);
+				glEnableVertexAttribArray(colorAttr);
+
+				glVertexAttribPointer(texcoordAttr, 2, GL_FLOAT, GL_FALSE, face.stride, (GLvoid *)48);
+				glEnableVertexAttribArray(texcoordAttr);
+				break;
+			default:
+				DEBUG("unknown shader type %d on face %d", face.shaderType, i);
+				continue;
+		}
+
+		renderObject.shaderType = face.shaderType;
+
+		glGenBuffers(1, &renderObject.elementBuffer);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderObject.elementBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * face.num_elements, face.element_buffer, GL_STATIC_DRAW);
+
+		renderObject.vertexArray = this->vertexArrayIds[i];
+
+		renderObject.primitiveType = getGLPrimitiveType(face.primitive_type);
+		renderObject.elementCount = face.num_elements;
+		renderObject.transformation = face.transform;
+		renderObject.material = model.getMaterial(face.materialIdx);
+
+		if (renderObject.material.flags & Model::Material::ENABLE_ALPHA_BLEND) {
+			DEBUG("alpha ref is %f", (float)((renderObject.material.rawFlags >> 0x17 & 0xff) << 1) / 255.0);
+			this->alphaRenderObjects.push_back(renderObject);
+		} else {
+			this->renderObjects.push_back(renderObject);
 		}
 	}
 

@@ -14,7 +14,9 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "log.hpp"
 #include "lsw.hpp"
+#include "shader.hpp"
 
 using namespace Mortar::LSW;
 
@@ -26,7 +28,7 @@ static struct Mesh readMeshInfo(Stream &stream, const uint32_t body_offset, uint
 
 	mesh.next_offset = stream.readUint32();
 
-	stream.seek(sizeof(uint32_t), SEEK_CUR);
+	stream.seek(1 * sizeof(uint32_t), SEEK_CUR);
 
 	mesh.material_idx = stream.readUint32();
 	mesh.vertex_type = stream.readUint32();
@@ -35,9 +37,18 @@ static struct Mesh readMeshInfo(Stream &stream, const uint32_t body_offset, uint
 
 	mesh.vertex_block_idx = stream.readUint32();
 
-	stream.seek(4 * sizeof(uint32_t), SEEK_CUR);
+	stream.seek(1 * sizeof(uint32_t), SEEK_CUR);
+
+	mesh.unk_0024 = stream.readUint32();
+
+	stream.seek(2 * sizeof(uint32_t), SEEK_CUR);
 
 	mesh.face_offset = stream.readUint32();
+
+	stream.seek(4, SEEK_CUR);
+
+	mesh.unk_0038 = stream.readUint32();
+	mesh.unk_003C = stream.readUint32();
 
 	return mesh;
 }
@@ -86,10 +97,10 @@ std::vector<Model::Mesh> Mortar::LSW::processMeshHeader(Stream &stream, const ui
 
 		/* Vertex stride is specified per-mesh. */
 		switch (mesh_data.vertex_type) {
-			case 89:
+			case 0x59:
 				stride = 36;
 				break;
-			case 93:
+			case 0x5d:
 				stride = 56;
 				break;
 			default:
@@ -98,24 +109,34 @@ std::vector<Model::Mesh> Mortar::LSW::processMeshHeader(Stream &stream, const ui
 
 		mesh.vertex_buffer_idx = mesh_data.vertex_block_idx - 1;
 		mesh.material_idx = mesh_data.material_idx;
-
-		vertexBuffers[mesh.vertex_buffer_idx].stride = stride;
+		mesh.rawVertexType = mesh_data.vertex_type;
 
 		struct Face face_data = readFaceInfo(stream, body_offset, mesh_data.face_offset);
 		bool processNextFace;
+
+		if (mesh_data.vertex_type == 0x5d || mesh_data.unk_0038 != 0) {
+			mesh.skinned = true;
+		}
+		if (mesh_data.unk_0024 != 0 && mesh_data.unk_003C != 0) {
+			mesh.blended = true;
+		}
 
 		do {
 			Model::Face face;
 
 			face.primitive_type = face_data.primitive_type;
+			face.materialIdx = mesh.material_idx;
+			face.stride = stride;
 			face.num_elements = face_data.num_elements;
 
 			face.element_buffer = new uint16_t[face_data.num_elements];
+			face.vertex_buffer_idx = mesh.vertex_buffer_idx;
 
 			stream.seek(body_offset + face_data.elements_offset, SEEK_SET);
 
-			for (int i = 0; i < face_data.num_elements; i++)
+			for (int i = 0; i < face_data.num_elements; i++) {
 				face.element_buffer[i] = stream.readUint16();
+			}
 
 			processNextFace = false;
 			mesh.faces.push_back(face);

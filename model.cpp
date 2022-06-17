@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -51,6 +51,19 @@ Model::Material Model::getMaterial(int i) {
 
 void Model::setObjects(std::vector<Model::Object> objects) {
 	this->objects = objects;
+
+	std::vector<Model::Face>::iterator iter = this->faces.begin();
+	for (int i = 0; i < objects.size(); i++) {
+		for (int j = 0; j < objects[i].meshes.size(); j++) {
+			for (int k = 0; k < objects[i].meshes[j].faces.size(); k++) {
+				Face face = objects[i].meshes[j].faces[k];
+
+				face.transform = objects[i].transformation;
+
+				this->faces.push_back(face);
+			}
+		}
+	}
 }
 
 Model::Object &Model::getObject(int i) {
@@ -59,4 +72,12 @@ Model::Object &Model::getObject(int i) {
 
 int Model::getObjectCount() {
 	return this->objects.size();
+}
+
+Model::Face &Model::getFace(int i) {
+	return this->faces[i];
+}
+
+int Model::getFaceCount() {
+	return this->faces.size();
 }

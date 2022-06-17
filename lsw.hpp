@@ -17,7 +17,9 @@
 #ifndef MORTAR_LSW_H
 #define MORTAR_LSW_H
 
+#include <cstdint>
 #include <stdint.h>
+
 #include "model.hpp"
 #include "stream.hpp"
 
@@ -78,11 +80,18 @@ namespace Mortar {
 
 			uint32_t vertex_block_idx;
 
-			uint32_t unk_0020[4];
+			uint32_t unk_0020;
+
+			uint32_t unk_0024;
+
+			uint32_t unk_0028[2];
 
 			uint32_t face_offset;
 
-			uint32_t unk_0034[4];
+			uint32_t unk_0034;
+
+			uint32_t unk_0038;
+			uint32_t unk_003C;
 		};
 
 		struct Face {
@@ -106,8 +115,9 @@ namespace Mortar {
 			uint32_t unk_0000[16];
 
 			uint32_t flags;
+			uint32_t moreFlags;
 
-			uint32_t unk_0044[4];
+			uint32_t unk_0048[3];
 
 			float red;
 			float green;
@@ -120,7 +130,11 @@ namespace Mortar {
 			int16_t texture_idx;
 			uint16_t unk_007A;
 
-			uint32_t unk_007C[14];
+			uint32_t unk_007C[2];
+
+			float unk_0084[2];
+
+			uint32_t unk_0090[10];
 		};
 
 		std::vector<Model::Mesh> processMeshHeader(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers);

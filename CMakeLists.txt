@@ -19,6 +19,7 @@ set(SRCS
 	memorystream.cpp
 	model.cpp
 	nup.cpp
+	shader.cpp
 	stream.cpp
 	texture.cpp
 	)
