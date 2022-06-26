@@ -9,8 +9,7 @@
 #define GLSL(src) "#version 150\n" #src
 
 const GLchar *unlitVertexSource = GLSL(
-  uniform mat4 projectionMtx;
-  uniform mat4 viewMtx;
+  uniform mat4 projViewMtx;
   uniform mat4 meshTransformMtx;
 
   uniform vec4 materialColor;
@@ -33,7 +32,7 @@ const GLchar *unlitVertexSource = GLSL(
 
     fragColor = vec4(adjustedVertColor + adjustedMatColor, color.w);
 
-    gl_Position = projectionMtx * viewMtx * meshTransformMtx * mat4(mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0)) * vec4(position, 1.0);
+    gl_Position = projViewMtx * meshTransformMtx * vec4(position, 1.0);
   }
 );
 
@@ -57,8 +56,7 @@ const GLchar *unlitFragmentSource = GLSL(
 );
 
 const GLchar *skinVertexSource = GLSL(
-  uniform mat4 projectionMtx;
-  uniform mat4 viewMtx;
+  uniform mat4 projViewMtx;
   uniform mat4 meshTransformMtx;
 
   uniform vec4 materialColor;
@@ -76,15 +74,15 @@ const GLchar *skinVertexSource = GLSL(
   {
     fragTexCoord = texCoord;
 
-    vec3 transformedNormal = (meshTransformMtx * mat4(mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0)) * vec4(normal, 1.0)).xyz;
+    vec3 transformedNormal = (meshTransformMtx * vec4(normal, 1.0)).xyz;
 
     vec3 light0Color = max(dot(normalize(vec3(1.0, 0.0, 0.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
     vec3 light1Color = max(dot(normalize(vec3(0.0, 1.0, 0.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
-    vec3 light2Color = max(dot(normalize(vec3(0.0, 0.0, 1.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
+    vec3 light2Color = max(dot(normalize(vec3(0.0, 0.0, -1.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
 
     fragColor = vec4(materialColor.xyz * (light0Color, light1Color, light2Color + vec3(0.4, 0.4, 0.4)), color.w);
 
-    gl_Position = projectionMtx * viewMtx * meshTransformMtx * mat4(mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0)) * vec4(position, 1.0);
+    gl_Position = projViewMtx * meshTransformMtx * vec4(position, 1.0);
   }
 );
 
@@ -109,8 +107,7 @@ const GLchar *skinFragmentSource = GLSL(
 );
 
 const GLchar *basicVertexSource = GLSL(
-  uniform mat4 projectionMtx;
-  uniform mat4 viewMtx;
+  uniform mat4 projViewMtx;
   uniform mat4 meshTransformMtx;
 
   uniform vec4 materialColor;
@@ -128,15 +125,15 @@ const GLchar *basicVertexSource = GLSL(
   {
     fragTexCoord = texCoord;
 
-    vec3 transformedNormal = (meshTransformMtx * mat4(mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0)) * vec4(normal, 1.0)).xyz;
+    vec3 transformedNormal = (meshTransformMtx * vec4(normal, 1.0)).xyz;
 
     vec3 light0Color = max(dot(normalize(vec3(1.0, 0.0, 0.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
     vec3 light1Color = max(dot(normalize(vec3(0.0, 1.0, 0.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
-    vec3 light2Color = max(dot(normalize(vec3(0.0, 0.0, 1.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
+    vec3 light2Color = max(dot(normalize(vec3(0.0, 0.0, -1.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
 
     fragColor = vec4(materialColor.xyz * (light0Color, light1Color, light2Color + vec3(0.4, 0.4, 0.4)), color.w);
 
-    gl_Position = projectionMtx * viewMtx * meshTransformMtx * mat4(mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0)) * vec4(position, 1.0);
+    gl_Position = projViewMtx * meshTransformMtx * vec4(position, 1.0);
   }
 );
 
@@ -174,7 +171,7 @@ int checkCompileStatus(GLuint shader) {
     glGetShaderInfoLog(shader, 512, NULL, infoLog);
     DEBUG("failed to compile shader: %s", infoLog);
     return -1;
-	}
+  }
 
   return 0;
 }

@@ -102,10 +102,14 @@ int main(int argc, char **argv) {
 		glm::vec3(0.0f, 1.0f, 0.0f)
 	);
 
+	glm::mat4 d3dTransform = glm::diagonal4x4(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
+
 	/* Main loop. */
 	bool shouldClose = false;
 	while (!shouldClose) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glm::mat4 projViewMtx = proj * view * d3dTransform;
 
 		for (int i = 0; i < glModel.renderObjects.size(); i++) {
 			GLModel::RenderObject renderObject = glModel.renderObjects[i];
@@ -117,8 +121,7 @@ int main(int argc, char **argv) {
 			GLint tex_unif = glGetUniformLocation(shaderProgram, "materialTex");
 			GLint has_tex_unif = glGetUniformLocation(shaderProgram, "hasTexture");
 
-			GLint projection_mtx_unif = glGetUniformLocation(shaderProgram, "projectionMtx");
-			GLint view_mtx_unif = glGetUniformLocation(shaderProgram, "viewMtx");
+			GLint projViewMtxUnif = glGetUniformLocation(shaderProgram, "projViewMtx");
 			GLint mesh_mtx_unif = glGetUniformLocation(shaderProgram, "meshTransformMtx");
 
 			GLint color_unif = glGetUniformLocation(shaderProgram, "materialColor");
@@ -130,8 +133,7 @@ int main(int argc, char **argv) {
 			// 	glUniform2fv(alphaAnimUVUnif, 1, renderObject.material.alphaAnimUV);
 			// }
 
-			glUniformMatrix4fv(projection_mtx_unif, 1, GL_FALSE, glm::value_ptr(proj));
-			glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
+			glUniformMatrix4fv(projViewMtxUnif, 1, GL_FALSE, glm::value_ptr(projViewMtx));
 
 			float adjustedColor[4];
 			memcpy(adjustedColor, renderObject.material.color, 4 * sizeof(float));
@@ -180,8 +182,7 @@ int main(int argc, char **argv) {
 			GLint tex_unif = glGetUniformLocation(shaderProgram, "materialTex");
 			GLint has_tex_unif = glGetUniformLocation(shaderProgram, "hasTexture");
 
-			GLint projection_mtx_unif = glGetUniformLocation(shaderProgram, "projectionMtx");
-			GLint view_mtx_unif = glGetUniformLocation(shaderProgram, "viewMtx");
+			GLint projViewMtxUnif = glGetUniformLocation(shaderProgram, "projViewMtx");
 			GLint mesh_mtx_unif = glGetUniformLocation(shaderProgram, "meshTransformMtx");
 
 			GLint color_unif = glGetUniformLocation(shaderProgram, "materialColor");
@@ -193,8 +194,7 @@ int main(int argc, char **argv) {
 			// 	glUniform2fv(alphaAnimUVUnif, 1, renderObject.material.alphaAnimUV);
 			// }
 
-			glUniformMatrix4fv(projection_mtx_unif, 1, GL_FALSE, glm::value_ptr(proj));
-			glUniformMatrix4fv(view_mtx_unif, 1, GL_FALSE, glm::value_ptr(view));
+			glUniformMatrix4fv(projViewMtxUnif, 1, GL_FALSE, glm::value_ptr(projViewMtx));
 
 			float adjustedColor[4];
 			memcpy(adjustedColor, renderObject.material.color, 4 * sizeof(float));
