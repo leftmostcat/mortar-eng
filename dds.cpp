@@ -26,94 +26,95 @@
 #define DDS_FORMAT_DXT5 MKTAG('D', 'X', 'T', '5')
 
 enum DDSFormatFlags {
-	DDS_HAS_ALPHA = 0x01,
-	DDS_HAS_FOURCC = 0x04,
-	DDS_IS_INDEXED = 0x20,
-	DDS_IS_RGB = 0x40
+  DDS_HAS_ALPHA = 0x01,
+  DDS_HAS_FOURCC = 0x04,
+  DDS_IS_INDEXED = 0x20,
+  DDS_IS_RGB = 0x40
 };
 
 struct DDSPixelFormat {
-	uint32_t size;
-	uint32_t flags;
-	uint32_t fourCC;
-	uint32_t num_bits;
-	uint32_t red_bitmask;
-	uint32_t green_bitmask;
-	uint32_t blue_bitmask;
-	uint32_t alpha_bitmask;
+  uint32_t size;
+  uint32_t flags;
+  uint32_t fourCC;
+  uint32_t num_bits;
+  uint32_t red_bitmask;
+  uint32_t green_bitmask;
+  uint32_t blue_bitmask;
+  uint32_t alpha_bitmask;
 };
 
 struct DDSHeader {
-	uint32_t tag;
-	uint32_t header_size;
-	uint32_t flags;
-	uint32_t height;
-	uint32_t width;
-	uint32_t pitch;
-	uint32_t depth;
-	uint32_t num_levels;
+  uint32_t tag;
+  uint32_t header_size;
+  uint32_t flags;
+  uint32_t height;
+  uint32_t width;
+  uint32_t pitch;
+  uint32_t depth;
+  uint32_t num_levels;
 
-	uint32_t reserved[11];
+  uint32_t reserved[11];
 
-	struct DDSPixelFormat format;
+  struct DDSPixelFormat format;
 
-	uint32_t caps;
-	uint32_t caps2;
-	uint32_t caps3;
-	uint32_t caps4;
-	uint32_t reserved2;
+  uint32_t caps;
+  uint32_t caps2;
+  uint32_t caps3;
+  uint32_t caps4;
+  uint32_t reserved2;
 };
 
 DDSTexture::DDSTexture(Stream &stream) : Texture() {
-	struct DDSHeader file_header;
+  struct DDSHeader file_header;
 
-	file_header.tag = stream.readUint32();
-	file_header.header_size = stream.readUint32();
-	file_header.flags = stream.readUint32();
-	file_header.height = stream.readUint32();
-	file_header.width = stream.readUint32();
+  file_header.tag = stream.readUint32();
+  file_header.header_size = stream.readUint32();
+  file_header.flags = stream.readUint32();
+  file_header.height = stream.readUint32();
+  file_header.width = stream.readUint32();
 
-	/* Pitch and depth are currently unused. */
-	stream.seek(2 * sizeof(uint32_t), SEEK_CUR);
+  /* Pitch and depth are currently unused. */
+  stream.seek(2 * sizeof(uint32_t), SEEK_CUR);
 
-	file_header.num_levels = stream.readUint32();
+  file_header.num_levels = stream.readUint32();
 
-	stream.seek(11 * sizeof(uint32_t), SEEK_CUR);
+  stream.seek(11 * sizeof(uint32_t), SEEK_CUR);
 
-	file_header.format.size = stream.readUint32();
-	file_header.format.flags = stream.readUint32();
-	file_header.format.fourCC = stream.readUint32();
+  file_header.format.size = stream.readUint32();
+  file_header.format.flags = stream.readUint32();
+  file_header.format.fourCC = stream.readUint32();
 
-	std::vector<Texture::Level> levels(file_header.num_levels);
+  std::vector<Texture::Level> levels(file_header.num_levels);
 
-	stream.seek(128, SEEK_SET);
+  stream.seek(128, SEEK_SET);
 
-	if (file_header.format.flags & DDS_HAS_FOURCC) {
-		switch (file_header.format.fourCC) {
-			case DDS_FORMAT_DXT3:
-				this->compressed = true;
-				this->format = GL_BGRA;
-				this->internal_format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+  if (file_header.format.flags & DDS_HAS_FOURCC) {
+    switch (file_header.format.fourCC) {
+      case DDS_FORMAT_DXT3:
+        this->compressed = true;
+        this->format = GL_BGRA;
+        this->internal_format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
 
-				/* Read in mipmap levels one by one. */
-				for (int i = 0; i < file_header.num_levels; i++) {
-					levels[i].size = (((file_header.width >> i) + 3) / 4) * (((file_header.height >> i) + 3) / 4) * 16;
+        /* Read in mipmap levels one by one. */
+        for (int i = 0; i < file_header.num_levels; i++) {
+          levels[i].size = (((file_header.width >> i) + 3) / 4) * (((file_header.height >> i) + 3) / 4) * 16;
 
-					levels[i].data = new uint8_t[levels[i].size];
+          levels[i].data = new uint8_t[levels[i].size];
 
-					for (int j = 0; j < levels[i].size; j++)
-						levels[i].data[j] = stream.readUint8();
-				}
+          for (int j = 0; j < levels[i].size; j++) {
+            levels[i].data[j] = stream.readUint8();
+          }
+        }
 
-				DEBUG("texture has %d levels", file_header.num_levels);
-				break;
-			default:
-				fprintf(stderr, "Unrecognized fourCC: %d\n", file_header.format.fourCC);
-				return;
-		}
-	}
+        DEBUG("texture has %d levels", file_header.num_levels);
+        break;
+      default:
+        fprintf(stderr, "Unrecognized fourCC: %d\n", file_header.format.fourCC);
+        return;
+    }
+  }
 
-	this->width = file_header.width;
-	this->height = file_header.height;
-	this->levels = levels;
+  this->width = file_header.width;
+  this->height = file_header.height;
+  this->levels = levels;
 }

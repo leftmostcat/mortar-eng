@@ -26,49 +26,35 @@
 #include "shader.hpp"
 
 class GLModel {
-	public:
-		class RenderObject {
-			public:
-				GLuint elementBuffer;
-				GLuint vertexArray;
+  public:
+    class RenderObject {
+      public:
+        GLuint elementBuffer;
+        GLuint vertexArray;
 
-				GLenum primitiveType;
+        GLenum primitiveType;
 
-				int elementCount;
+        int elementCount;
 
-				glm::mat4 transformation;
+        glm::mat4 transformation;
 
-				Model::Material material;
+        Model::Material material;
 
-				Shader shaderType;
-		};
+        Shader shaderType;
+    };
 
-		GLModel(Model model, EffectManager *effectManager);
-		~GLModel();
+    GLModel(Model model, EffectManager *effectManager);
+    ~GLModel();
 
-		GLuint *vertexArrayIds;
-		GLuint *vertexBufferIds;
-		GLuint *textureIds;
+    GLuint *vertexArrayIds;
+    GLuint *vertexBufferIds;
+    GLuint *textureIds;
 
-		int vertexBufferCount;
-		int textureCount;
+    int vertexBufferCount;
+    int textureCount;
 
-		std::vector<RenderObject> renderObjects;
-		std::vector<RenderObject> alphaRenderObjects;
+    std::vector<RenderObject> renderObjects;
+    std::vector<RenderObject> alphaRenderObjects;
 };
-
-inline const char *getErrorString(GLenum err) {
-	if (err == GL_INVALID_ENUM) {
-		return "GL_INVALID_ENUM";
-	} else if (err == GL_INVALID_VALUE) {
-		return "GL_INVALID_VALUE";
-	} else if (err == GL_INVALID_OPERATION) {
-		return "GL_INVALID_OPERATION";
-	} else if (err == GL_INVALID_FRAMEBUFFER_OPERATION) {
-		return "GL_INVALID_FRAMEBUFFER_OPERATION";
-	} else {
-		return "unknown error";
-	}
-}
 
 #endif

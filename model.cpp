@@ -18,66 +18,66 @@
 #include "model.hpp"
 
 void Model::setVertexBuffers(std::vector<Model::VertexBuffer> vertexBuffers) {
-	this->vertexBuffers = vertexBuffers;
+  this->vertexBuffers = vertexBuffers;
 }
 
 Model::VertexBuffer Model::getVertexBuffer(int i) {
-	return this->vertexBuffers.at(i);
+  return this->vertexBuffers.at(i);
 }
 
 int Model::getVertexBufferCount() {
-	return this->vertexBuffers.size();
+  return this->vertexBuffers.size();
 }
 
 void Model::setTextures(std::vector<Texture> textures) {
-	this->textures = textures;
+  this->textures = textures;
 }
 
 Texture Model::getTexture(int i) {
-	return this->textures.at(i);
+  return this->textures.at(i);
 }
 
 int Model::getTextureCount() {
-	return this->textures.size();
+  return this->textures.size();
 }
 
 void Model::setMaterials(std::vector<Model::Material> materials) {
-	this->materials = materials;
+  this->materials = materials;
 }
 
 Model::Material Model::getMaterial(int i) {
-	return this->materials.at(i);
+  return this->materials.at(i);
 }
 
 void Model::setObjects(std::vector<Model::Object> objects) {
-	this->objects = objects;
+  this->objects = objects;
 
-	std::vector<Model::Face>::iterator iter = this->faces.begin();
-	for (int i = 0; i < objects.size(); i++) {
-		for (int j = 0; j < objects[i].meshes.size(); j++) {
-			for (int k = 0; k < objects[i].meshes[j].faces.size(); k++) {
-				Face face = objects[i].meshes[j].faces[k];
+  std::vector<Model::Face>::iterator iter = this->faces.begin();
+  for (int i = 0; i < objects.size(); i++) {
+    for (int j = 0; j < objects[i].meshes.size(); j++) {
+      for (int k = 0; k < objects[i].meshes[j].faces.size(); k++) {
+        Face face = objects[i].meshes[j].faces[k];
 
-				face.transform = objects[i].transformation;
+        face.transform = objects[i].transformation;
 
-				this->faces.push_back(face);
-			}
-		}
-	}
+        this->faces.push_back(face);
+      }
+    }
+  }
 }
 
 Model::Object &Model::getObject(int i) {
-	return this->objects[i];
+  return this->objects[i];
 }
 
 int Model::getObjectCount() {
-	return this->objects.size();
+  return this->objects.size();
 }
 
 Model::Face &Model::getFace(int i) {
-	return this->faces[i];
+  return this->faces[i];
 }
 
 int Model::getFaceCount() {
-	return this->faces.size();
+  return this->faces.size();
 }

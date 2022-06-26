@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,18 +21,18 @@
 #include "stream.hpp"
 
 class FileStream : public Stream {
-	public:
-		explicit FileStream(const char *path, const char *mode);
-		~FileStream();
+  public:
+    explicit FileStream(const char *path, const char *mode);
+    ~FileStream();
 
-		virtual void seek(long offset, int whence);
-		virtual long tell();
+    virtual void seek(long offset, int whence);
+    virtual long tell();
 
-	private:
-		virtual void *read(size_t size);
+  private:
+    virtual void *read(size_t size);
 
-		FILE *fp;
-		SDL_RWops *rw;
+    FILE *fp;
+    SDL_RWops *rw;
 };
 
 #endif

@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -17,25 +17,25 @@
 #include "filestream.hpp"
 
 FileStream::FileStream(const char *path, const char *mode) : Stream::Stream() {
-	this->rw = SDL_RWFromFile(path, mode);
+  this->rw = SDL_RWFromFile(path, mode);
 }
 
 FileStream::~FileStream() {
-	SDL_RWclose(this->rw);
+  SDL_RWclose(this->rw);
 }
 
 void FileStream::seek(long offset, int whence) {
-	SDL_RWseek(this->rw, offset, whence);
+  SDL_RWseek(this->rw, offset, whence);
 }
 
 long FileStream::tell() {
-	return SDL_RWtell(this->rw);
+  return SDL_RWtell(this->rw);
 }
 
 void *FileStream::read(size_t size) {
-	uint8_t *ptr = new uint8_t[size];
+  uint8_t *ptr = new uint8_t[size];
 
-	SDL_RWread(this->rw, ptr, size, 1);
+  SDL_RWread(this->rw, ptr, size, 1);
 
-	return (void *)ptr;
+  return (void *)ptr;
 }

@@ -24,121 +24,121 @@
 #include "stream.hpp"
 
 namespace Mortar {
-	namespace LSW {
-		struct VertexBlock {
-			uint32_t size;
-			uint32_t id;
-			uint32_t offset;
-		};
+  namespace LSW {
+    struct VertexBlock {
+      uint32_t size;
+      uint32_t id;
+      uint32_t offset;
+    };
 
-		struct VertexHeader {
-			uint32_t num_vertex_blocks;
+    struct VertexHeader {
+      uint32_t num_vertex_blocks;
 
-			uint32_t unk_0004[3];
+      uint32_t unk_0004[3];
 
-			struct VertexBlock *blocks;
-		};
+      struct VertexBlock *blocks;
+    };
 
-		struct TextureBlockHeader {
-			uint32_t offset;
+    struct TextureBlockHeader {
+      uint32_t offset;
 
-			uint32_t unk_0004[4];
-		};
+      uint32_t unk_0004[4];
+    };
 
-		struct TextureHeader {
-			uint32_t texture_block_offset;
-			uint32_t texture_block_size;
-			uint32_t num_textures;
+    struct TextureHeader {
+      uint32_t texture_block_offset;
+      uint32_t texture_block_size;
+      uint32_t num_textures;
 
-			uint32_t unk_000C[4];
+      uint32_t unk_000C[4];
 
-			struct TextureBlockHeader *texture_block_headers;
-		};
+      struct TextureBlockHeader *texture_block_headers;
+    };
 
-		struct LayerHeader {
-			uint32_t name_offset;
-			uint32_t mesh_header_list_offsets[4];
-		};
+    struct LayerHeader {
+      uint32_t name_offset;
+      uint32_t mesh_header_list_offsets[4];
+    };
 
-		struct MeshHeader {
-			uint32_t unk_0000[3];
+    struct MeshHeader {
+      uint32_t unk_0000[3];
 
-			uint32_t mesh_offset;
+      uint32_t mesh_offset;
 
-			uint32_t unk_0010;
-		};
+      uint32_t unk_0010;
+    };
 
-		struct Mesh {
-			uint32_t next_offset;
+    struct Mesh {
+      uint32_t next_offset;
 
-			uint32_t unk_0004;
+      uint32_t unk_0004;
 
-			uint32_t material_idx;
-			uint32_t vertex_type;
+      uint32_t material_idx;
+      uint32_t vertex_type;
 
-			uint32_t unk_0010[3];
+      uint32_t unk_0010[3];
 
-			uint32_t vertex_block_idx;
+      uint32_t vertex_block_idx;
 
-			uint32_t unk_0020;
+      uint32_t unk_0020;
 
-			uint32_t unk_0024;
+      uint32_t unk_0024;
 
-			uint32_t unk_0028[2];
+      uint32_t unk_0028[2];
 
-			uint32_t face_offset;
+      uint32_t face_offset;
 
-			uint32_t unk_0034;
+      uint32_t unk_0034;
 
-			uint32_t unk_0038;
-			uint32_t unk_003C;
-		};
+      uint32_t unk_0038;
+      uint32_t unk_003C;
+    };
 
-		struct Face {
-			uint32_t next_offset;
-			uint32_t primitive_type;
+    struct Face {
+      uint32_t next_offset;
+      uint32_t primitive_type;
 
-			uint16_t num_elements;
-			uint16_t unk_000A;
+      uint16_t num_elements;
+      uint16_t unk_000A;
 
-			uint32_t elements_offset;
+      uint32_t elements_offset;
 
-			uint32_t unk_0010[16];
-		};
+      uint32_t unk_0010[16];
+    };
 
-		struct MaterialHeader {
-			uint32_t num_materials;
-			uint32_t *material_offsets;
-		};
+    struct MaterialHeader {
+      uint32_t num_materials;
+      uint32_t *material_offsets;
+    };
 
-		struct Material {
-			uint32_t unk_0000[16];
+    struct Material {
+      uint32_t unk_0000[16];
 
-			uint32_t flags;
-			uint32_t moreFlags;
+      uint32_t flags;
+      uint32_t moreFlags;
 
-			uint32_t unk_0048[3];
+      uint32_t unk_0048[3];
 
-			float red;
-			float green;
-			float blue;
+      float red;
+      float green;
+      float blue;
 
-			uint32_t unk_0060[5];
+      uint32_t unk_0060[5];
 
-			uint32_t alpha;
+      uint32_t alpha;
 
-			int16_t texture_idx;
-			uint16_t unk_007A;
+      int16_t texture_idx;
+      uint16_t unk_007A;
 
-			uint32_t unk_007C[2];
+      uint32_t unk_007C[2];
 
-			float unk_0084[2];
+      float unk_0084[2];
 
-			uint32_t unk_0090[10];
-		};
+      uint32_t unk_0090[10];
+    };
 
-		std::vector<Model::Mesh> processMeshHeader(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers);
-	}
+    std::vector<Model::Mesh> processMeshHeader(Stream &stream, const uint32_t body_offset, uint32_t mesh_header_offset, std::vector<Model::VertexBuffer> &vertexBuffers);
+  }
 }
 
 #endif

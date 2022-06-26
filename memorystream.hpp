@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,18 +20,18 @@
 #include "stream.hpp"
 
 class MemoryStream : public Stream {
-	public:
-		explicit MemoryStream(void *data, size_t size);
+  public:
+    explicit MemoryStream(void *data, size_t size);
 
-		virtual void seek(long offset, int whence);
-		virtual long tell();
+    virtual void seek(long offset, int whence);
+    virtual long tell();
 
-	private:
-		virtual void *read(size_t size);
+  private:
+    virtual void *read(size_t size);
 
-		uint8_t *data;
-		size_t size;
-		long pos;
+    uint8_t *data;
+    size_t size;
+    long pos;
 };
 
 #endif

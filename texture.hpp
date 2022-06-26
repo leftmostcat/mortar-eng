@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -22,22 +22,22 @@
 #include <stdint.h>
 
 class Texture {
-	public:
-		explicit Texture();
+  public:
+    explicit Texture();
 
-		class Level {
-			public:
-				int size;
-				uint8_t *data;
-		};
+    class Level {
+      public:
+        int size;
+        uint8_t *data;
+    };
 
-		bool compressed;
-		GLenum format;
-		GLint internal_format;
-		int width;
-		int height;
+    bool compressed;
+    GLenum format;
+    GLint internal_format;
+    int width;
+    int height;
 
-		std::vector<Texture::Level> levels;
+    std::vector<Texture::Level> levels;
 };
 
 #endif

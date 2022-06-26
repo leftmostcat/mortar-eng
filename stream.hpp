@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,24 +21,24 @@
 #include <stdio.h>
 
 class Stream {
-	public:
-		int8_t readInt8();
-		int16_t readInt16();
-		int32_t readInt32();
+  public:
+    int8_t readInt8();
+    int16_t readInt16();
+    int32_t readInt32();
 
-		uint8_t readUint8();
-		uint16_t readUint16();
-		uint32_t readUint32();
+    uint8_t readUint8();
+    uint16_t readUint16();
+    uint32_t readUint32();
 
-		float readFloat();
+    float readFloat();
 
-		char *readString();
+    char *readString();
 
-		virtual void seek(long offset, int whence) = 0;
-		virtual long tell() = 0;
+    virtual void seek(long offset, int whence) = 0;
+    virtual long tell() = 0;
 
-	private:
-		virtual void *read(size_t size) = 0;
+  private:
+    virtual void *read(size_t size) = 0;
 };
 
 #endif
