@@ -1,0 +1,116 @@
+/* This file is part of mortar.
+ *
+ * mortar is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * mortar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef MORTAR_MESH_H
+#define MORTAR_MESH_H
+
+#include <stdint.h>
+#include <vector>
+
+#include "joint.hpp"
+#include "material.hpp"
+#include "resource.hpp"
+#include "shader.hpp"
+#include "vertex.hpp"
+
+namespace Mortar::Resource {
+  enum class PrimitiveType {
+    LINE_LIST,
+    TRIANGLE_LIST,
+    TRIANGLE_STRIP,
+  };
+
+  class Surface : public Resource {
+    public:
+      Surface(ResourceHandle handle)
+        : Resource { handle } {};
+
+      PrimitiveType getPrimitiveType() const;
+      void setPrimitiveType(PrimitiveType primitiveType);
+
+      const IndexBuffer *getIndexBuffer() const;
+      void setIndexBuffer(IndexBuffer *indexBuffer);
+
+      void setSkinTransformCount(unsigned count);
+      void setSkinTransformStart(unsigned start);
+
+    private:
+      PrimitiveType primitiveType;
+
+      IndexBuffer *indexBuffer;
+
+      unsigned skinTransformCount;
+      unsigned skinTransformStart;
+  };
+
+  class Mesh : public Resource {
+    public:
+      Mesh(ResourceHandle handle)
+        : Resource { handle },
+          shaderType { ShaderType::INVALID },
+          vertexLayout { VertexLayout::EMPTY } {};
+
+      void addSurface(Surface *surface);
+      const std::vector<Surface *>& getSurfaces() const;
+
+      const Material *getMaterial() const;
+      void setMaterial(Material *material);
+
+      const VertexBuffer *getVertexBuffer() const;
+      void setVertexBuffer(VertexBuffer *vertexBuffer);
+
+      ShaderType getShaderType() const;
+      void setShaderType(ShaderType shaderType);
+
+      const VertexLayout& getVertexLayout() const;
+      void setVertexLayout(const VertexLayout& vertexLayout);
+
+    private:
+      std::vector<Surface *> surfaces;
+
+      Material *material;
+      VertexBuffer *vertexBuffer;
+
+      ShaderType shaderType;
+      VertexLayout vertexLayout;
+  };
+
+  class KinematicMesh : public Mesh {
+    public:
+      KinematicMesh(ResourceHandle handle)
+        : Mesh { handle } {};
+
+      unsigned getJointIdx() const;
+      void setJointIdx(unsigned jointIdx);
+
+    private:
+      unsigned jointIdx;
+  };
+
+  class SkinMesh : public Mesh {
+    public:
+      SkinMesh(ResourceHandle handle)
+        : Mesh { handle } {};
+  };
+
+  class DeformableSkinMesh : public Mesh {
+    public:
+      DeformableSkinMesh(ResourceHandle handle)
+        : Mesh { handle } {};
+  };
+}
+
+#endif
