@@ -41,11 +41,6 @@ void glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLs
 }
 
 int main(int argc, char **argv) {
-  if (argc < 2 || access(argv[1], R_OK) != 0) {
-    DEBUG("no model specified");
-    return -1;
-  }
-
   if (SDL_Init(SDL_INIT_VIDEO)) {
     DEBUG("failed to initialize SDL");
     return -1;
