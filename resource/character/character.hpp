@@ -17,9 +17,12 @@
 #ifndef MORTAR_RESOURCE_CHARACTER_H
 #define MORTAR_RESOURCE_CHARACTER_H
 
+#include <map>
 #include <string>
 #include <vector>
 
+#include "../../math/matrix.hpp"
+#include "../anim.hpp"
 #include "../layer.hpp"
 #include "../joint.hpp"
 #include "../model.hpp"
@@ -28,6 +31,27 @@
 namespace Mortar::Resource::Character {
   class Character : public Resource {
     public:
+      enum class AnimationType {
+        NONE,
+        IDLE,
+      };
+
+      class Locator : public Resource {
+        public:
+          Locator(ResourceHandle handle)
+            : Resource { handle } {};
+
+          const Math::Matrix& getTransform() const;
+          void setTransform(const Math::Matrix& transform);
+
+          unsigned char getJointIdx() const;
+          void setJointIdx(unsigned char jointIdx);
+
+        private:
+          Math::Matrix transform;
+          unsigned char jointIdx;
+      };
+
       Character(ResourceHandle handle)
         : Resource { handle } {};
 
@@ -38,18 +62,34 @@ namespace Mortar::Resource::Character {
       const Joint *getJoint(unsigned i) const;
       const std::vector<Joint *>& getJoints() const;
 
-      void addSkinTransform(glm::mat4 skinTransform);
-      const glm::mat4& getSkinTransform(unsigned i) const;
+      void addSkinTransform(Math::Matrix& skinTransform);
+      const Math::Matrix& getSkinTransform(unsigned i) const;
+
+      const std::vector<Math::Matrix>& getRestPose() const;
+      void setRestPose(std::vector<Math::Matrix>& restPose);
 
       void addLayer(Layer *layer);
       const Layer *getLayer(unsigned i) const;
       const std::vector<Layer *>& getLayers() const;
 
+      void addLocator(Locator *locator);
+      const Locator *getLocatorFromExternalIdx(unsigned char idx) const;
+
+      void addExternalLocatorMapping(unsigned char external, unsigned char internal);
+
+      void addSkeletalAnimation(AnimationType type, Animation *animation);
+      bool hasSkeletalAnimation(AnimationType type) const;
+      const Animation *getSkeletalAnimation(AnimationType type) const;
+
     private:
       Mortar::Resource::Model *model;
       std::vector<Joint *> joints;
-      std::vector<glm::mat4> skinTransforms;
+      std::vector<Math::Matrix> restPose;
+      std::vector<Math::Matrix> skinTransforms;
       std::vector<Layer *> layers;
+      std::vector<Locator *> locators;
+      std::map<unsigned char, unsigned char> externalLocatorMap;
+      std::map<AnimationType, Animation *> skeletalAnimations;
   };
 }
 

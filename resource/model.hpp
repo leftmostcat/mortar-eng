@@ -21,7 +21,6 @@
 #include <stdint.h>
 
 #include "material.hpp"
-#include "matrix.hpp"
 #include "mesh.hpp"
 #include "resource.hpp"
 #include "texture.hpp"

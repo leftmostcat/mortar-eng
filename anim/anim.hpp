@@ -14,17 +14,17 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "matrix.hpp"
+#ifndef MORTAR_ANIM_H
+#define MORTAR_ANIM_H
 
-glm::mat4 readMatrix(Stream &stream) {
-  float mtx_array[16];
+#include <vector>
 
-  /* D3DMATRIX is row-major and we need column-major for OpenGL, so read funny. */
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      mtx_array[i + j * 4] = stream.readFloat();
-    }
-  }
+#include "../math/matrix.hpp"
+#include "../resource/anim.hpp"
+#include "../resource/joint.hpp"
 
-  return glm::make_mat4(mtx_array);
+namespace Mortar::Animation {
+  std::vector<Mortar::Math::Matrix> runSkeletalAnimation(const Mortar::Resource::Animation *animation, const std::vector<Mortar::Resource::Joint *>& joints, float position);
 }
+
+#endif

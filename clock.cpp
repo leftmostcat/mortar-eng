@@ -14,23 +14,26 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_GAME_CONFIG_H
-#define MORTAR_GAME_CONFIG_H
+#include <SDL2/SDL_timer.h>
 
-namespace Mortar::Game {
-  class Config {
-    public:
-      Config(const char *dataPath)
-        : dataPath { dataPath } {};
+#include "clock.hpp"
 
-      const char *getDataPath();
-      virtual const char *getAnimationResourcePath(const char *character, const char *name) = 0;
-      virtual const char *getCharacterResourcePath(const char *name) = 0;
-      virtual const char *getSceneResourcePath(const char *name) = 0;
+using namespace Mortar;
 
-    protected:
-      const char *dataPath;
-  };
+void Clock::initialize() {
+  this->perfFrequency = SDL_GetPerformanceFrequency();
+  this->countsLastFrame = SDL_GetPerformanceCounter();
+
+  this->secondsPerCount = 1.0f / this->perfFrequency;
 }
 
-#endif
+void Clock::update() {
+  uint64_t counts = SDL_GetPerformanceCounter();
+
+  this->timeDelta = (counts - this->countsLastFrame) * this->secondsPerCount;
+  this->countsLastFrame = counts;
+}
+
+float Clock::getTimeDelta() {
+  return this->timeDelta;
+}

@@ -26,10 +26,10 @@ void Instance::setMesh(Mesh *mesh) {
   this->mesh = mesh;
 }
 
-const glm::mat4& Instance::getWorldTransform() const {
+const Mortar::Math::Matrix& Instance::getWorldTransform() const {
   return this->worldTransform;
 }
 
-void Instance::setWorldTransform(glm::mat4& worldTransform) {
+void Instance::setWorldTransform(Math::Matrix& worldTransform) {
   this->worldTransform = worldTransform;
 }

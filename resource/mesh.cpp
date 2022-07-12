@@ -36,12 +36,20 @@ void Surface::setIndexBuffer(IndexBuffer *indexBuffer) {
   this->indexBuffer = indexBuffer;
 }
 
+unsigned Surface::getSkinTransformCount() const {
+  return this->skinTransformCount;
+}
+
 void Surface::setSkinTransformCount(unsigned count) {
   this->skinTransformCount = count;
 }
 
-void Surface::setSkinTransformStart(unsigned start) {
-  this->skinTransformStart = start;
+const std::vector<ushort>& Surface::getSkinTransformIndices() const {
+  return this->skinTransformIndices;
+}
+
+void Surface::setSkinTransformIndices(std::vector<ushort>& indices) {
+  this->skinTransformIndices = indices;
 }
 
 void Mesh::addSurface(Surface *surface) {

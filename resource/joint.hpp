@@ -17,7 +17,7 @@
 #ifndef MORTAR_RESOURCE_JOINT_H
 #define MORTAR_RESOURCE_JOINT_H
 
-#include "matrix.hpp"
+#include "../math/matrix.hpp"
 #include "resource.hpp"
 
 namespace Mortar::Resource {
@@ -29,20 +29,31 @@ namespace Mortar::Resource {
       const char *getName() const;
       void setName(const char *name);
 
-      size_t getParentIdx() const;
-      void setParentIdx(size_t parentIdx);
+      int getParentIdx() const;
+      void setParentIdx(int parentIdx);
 
-      const glm::mat4& getTransform() const;
-      void setTransform(glm::mat4& transform);
+      const Math::Matrix& getTransform() const;
+      void setTransform(Mortar::Math::Matrix& transform);
 
-      const glm::mat4& getRestPoseTransform() const;
-      void setRestPoseTransform(glm::mat4& transform);
+      const Math::Point& getAttachmentPoint() const;
+      void setAttachmentPoint(Math::Point& attachmentPoint);
+
+      bool getIsRelativeToAttachment() const;
+      void setIsRelativeToAttachment(bool isRelativeToAttachment);
 
     private:
+      enum Flags {
+        IS_RELATIVE_TO_ATTACHMENT = 1 << 0,
+      };
+
+      void setFlag(Flags flag, bool value);
+
       const char *name;
-      size_t parentIdx;
-      glm::mat4 transform;
-      glm::mat4 restPoseTransform;
+      int parentIdx;
+      Math::Matrix transform;
+      Math::Point attachmentPoint;
+
+      unsigned char flags;
   };
 }
 

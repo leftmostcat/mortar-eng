@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "matrix.hpp"
 #include "model.hpp"
 #include "texture.hpp"
 

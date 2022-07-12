@@ -101,16 +101,9 @@ namespace Mortar::Resource::Providers::LSW {
 
         uint8_t unk_0015;
 
-        uint16_t skin_matrix_start;
+        uint16_t skin_matrix_indices[16];
 
-        uint32_t unk_0018;
-        uint32_t unk_001C;
-        uint32_t unk_0020;
-        uint32_t unk_0024;
-        uint32_t unk_0028;
-        uint32_t unk_002C;
-        uint32_t unk_0030;
-        uint32_t unk_0034;
+        uint16_t unk_0036;
         uint32_t unk_0038;
         uint32_t unk_003C;
         uint32_t unk_0040;

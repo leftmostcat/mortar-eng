@@ -14,15 +14,15 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../math/matrix.hpp"
 #include "geom.hpp"
-#include "matrix.hpp"
 
 using namespace Mortar::Resource;
 
 void GeomObject::clear() {
   this->next = nullptr;
   this->mesh = nullptr;
-  this->worldTransform = glm::identity<glm::mat4>();
+  this->worldTransform = Math::Matrix();
 }
 
 void GeomObject::setNext(GeomObject *next) {
@@ -33,6 +33,10 @@ void GeomObject::setMesh(Mortar::Resource::Mesh *mesh) {
   this->mesh = mesh;
 }
 
-void GeomObject::setWorldTransform(glm::mat4 worldTransform) {
+void GeomObject::setWorldTransform(Math::Matrix worldTransform) {
   this->worldTransform = worldTransform;
+}
+
+void GeomObject::setSkinTransforms(std::vector<Math::Matrix> *skinTransforms) {
+  this->skinTransforms = skinTransforms;
 }

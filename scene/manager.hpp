@@ -27,7 +27,7 @@ namespace Mortar::Scene {
       void initialize(Render::Renderer *renderer);
       void shutDown();
 
-      Resource::Actor *addActor(Resource::Character::Character *character, glm::mat4 worldTransform);
+      Resource::Actor *addActor(Resource::Character::Character *character, Math::Matrix worldTransform);
 
       void render();
 

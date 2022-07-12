@@ -14,18 +14,18 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <glm/gtx/string_cast.hpp>
 #include <iterator>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "../../log.hpp"
 #include "../../state.hpp"
+#include "../../math/matrix.hpp"
 #include "../../streams/filestream.hpp"
 #include "../../streams/memorystream.hpp"
 #include "../character/character.hpp"
 #include "../joint.hpp"
 #include "../layer.hpp"
-#include "../matrix.hpp"
 #include "../mesh.hpp"
 #include "../shader.hpp"
 #include "dds.hpp"
@@ -95,15 +95,26 @@ struct HGPLayerHeader {
 };
 
 struct HGPJoint {
-  glm::mat4 transformation_mtx;
-  float attachment[3];
+  Mortar::Math::Matrix transformation_mtx;
+  Mortar::Math::Point attachment;
 
   uint32_t name_offset;
 
   int8_t parent_idx;
+  uint8_t flags;
 
-  uint8_t unk_0051[3];
+  uint8_t unk_0052[2];
   uint32_t unk_0054[3];
+};
+
+struct HGPLocator {
+  Mortar::Math::Matrix transform;
+
+  uint32_t unk_0040;
+
+  uint8_t jointIdx;
+
+  uint8_t unk_0045[11];
 };
 
 const uint32_t BODY_OFFSET = 0x30;
@@ -189,23 +200,24 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
   for (int i = 0; i < model_header.num_joints; i++) {
     struct HGPJoint& hgpJoint = hgpJoints.at(i);
 
-    hgpJoint.transformation_mtx = readMatrix(stream);
-    hgpJoint.attachment[0] = stream.readFloat();
-    hgpJoint.attachment[1] = stream.readFloat();
-    hgpJoint.attachment[2] = stream.readFloat();
+    hgpJoint.transformation_mtx = Math::Matrix::fromStream(stream);
+    hgpJoint.attachment = Math::Point::fromStream(stream);
     hgpJoint.name_offset = stream.readUint32();
     hgpJoint.parent_idx = stream.readInt8();
+    hgpJoint.flags = stream.readUint8();
 
-    stream.seek(3 * sizeof(uint8_t), SEEK_CUR);
+    stream.seek(2 * sizeof(uint8_t), SEEK_CUR);
     stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
   }
 
-  std::vector<glm::mat4> restPose (model_header.num_joints);
+  std::vector<Math::Matrix> restPose (model_header.num_joints);
 
   stream.seek(BODY_OFFSET + model_header.rest_pose_offset, SEEK_SET);
   for (int i = 0; i < model_header.num_joints; i++) {
-    restPose[i] = readMatrix(stream);
+    restPose[i] = Math::Matrix::fromStream(stream);
   }
+
+  character->setRestPose(restPose);
 
   for (int i = 0; i < model_header.num_joints; i++) {
     HGPJoint& hgpJoint = hgpJoints[i];
@@ -223,13 +235,22 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
 
     joint->setParentIdx(hgpJoint.parent_idx);
     joint->setTransform(hgpJoint.transformation_mtx);
-    joint->setRestPoseTransform(restPose[i]);
+
+    joint->setAttachmentPoint(hgpJoint.attachment);
+
+    joint->setIsRelativeToAttachment((hgpJoint.flags & 8) != 0);
+
+    char parentMsg[256] = { 0 };
+    if (joint->getParentIdx() != -1) {
+      sprintf(parentMsg, ", parent is %s", character->getJoint(joint->getParentIdx())->getName());
+    }
+    DEBUG("joint %d is %s%s, flags 0x%x", i, jointName, parentMsg, hgpJoint.flags);
   }
 
   /* Read in information necessary for processing layers and meshes. */
   stream.seek(BODY_OFFSET + model_header.skin_transforms_offset, SEEK_SET);
   for (int i = 0; i < model_header.num_joints; i++) {
-    auto mtx = readMatrix(stream);
+    auto mtx = Math::Matrix::fromStream(stream);
     character->addSkinTransform(mtx);
   }
 
@@ -308,6 +329,34 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
         }
       }
     }
+  }
+
+  stream.seek(BODY_OFFSET + model_header.locators_offset, SEEK_SET);
+  for (int i = 0; i < model_header.num_locators; i++) {
+    HGPLocator hgpLocator;
+    hgpLocator.transform = Math::Matrix::fromStream(stream);
+
+    stream.seek(sizeof(uint32_t), SEEK_CUR);
+
+    hgpLocator.jointIdx = stream.readUint8();
+
+    stream.seek(11 * sizeof(uint8_t), SEEK_CUR);
+
+    // XXX: Breaks if we have more than 99 locators
+    char *locatorName = (char *)calloc(strlen(resourceName) + 7, sizeof(char));
+    sprintf(locatorName, "%s.loc%.2d", resourceName, i);
+
+    Character::Character::Locator *locator = resourceManager.getResource<Character::Character::Locator>(locatorName);
+    character->addLocator(locator);
+
+    locator->setTransform(hgpLocator.transform);
+    locator->setJointIdx(hgpLocator.jointIdx);
+  }
+
+  stream.seek(BODY_OFFSET + model_header.locator_index_map_offset, SEEK_SET);
+  for (int i = 0; i < model_header.num_locator_indices; i++) {
+    uint8_t internal = stream.readUint8();
+    character->addExternalLocatorMapping(i, internal);
   }
 
   return character;

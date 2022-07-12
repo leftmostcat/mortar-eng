@@ -14,6 +14,9 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "resource/anim.hpp"
+#include "resource/providers/lsw/anim.hpp"
+#include <SDL2/SDL_keycode.h>
 #define GL_GLEXT_PROTOTYPES
 
 #include <GL/gl.h>
@@ -63,22 +66,49 @@ int main(int argc, char **argv) {
 
   auto description = Resource::Character::CharacterDescription("obiwankenobi");
 
-  const char *path = State::getGameConfig()->getCharacterResourcePath(description.getName());
-  auto stream = FileStream(path, "rb");
+  const char *charPath = State::getGameConfig()->getCharacterResourcePath(description.getName());
+  auto charStream = FileStream(charPath, "rb");
 
-  Resource::Character::Character *character = Resource::Providers::HGPProvider::read(&description, path, stream);
+  Resource::Character::Character *character = Resource::Providers::HGPProvider::read(&description, charPath, charStream);
 
-  State::getSceneManager().addActor(character, glm::identity<glm::mat4>());
+  const char *animPath = State::getGameConfig()->getAnimationResourcePath("obiwankenobi", "idle");
+  auto animStream = FileStream(animPath, "rb");
+
+  Resource::Animation *animation = Resource::Providers::LSW::AnimProvider::read(animPath, animStream);
+
+  character->addSkeletalAnimation(Resource::Character::Character::AnimationType::IDLE, animation);
+
+  State::getSceneManager().addActor(character, Math::Matrix());
+
+  State::getClock().initialize();
 
   /* Main loop. */
   bool shouldClose = false;
   while (!shouldClose) {
+    State::getClock().update();
     State::getSceneManager().render();
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-      if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_q)) {
-        shouldClose = true;
+      if (event.type == SDL_KEYDOWN) {
+        if (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_q) {
+          shouldClose = true;
+        } else if (event.key.keysym.sym == SDLK_a) {
+          State::animEnabled = !State::animEnabled;
+        } else if (event.key.keysym.sym == SDLK_r) {
+          State::animRate = State::animRate == 30.0f ? 1.0f : 30.0f;
+        } else if (event.key.keysym.sym == SDLK_p) {
+          State::printNextFrame = true;
+        } else if (event.key.keysym.sym == SDLK_i) {
+          switch (State::interpolate) {
+            case State::InterpolateType::NONE:
+              State::interpolate = State::InterpolateType::HERMITE;
+              break;
+            case State::InterpolateType::HERMITE:
+              State::interpolate = State::InterpolateType::NONE;
+              break;
+          };
+        }
       } else if (event.type == SDL_QUIT) {
         shouldClose = true;
       }

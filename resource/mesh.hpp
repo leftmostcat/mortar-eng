@@ -44,8 +44,11 @@ namespace Mortar::Resource {
       const IndexBuffer *getIndexBuffer() const;
       void setIndexBuffer(IndexBuffer *indexBuffer);
 
+      unsigned getSkinTransformCount() const;
       void setSkinTransformCount(unsigned count);
-      void setSkinTransformStart(unsigned start);
+
+      const std::vector<ushort>& getSkinTransformIndices() const;
+      void setSkinTransformIndices(std::vector<ushort>& indices);
 
     private:
       PrimitiveType primitiveType;
@@ -53,7 +56,7 @@ namespace Mortar::Resource {
       IndexBuffer *indexBuffer;
 
       unsigned skinTransformCount;
-      unsigned skinTransformStart;
+      std::vector<ushort> skinTransformIndices;
   };
 
   class Mesh : public Resource {

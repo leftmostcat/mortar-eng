@@ -27,10 +27,46 @@ void Actor::setCharacter(Character::Character *character) {
   this->character = character;
 }
 
-const glm::mat4& Actor::getWorldTransform() const {
+const Mortar::Math::Matrix& Actor::getWorldTransform() const {
   return this->worldTransform;
 }
 
-void Actor::setWorldTransform(glm::mat4 &worldTransform) {
+void Actor::setWorldTransform(Math::Matrix &worldTransform) {
   this->worldTransform = worldTransform;
+}
+
+Character::Character::AnimationType Actor::getAnimation() const {
+  return this->animState.animType;
+}
+
+void Actor::setAnimation(Character::Character::AnimationType animType) {
+  this->animState.animType = animType;
+  this->animState.position = 0.0f;
+}
+
+void Actor::setAnimation(Character::Character::AnimationType animType, float position) {
+  this->animState.animType = animType;
+  this->animState.position = position;
+}
+
+void Actor::advanceAnimation(float timeDelta) {
+  this->animState.position += timeDelta;
+
+  const Animation *anim = character->getSkeletalAnimation(this->animState.animType);
+  if (!anim) {
+    this->animState.position = 0.0f;
+    return;
+  }
+
+  // XXX: Ignores animations that can't loop, animations that can play
+  // backwards, etc.
+  float animLength = anim->getLength();
+  if (this->animState.position > animLength) {
+    float difference = this->animState.position - animLength;
+    this->animState.position = difference;
+  }
+}
+
+float Actor::getAnimationPosition() const {
+  return this->animState.position;
 }

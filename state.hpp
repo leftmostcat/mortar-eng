@@ -17,6 +17,7 @@
 #ifndef MORTAR_STATE_H
 #define MORTAR_STATE_H
 
+#include "clock.hpp"
 #include "game/config.hpp"
 #include "resource/manager.hpp"
 #include "scene/manager.hpp"
@@ -24,12 +25,24 @@
 namespace Mortar {
   class State {
     public:
+      static Clock& getClock();
       static Game::Config *getGameConfig();
       static Resource::ResourceManager& getResourceManager();
       static Scene::SceneManager& getSceneManager();
       static void setGameConfig(Game::Config *config);
 
+      enum class InterpolateType {
+        NONE,
+        HERMITE,
+      };
+
+      static float animRate;
+      static bool animEnabled;
+      static bool printNextFrame;
+      static InterpolateType interpolate;
+
     private:
+      static Clock clock;
       static Game::Config *gameConfig;
       static Resource::ResourceManager resourceManager;
       static Scene::SceneManager sceneManager;

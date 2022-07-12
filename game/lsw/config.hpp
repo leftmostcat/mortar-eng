@@ -25,8 +25,9 @@ namespace Mortar::Game::LSW {
       Config()
         : Mortar::Game::Config { "lego_data" } {};
 
-      virtual const char * getCharacterResourcePath(const char *name) override;
-      virtual const char * getSceneResourcePath(const char *name) override;
+      virtual const char *getAnimationResourcePath(const char *character, const char *name) override;
+      virtual const char *getCharacterResourcePath(const char *name) override;
+      virtual const char *getSceneResourcePath(const char *name) override;
   };
 }
 

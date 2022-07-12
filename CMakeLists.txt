@@ -10,25 +10,29 @@ find_package(PkgConfig REQUIRED)
 find_package(SDL2 REQUIRED)
 
 set(SRCS
+  anim/anim.cpp
+  clock.cpp
   game/config.cpp
   game/lsw/config.cpp
+  math/matrix.cpp
   render/gl/renderer.cpp
   render/gl/shader.cpp
   resource/character/character.cpp
   resource/character/description.cpp
+  resource/providers/lsw/anim.cpp
   resource/providers/lsw/lsw.cpp
   resource/providers/lsw/meshes.cpp
   resource/providers/dds.cpp
   resource/providers/hgp.cpp
   resource/providers/nup.cpp
   resource/actor.cpp
+  resource/anim.cpp
   resource/geom.cpp
   resource/instance.cpp
   resource/joint.cpp
   resource/layer.cpp
   resource/manager.cpp
   resource/material.cpp
-  resource/matrix.cpp
   resource/mesh.cpp
   resource/model.cpp
   resource/resource.cpp

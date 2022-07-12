@@ -17,7 +17,7 @@
 #ifndef MORTAR_RESOURCE_INSTANCE_H
 #define MORTAR_RESOURCE_INSTANCE_H
 
-#include "matrix.hpp"
+#include "../math/matrix.hpp"
 #include "mesh.hpp"
 #include "resource.hpp"
 
@@ -30,12 +30,12 @@ namespace Mortar::Resource {
       const Mesh *getMesh() const;
       void setMesh(Mesh *mesh);
 
-      const glm::mat4& getWorldTransform() const;
-      void setWorldTransform(glm::mat4& worldTransform);
+      const Math::Matrix& getWorldTransform() const;
+      void setWorldTransform(Math::Matrix& worldTransform);
 
     private:
       Mesh *mesh;
-      glm::mat4 worldTransform;
+      Math::Matrix worldTransform;
   };
 }
 

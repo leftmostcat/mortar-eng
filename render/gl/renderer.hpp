@@ -32,14 +32,14 @@ namespace Mortar::Render::GL {
         Mortar::Render::Renderer { window },
         d3dTransform { glm::diagonal4x4(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f)) } {};
 
-      virtual void initialize() override;
-      virtual void shutDown() override;
+      void initialize() override;
+      void shutDown() override;
 
-      virtual void registerMeshes(const std::vector<Resource::Mesh *>& meshes) override;
-      virtual void registerTextures(const std::vector<Resource::Texture *>& textures) override;
-      virtual void registerVertexBuffers(const std::vector<Resource::VertexBuffer *>& vertexBuffers) override;
+      void registerMeshes(const std::vector<Resource::Mesh *>& meshes) override;
+      void registerTextures(const std::vector<Resource::Texture *>& textures) override;
+      void registerVertexBuffers(const std::vector<Resource::VertexBuffer *>& vertexBuffers) override;
 
-      virtual void renderGeometry(const Resource::GeomObject *geometry) override;
+      void renderGeometry(const Resource::GeomObject *geometry) override;
 
     private:
       ShaderManager shaderManager;

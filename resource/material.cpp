@@ -19,7 +19,7 @@
 
 using namespace Mortar::Resource;
 
-void Material::setFlag(Material::MaterialFlags flag, bool value) {
+void Material::setFlag(Material::Flags flag, bool value) {
   if (value) {
     this->flags |= flag;
   } else {
@@ -32,7 +32,7 @@ bool Material::isAlphaBlended() const {
 }
 
 void Material::setIsAlphaBlended(bool isAlphaBlended) {
-  this->setFlag(Material::MaterialFlags::ENABLE_ALPHA_BLEND, isAlphaBlended);
+  this->setFlag(Material::Flags::ENABLE_ALPHA_BLEND, isAlphaBlended);
 }
 
 bool Material::isDynamicallyLit() const {
@@ -40,7 +40,7 @@ bool Material::isDynamicallyLit() const {
 }
 
 void Material::setIsDynamicallyLit(bool isDynamicallyLit) {
-  this->setFlag(Material::MaterialFlags::DYNAMICALLY_LIT, isDynamicallyLit);
+  this->setFlag(Material::Flags::DYNAMICALLY_LIT, isDynamicallyLit);
 }
 
 const float *Material::getColor() const {

@@ -19,8 +19,8 @@
 
 #include <vector>
 
+#include "../math/matrix.hpp"
 #include "material.hpp"
-#include "matrix.hpp"
 #include "mesh.hpp"
 #include "resource.hpp"
 
@@ -35,13 +35,14 @@ namespace Mortar::Resource {
       void setNext(GeomObject *next);
 
       void setMesh(Mesh *mesh);
-      void setWorldTransform(glm::mat4 worldTransform);
+      void setWorldTransform(Math::Matrix worldTransform);
+      void setSkinTransforms(std::vector<Math::Matrix> *skinTransforms);
 
       GeomObject *next;
       Mesh *mesh;
-      glm::mat4 worldTransform;
+      Math::Matrix worldTransform;
 
-      std::vector<glm::mat4> *skinTransforms;
+      std::vector<Math::Matrix> *skinTransforms;
   };
 }
 

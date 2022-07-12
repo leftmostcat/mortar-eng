@@ -18,7 +18,7 @@
 
 #include "../../log.hpp"
 #include "../../state.hpp"
-#include "../matrix.hpp"
+#include "../../math/matrix.hpp"
 #include "../scene.hpp"
 #include "dds.hpp"
 #include "nup.hpp"
@@ -54,7 +54,7 @@ struct NUPModelHeader {
 };
 
 struct NUPInstance {
-  glm::mat4 transformation;
+  Mortar::Math::Matrix transformation;
 
   uint16_t mesh_idx;
   uint16_t unk_0042;
@@ -157,7 +157,7 @@ Mortar::Resource::Scene *NUPReader::read(const char *name, Stream &stream) {
   NUPInstance *instances_data = new NUPInstance[model_header.num_instances];
 
   for (int i = 0; i < model_header.num_instances; i++) {
-    instances_data[i].transformation = readMatrix(stream);
+    instances_data[i].transformation = Math::Matrix::fromStream(stream);
     instances_data[i].mesh_idx = stream.readUint16();
 
     stream.seek(sizeof(uint16_t), SEEK_CUR);
@@ -178,7 +178,7 @@ Mortar::Resource::Scene *NUPReader::read(const char *name, Stream &stream) {
 
     if (instances_data[i].matrix_offset) {
       stream.seek(BODY_OFFSET + instances_data[i].matrix_offset, SEEK_SET);
-      glm::mat4 transform = readMatrix(stream);
+      Math::Matrix transform = Math::Matrix::fromStream(stream);
       instance->setWorldTransform(transform);
     }
     else {

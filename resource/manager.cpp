@@ -33,6 +33,10 @@ void ResourceManager::shutDown() {
   for (auto geomObject = this->geomObjectPool.begin(); geomObject != this->geomObjectPool.end(); geomObject++) {
     delete *geomObject;
   }
+
+  for (auto resource = this->resources.begin(); resource != this->resources.end(); resource++) {
+    delete resource->second;
+  }
 }
 
 GeomObject *ResourceManager::getResource() {

@@ -122,7 +122,6 @@ Mortar::Resource::Texture *DDSProvider::read(const char *name, Stream &stream) {
           texture->addLevel(level);
         }
 
-        DEBUG("texture has %d levels", file_header.num_levels);
         break;
       default:
         fprintf(stderr, "Unrecognized fourCC: %d\n", file_header.format.fourCC);

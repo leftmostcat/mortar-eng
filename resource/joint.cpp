@@ -26,26 +26,42 @@ void Joint::setName(const char *name) {
   this->name = name;
 }
 
-size_t Joint::getParentIdx() const {
+int Joint::getParentIdx() const {
   return this->parentIdx;
 }
 
-void Joint::setParentIdx(size_t parentIdx) {
+void Joint::setParentIdx(int parentIdx) {
   this->parentIdx = parentIdx;
 }
 
-const glm::mat4& Joint::getTransform() const {
+const Mortar::Math::Matrix& Joint::getTransform() const {
   return this->transform;
 }
 
-void Joint::setTransform(glm::mat4 &transform) {
+void Joint::setTransform(Mortar::Math::Matrix &transform) {
   this->transform = transform;
 }
 
-const glm::mat4& Joint::getRestPoseTransform() const {
-  return this->restPoseTransform;
+const Mortar::Math::Point& Joint::getAttachmentPoint() const {
+  return this->attachmentPoint;
 }
 
-void Joint::setRestPoseTransform(glm::mat4 &transform) {
-  this->restPoseTransform = transform;
+void Joint::setAttachmentPoint(Mortar::Math::Point &attachmentPoint) {
+  this->attachmentPoint = attachmentPoint;
+}
+
+void Joint::setFlag(Joint::Flags flag, bool value) {
+  if (value) {
+    this->flags |= flag;
+  } else {
+    this->flags &= ~flag;
+  }
+}
+
+bool Joint::getIsRelativeToAttachment() const {
+  return this->flags & IS_RELATIVE_TO_ATTACHMENT;
+}
+
+void Joint::setIsRelativeToAttachment(bool isRelativeToAttachment) {
+  this->setFlag(IS_RELATIVE_TO_ATTACHMENT, isRelativeToAttachment);
 }

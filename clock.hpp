@@ -14,22 +14,26 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_GAME_CONFIG_H
-#define MORTAR_GAME_CONFIG_H
+#ifndef MORTAR_CLOCK_H
+#define MORTAR_CLOCK_H
 
-namespace Mortar::Game {
-  class Config {
+#include <stdint.h>
+
+namespace Mortar {
+  class Clock {
     public:
-      Config(const char *dataPath)
-        : dataPath { dataPath } {};
+      void initialize();
+      void update();
 
-      const char *getDataPath();
-      virtual const char *getAnimationResourcePath(const char *character, const char *name) = 0;
-      virtual const char *getCharacterResourcePath(const char *name) = 0;
-      virtual const char *getSceneResourcePath(const char *name) = 0;
+      float getTimeDelta();
 
-    protected:
-      const char *dataPath;
+    private:
+      uint64_t perfFrequency;
+      uint64_t countsLastFrame;
+
+      float secondsPerCount;
+
+      float timeDelta;
   };
 }
 

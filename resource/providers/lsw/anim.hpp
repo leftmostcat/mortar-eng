@@ -14,18 +14,17 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_MATRIX_H
-#define MORTAR_MATRIX_H
+#ifndef MORTAR_RESOURCE_PROVIDERS_LSW_ANIM_H
+#define MORTAR_RESOURCE_PROVIDERS_LSW_ANIM_H
 
-#define GLM_FORCE_RADIANS
+#include "../../../streams/stream.hpp"
+#include "../../anim.hpp"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/matrix_operation.hpp>
-
-#include "../streams/stream.hpp"
-
-glm::mat4 readMatrix(Stream &stream);
+namespace Mortar::Resource::Providers::LSW {
+  class AnimProvider {
+    public:
+      static Animation *read(const char *name, Stream& stream);
+  };
+}
 
 #endif

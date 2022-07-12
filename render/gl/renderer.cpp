@@ -17,6 +17,8 @@
 #define GL_GLEXT_PROTOTYPES
 
 #include <GL/gl.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <SDL2/SDL_video.h>
 #include <map>
 #include <stdexcept>
@@ -24,7 +26,6 @@
 
 #include "../../log.hpp"
 #include "../../state.hpp"
-#include "../../resource/matrix.hpp"
 #include "renderer.hpp"
 #include "shader.hpp"
 
@@ -210,11 +211,14 @@ void Renderer::registerTextures(const std::vector<Resource::Texture *> &textures
   GLuint *textureIdPtr = textureIds;
   glGenTextures(textures.size(), textureIds);
 
-  for (int i; i < textures.size(); i++, textureIdPtr++) {
+  DEBUG("texture size %zu", textures.size());
+
+  for (int i = 0; i < textures.size(); i++, textureIdPtr++) {
     Resource::Texture *texture = textures.at(i);
 
     glActiveTexture(GL_TEXTURE0 + i);
     glBindTexture(GL_TEXTURE_2D, *textureIdPtr);
+    DEBUG("setting sampler %d for %s", i, texture->getHandle());
     this->textureSamplers[texture->getHandle()] = i;
     this->textureIds[texture->getHandle()] = *textureIdPtr;
 
@@ -261,7 +265,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
   /* Initialize transformation matrices. */
-  glm::mat4 proj = glm::perspective(45.0f, (float)WIDTH / HEIGHT, 0.5f, 10.0f);
+  glm::mat4 proj = glm::perspective(45.0f, (float)WIDTH / HEIGHT, 0.15f, 10000.0f);
 
   glm::mat4 view = glm::lookAt(
     glm::vec3(0.3f, 0.4f, 0.6f),
@@ -288,10 +292,11 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
     GLint has_tex_unif = glGetUniformLocation(shaderProgram, "hasTexture");
 
     GLint projViewMtxUnif = glGetUniformLocation(shaderProgram, "projViewMtx");
-    GLint mesh_mtx_unif = glGetUniformLocation(shaderProgram, "meshTransformMtx");
+    GLint worldTransformUnif = glGetUniformLocation(shaderProgram, "meshTransformMtx");
 
     GLint color_unif = glGetUniformLocation(shaderProgram, "materialColor");
     GLint multipliers_unif = glGetUniformLocation(shaderProgram, "colorMultipliers");
+    GLint skinMtcesUnif = glGetUniformLocation(shaderProgram, "skinTransformMtces");
 
     // if (renderObject.shaderType == UNLIT) {
     //   glUniform2fv(alphaAnimUVUnif, 1, renderObject.material.alphaAnimUV);
@@ -337,15 +342,41 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
 
     /* Set per-mesh material color and transformation matrix. */
     glUniform3fv(color_unif, 1, adjustedColor);
-    glUniformMatrix4fv(mesh_mtx_unif, 1, GL_TRUE, glm::value_ptr(geometry->worldTransform));
+
+    if (worldTransformUnif != -1) {
+      glUniformMatrix4fv(worldTransformUnif, 1, GL_FALSE, geometry->worldTransform.f);
+    }
 
     Resource::ResourceHandle meshHandle = mesh->getHandle();
 
     GLuint vertexArrayId = this->vertexArrayIds.at(meshHandle);
     glBindVertexArray(vertexArrayId);
 
+    std::vector<Math::Matrix> *skinTransforms = geometry->skinTransforms;
+
     const std::vector<Resource::Surface *>& surfaces = mesh->getSurfaces();
     for (auto surface = surfaces.begin(); surface != surfaces.end(); surface++) {
+      if (skinMtcesUnif != -1) {
+        const std::vector<ushort>& indices = (*surface)->getSkinTransformIndices();
+        unsigned count = (*surface)->getSkinTransformCount();
+
+        assert(count <= 16);
+
+        float floats[256];
+        float *floatPtr = floats;
+        for (int i = 0; i < count; i++, floatPtr += 16) {
+          if (State::printNextFrame && (*surface)->getIndexBuffer()->getCount() == 30) {
+            DEBUG("index for %s at %d is %d", (*surface)->getHandle(), i, indices.at(i));
+            DEBUG("base 0x%lx, 0x%lx", (unsigned long)floats, (unsigned long)floatPtr);
+          }
+
+          const float *transform = skinTransforms->at(indices.at(i)).f;
+          memcpy(floatPtr, transform, 16 * sizeof(float));
+        }
+
+        glUniformMatrix4fv(skinMtcesUnif, count, GL_TRUE, floats);
+      }
+
       Resource::ResourceHandle surfaceHandle = (*surface)->getHandle();
 
       GLuint elementBufferId = this->elementBufferIds.at(surfaceHandle);

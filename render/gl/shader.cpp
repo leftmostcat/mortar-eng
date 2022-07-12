@@ -77,14 +77,13 @@ const GLchar *unlitFragmentSource = GLSL(
 
 const GLchar *skinVertexSource = GLSL(
   uniform mat4 projViewMtx;
-  uniform mat4 meshTransformMtx;
-	uniform mat4x3 skinTransformMtces[16];
+	uniform mat4 skinTransformMtces[16];
 
   uniform vec3 materialColor;
   uniform vec2 colorMultipliers;
 
   in vec3 position;
-	in vec2 blendweight;
+	in vec2 blendWeights;
 	in vec3 blendIndices;
   in vec3 normal;
   in vec4 color;
@@ -97,9 +96,16 @@ const GLchar *skinVertexSource = GLSL(
   {
     fragTexCoord = texCoord;
 
-		vec3 finalTransformIndices = floor(blendIndices) * 3;
+		ivec3 intBlendIndices = ivec3(blendIndices);
 
-    vec3 transformedNormal = (meshTransformMtx * vec4(normal, 1.0)).xyz;
+    float weight2 = 1 - blendWeights.x - blendWeights.y;
+
+    vec4 normal4 = vec4(normal, 0.0f);
+    vec3 normalBlend0 = (normal4 * skinTransformMtces[intBlendIndices.x] * blendWeights.x).xyz;
+    vec3 normalBlend1 = (normal4 * skinTransformMtces[intBlendIndices.y] * blendWeights.y).xyz;
+    vec3 normalBlend2 = (normal4 * skinTransformMtces[intBlendIndices.z] * weight2).xyz;
+
+    vec3 transformedNormal = normalBlend0 + normalBlend1 + normalBlend2;
 
     vec3 light0Color = max(dot(normalize(vec3(1.0, 0.0, 0.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
     vec3 light1Color = max(dot(normalize(vec3(0.0, 1.0, 0.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
@@ -107,7 +113,14 @@ const GLchar *skinVertexSource = GLSL(
 
     fragColor = vec4(materialColor * (light0Color, light1Color, light2Color + vec3(0.4, 0.4, 0.4)), color.w);
 
-    gl_Position = projViewMtx * meshTransformMtx * vec4(position, 1.0);
+    vec4 position4 = vec4(position, 1.0f);
+    vec3 positionBlend0 = (position4 * skinTransformMtces[intBlendIndices.x] * blendWeights.x).xyz;
+    vec3 positionBlend1 = (position4 * skinTransformMtces[intBlendIndices.y] * blendWeights.y).xyz;
+    vec3 positionBlend2 = (position4 * skinTransformMtces[intBlendIndices.z] * weight2).xyz;
+
+    vec3 transformedPosition = positionBlend0 + positionBlend1 + positionBlend2;
+
+    gl_Position = projViewMtx * vec4(transformedPosition, 1.0);
   }
 );
 
@@ -150,7 +163,7 @@ const GLchar *basicVertexSource = GLSL(
   {
     fragTexCoord = texCoord;
 
-    vec3 transformedNormal = (meshTransformMtx * vec4(normal, 1.0)).xyz;
+    vec3 transformedNormal = (meshTransformMtx * vec4(normal, 0.0)).xyz;
 
     vec3 light0Color = max(dot(normalize(vec3(1.0, 0.0, 0.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);
     vec3 light1Color = max(dot(normalize(vec3(0.0, 1.0, 0.0)), transformedNormal), 0) * vec3(1.0, 1.0, 1.0);

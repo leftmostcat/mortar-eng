@@ -22,6 +22,16 @@
 
 using namespace Mortar::Game::LSW;
 
+const char *Config::getAnimationResourcePath(const char *character, const char *name) {
+  char pathBuf[1024];
+  sprintf(pathBuf, "%s/Chars/%s/%s.ani", this->dataPath, character, name);
+
+  char *path = (char *)calloc(strlen(pathBuf) + 1, sizeof(char));
+  strcpy(path, pathBuf);
+
+  return path;
+}
+
 const char *Config::getCharacterResourcePath(const char *name) {
   char pathBuf[1024];
   sprintf(pathBuf, "%s/Chars/%s/%s.hgp", this->dataPath, name, name);

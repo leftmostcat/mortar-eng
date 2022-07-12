@@ -14,6 +14,7 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <vector>
 
 #include "character.hpp"
@@ -40,11 +41,19 @@ const std::vector<Mortar::Resource::Joint *>& Character::getJoints() const {
   return this->joints;
 }
 
-void Character::addSkinTransform(glm::mat4 skinTransform) {
+const std::vector<Mortar::Math::Matrix>& Character::getRestPose() const {
+  return this->restPose;
+}
+
+void Character::setRestPose(std::vector<Math::Matrix>& restPose) {
+  this->restPose = restPose;
+}
+
+void Character::addSkinTransform(Math::Matrix& skinTransform) {
   this->skinTransforms.push_back(skinTransform);
 }
 
-const glm::mat4& Character::getSkinTransform(unsigned i) const {
+const Mortar::Math::Matrix& Character::getSkinTransform(unsigned i) const {
   return this->skinTransforms.at(i);
 }
 
@@ -58,4 +67,49 @@ const Mortar::Resource::Layer *Character::getLayer(unsigned i) const {
 
 const std::vector<Mortar::Resource::Layer *>& Character::getLayers() const {
   return this->layers;
+}
+
+void Character::addLocator(Locator *locator) {
+  this->locators.push_back(locator);
+}
+
+const Character::Locator *Character::getLocatorFromExternalIdx(unsigned char idx) const {
+  return this->locators.at(this->externalLocatorMap.at(idx));
+}
+
+void Character::addExternalLocatorMapping(unsigned char external, unsigned char internal) {
+  this->externalLocatorMap[external] = internal;
+}
+
+void Character::addSkeletalAnimation(AnimationType type, Animation *animation) {
+  assert(type != AnimationType::NONE);
+  this->skeletalAnimations[type] = animation;
+}
+
+bool Character::hasSkeletalAnimation(AnimationType type) const {
+  return this->skeletalAnimations.contains(type);
+}
+
+const Mortar::Resource::Animation *Character::getSkeletalAnimation(AnimationType type) const {
+  if (!this->hasSkeletalAnimation(type)) {
+    return nullptr;
+  }
+
+  return this->skeletalAnimations.at(type);
+}
+
+const Mortar::Math::Matrix& Character::Locator::getTransform() const {
+  return this->transform;
+}
+
+void Character::Locator::setTransform(const Math::Matrix &transform) {
+  this->transform = transform;
+}
+
+unsigned char Character::Locator::getJointIdx() const {
+  return this->jointIdx;
+}
+
+void Character::Locator::setJointIdx(unsigned char jointIdx) {
+  this->jointIdx = jointIdx;
 }

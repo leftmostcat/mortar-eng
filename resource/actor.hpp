@@ -17,8 +17,7 @@
 #ifndef MORTAR_RESOURCE_ACTOR_H
 #define MORTAR_RESOURCE_ACTOR_H
 
-#include <glm/glm.hpp>
-
+#include "../math/matrix.hpp"
 #include "character/character.hpp"
 #include "resource.hpp"
 
@@ -31,12 +30,26 @@ namespace Mortar::Resource {
       const Character::Character *getCharacter() const;
       void setCharacter(Character::Character *character);
 
-      const glm::mat4& getWorldTransform() const;
-      void setWorldTransform(glm::mat4& worldTransform);
+      const Math::Matrix& getWorldTransform() const;
+      void setWorldTransform(Math::Matrix& worldTransform);
+
+      Character::Character::AnimationType getAnimation() const;
+      void setAnimation(Character::Character::AnimationType animType);
+      void setAnimation(Character::Character::AnimationType animType, float position);
+
+      void advanceAnimation(float timeDelta);
+      float getAnimationPosition() const;
 
     private:
+      class AnimState {
+        public:
+          float position;
+          Character::Character::AnimationType animType;
+      };
+
+      AnimState animState;
       Character::Character *character;
-      glm::mat4 worldTransform;
+      Math::Matrix worldTransform;
   };
 }
 

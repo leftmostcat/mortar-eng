@@ -107,7 +107,9 @@ const struct LSWProviders::LSWSurface LSWProviders::readSurfaceInfo(Stream &stre
 
 	stream.seek(sizeof(uint8_t), SEEK_CUR);
 
-	surface.skin_matrix_start = stream.readUint16();
+  for (int i = 0; i < 16; i++) {
+    surface.skin_matrix_indices[i] = stream.readUint16();
+  }
 
   // We can safely skip reading the rest of the unknown fields as we'll seek to
   // the next surface or elsewhere after this
@@ -161,7 +163,9 @@ void LSWProviders::processSurfaces(const char *baseName, Stream &stream, const u
     surface->setPrimitiveType(primitiveTypes.at(lswSurface.primitiveType));
 
     surface->setSkinTransformCount(lswSurface.num_skin_matrices);
-    surface->setSkinTransformStart(lswSurface.skin_matrix_start);
+
+    std::vector<ushort> indices(std::begin(lswSurface.skin_matrix_indices), std::end(lswSurface.skin_matrix_indices));
+    surface->setSkinTransformIndices(indices);
 
     nextOffset = lswSurface.next_offset;
     i++;

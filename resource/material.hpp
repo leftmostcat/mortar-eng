@@ -44,13 +44,13 @@ namespace Mortar::Resource {
     void setTexture(Texture *texture);
 
     private:
-      enum MaterialFlags {
+      enum Flags {
         USE_VERTEX_COLOR = 1 << 0,
         ENABLE_ALPHA_BLEND = 1 << 1,
         DYNAMICALLY_LIT = 1 << 2,
       };
 
-      void setFlag(MaterialFlags flag, bool value);
+      void setFlag(Flags flag, bool value);
 
       union {
         struct {
@@ -65,7 +65,7 @@ namespace Mortar::Resource {
 
       Texture *texture;
 
-      unsigned flags;
+      unsigned char flags;
   };
 }
 

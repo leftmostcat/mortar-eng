@@ -16,15 +16,26 @@
 
 #include <stdexcept>
 
+#include "clock.hpp"
 #include "state.hpp"
 #include "resource/manager.hpp"
 #include "scene/manager.hpp"
 
 using namespace Mortar;
 
+Clock State::clock = Clock();
 Game::Config *State::gameConfig = nullptr;
 Resource::ResourceManager State::resourceManager = Resource::ResourceManager();
 Scene::SceneManager State::sceneManager = Scene::SceneManager();
+
+float State::animRate = 1.0f;
+bool State::animEnabled = true;
+bool State::printNextFrame = false;
+State::InterpolateType State::interpolate = InterpolateType::HERMITE;
+
+Clock& State::getClock() {
+  return State::clock;
+}
 
 Game::Config *State::getGameConfig() {
   if (!State::gameConfig) {
