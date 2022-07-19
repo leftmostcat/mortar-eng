@@ -21,13 +21,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "actor.hpp"
-#include "character/character.hpp"
 #include "geom.hpp"
-#include "material.hpp"
-#include "model.hpp"
-#include "resource.hpp"
-#include "texture.hpp"
 
 namespace Mortar::Resource {
   class ResourceManager {

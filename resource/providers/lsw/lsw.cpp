@@ -14,9 +14,9 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cstdint>
 #include <map>
 #include <stdexcept>
+#include <stdint.h>
 #include <vector>
 
 #include "../../../log.hpp"
