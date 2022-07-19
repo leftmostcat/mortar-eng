@@ -211,6 +211,7 @@ Mortar::Resource::Animation *AnimProvider::read(const char *name, Stream& stream
         channel->setData(data, floatCount * sizeof(float));
       } else {
         DEBUG("unimplemented keyframe type %d", keyframeType);
+        throw std::runtime_error("unimplemented keyframe type");
       }
     }
   }
