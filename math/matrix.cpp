@@ -56,6 +56,41 @@ Matrix Matrix::operator*(const Matrix& B) const {
   return out;
 }
 
+Matrix Matrix::rotationZYX(float alpha, float beta, float gamma) {
+  Matrix out;
+
+  float sinAlpha = sin(alpha);
+  float cosAlpha = cos(alpha);
+
+  float sinBeta = sin(beta);
+  float cosBeta = cos(beta);
+
+  float sinGamma = sin(gamma);
+  float cosGamma = cos(gamma);
+
+  out._11 = cosAlpha * cosGamma;
+  out._12 = sinAlpha * sinBeta * cosGamma - cosBeta * sinGamma;
+  out._13 = sinBeta * sinGamma + sinAlpha * cosBeta * cosGamma;
+  out._14 = 0.0f;
+
+  out._21 = cosAlpha * sinGamma;
+  out._22 = cosBeta * cosGamma + sinAlpha * sinBeta * sinGamma;
+  out._23 = sinAlpha * cosBeta * sinGamma - sinBeta * cosGamma;
+  out._24 = 0.0f;
+
+  out._31 = -sinAlpha;
+  out._32 = cosAlpha * sinBeta;
+  out._33 = cosAlpha * cosBeta;
+  out._34 = 0.0f;
+
+  out._41 = 0.0f;
+  out._42 = 0.0f;
+  out._43 = 0.0f;
+  out._44 = 1.0f;
+
+  return out;
+}
+
 void Matrix::setTranslation(Point translation) {
   this->_41 = translation.x;
   this->_42 = translation.y;
@@ -100,6 +135,18 @@ void Matrix::transpose() {
   tmp = this->_14;
   this->_14 = this->_41;
   this->_41 = tmp;
+
+  tmp = this->_23;
+  this->_23 = this->_32;
+  this->_32 = tmp;
+
+  tmp = this->_24;
+  this->_24 = this->_42;
+  this->_42 = tmp;
+
+  tmp = this->_34;
+  this->_34 = this->_43;
+  this->_43 = tmp;
 }
 
 std::string Matrix::toString() {

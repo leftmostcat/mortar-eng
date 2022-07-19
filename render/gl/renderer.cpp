@@ -267,9 +267,9 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
   /* Initialize transformation matrices. */
   glm::mat4 proj = glm::perspective(45.0f, (float)WIDTH / HEIGHT, 0.15f, 10000.0f);
 
-  glm::mat4 view = glm::lookAt(
-    glm::vec3(0.3f, 0.4f, 0.6f),
-    glm::vec3(0.0f, 0.0f, 0.0f),
+  glm::mat4 view = glm::lookAtLH(
+    glm::vec3(0.1f, 0.4f, -0.6f),
+    glm::vec3(0.0f, 0.2f, 0.0f),
     glm::vec3(0.0f, 1.0f, 0.0f)
   );
 
@@ -279,7 +279,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
     return;
   }
 
-  glm::mat4 projViewMtx = proj * view * d3dTransform;
+  glm::mat4 projViewMtx = proj * d3dTransform * view;
 
   do {
     Resource::Mesh *mesh = geometry->mesh;

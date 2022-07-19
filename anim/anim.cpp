@@ -136,6 +136,10 @@ struct KeyframeLookupKey createKeyframeLookup(unsigned intervalCount, float posi
 }
 
 std::vector<Mortar::Math::Matrix> Mortar::Animation::runSkeletalAnimation(const Mortar::Resource::Animation *animation, const std::vector<Mortar::Resource::Joint *>& joints, float position) {
+  if (position >= animation->getLength()) {
+    position = animation->getLength() - 0.01;
+  }
+
   struct KeyframeLookupKey key = createKeyframeLookup(animation->getIntervalCount(), position);
 
   std::vector<Mortar::Math::Matrix> transforms;

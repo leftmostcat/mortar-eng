@@ -84,40 +84,7 @@ namespace Mortar::Math {
         return Matrix(mtx);
       };
 
-      static inline Matrix rotationZYX(float alpha, float beta, float gamma) {
-        Matrix out;
-
-        float sinAlpha = sin(alpha);
-        float cosAlpha = cos(alpha);
-
-        float sinBeta = sin(beta);
-        float cosBeta = cos(beta);
-
-        float sinGamma = sin(gamma);
-        float cosGamma = cos(gamma);
-
-        out._11 = cosAlpha * cosGamma;
-        out._12 = sinAlpha * sinBeta * cosGamma;
-        out._13 = sinBeta * sinGamma + sinAlpha * cosBeta * cosGamma;
-        out._14 = 0.0f;
-
-        out._21 = cosAlpha * sinGamma;
-        out._22 = cosBeta * cosGamma + sinAlpha * sinBeta * sinGamma;
-        out._23 = sinAlpha * cosBeta * sinGamma - sinBeta * cosGamma;
-        out._24 = 0.0f;
-
-        out._31 = -sinAlpha;
-        out._32 = cosAlpha * sinBeta;
-        out._33 = cosAlpha * cosBeta;
-        out._34 = 0.0f;
-
-        out._41 = 0.0f;
-        out._42 = 0.0f;
-        out._43 = 0.0f;
-        out._44 = 1.0f;
-
-        return out;
-      }
+      static Matrix rotationZYX(float alpha, float beta, float gamma);
 
       static inline Matrix fromStream(Stream& stream) {
         std::array<float, 16> mtx;
