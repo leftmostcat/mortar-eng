@@ -17,8 +17,8 @@
 #define GL_GLEXT_PROTOTYPES
 
 #include <GL/gl.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_operation.hpp>
 #include <SDL2/SDL_video.h>
 #include <map>
 #include <stdexcept>
@@ -218,7 +218,7 @@ void Renderer::registerTextures(const std::vector<Resource::Texture *> &textures
 
     glActiveTexture(GL_TEXTURE0 + i);
     glBindTexture(GL_TEXTURE_2D, *textureIdPtr);
-    DEBUG("setting sampler %d for %s", i, texture->getHandle());
+
     this->textureSamplers[texture->getHandle()] = i;
     this->textureIds[texture->getHandle()] = *textureIdPtr;
 

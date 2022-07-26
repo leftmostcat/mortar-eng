@@ -35,8 +35,8 @@ namespace Mortar::Resource {
       const Math::Matrix& getTransform() const;
       void setTransform(Mortar::Math::Matrix& transform);
 
-      const Math::Point& getAttachmentPoint() const;
-      void setAttachmentPoint(Math::Point& attachmentPoint);
+      const Math::Vector& getAttachmentPoint() const;
+      void setAttachmentPoint(Math::Vector& attachmentPoint);
 
       bool getIsRelativeToAttachment() const;
       void setIsRelativeToAttachment(bool isRelativeToAttachment);
@@ -51,7 +51,7 @@ namespace Mortar::Resource {
       const char *name;
       int parentIdx;
       Math::Matrix transform;
-      Math::Point attachmentPoint;
+      Math::Vector attachmentPoint;
 
       unsigned char flags;
   };

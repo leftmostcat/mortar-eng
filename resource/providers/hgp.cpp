@@ -96,7 +96,7 @@ struct HGPLayerHeader {
 
 struct HGPJoint {
   Mortar::Math::Matrix transformation_mtx;
-  Mortar::Math::Point attachment;
+  Mortar::Math::Vector attachment;
 
   uint32_t name_offset;
 
@@ -201,7 +201,7 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
     struct HGPJoint& hgpJoint = hgpJoints.at(i);
 
     hgpJoint.transformation_mtx = Math::Matrix::fromStream(stream);
-    hgpJoint.attachment = Math::Point::fromStream(stream);
+    hgpJoint.attachment = Math::Vector::fromStream(stream, 1.0);
     hgpJoint.name_offset = stream.readUint32();
     hgpJoint.parent_idx = stream.readInt8();
     hgpJoint.flags = stream.readUint8();

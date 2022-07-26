@@ -14,15 +14,10 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "resource/anim.hpp"
-#include "resource/providers/lsw/anim.hpp"
-#include <SDL2/SDL_keycode.h>
 #define GL_GLEXT_PROTOTYPES
 
 #include <GL/gl.h>
-#include <SDL2/SDL.h>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/glm.hpp>
+#include <SDL2/SDL_keycode.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -33,8 +28,10 @@
 #include "render/gl/renderer.hpp"
 #include "log.hpp"
 #include "state.hpp"
+#include "resource/anim.hpp"
 #include "resource/character/character.hpp"
 #include "resource/character/description.hpp"
+#include "resource/providers/lsw/anim.hpp"
 #include "resource/providers/hgp.hpp"
 #include "streams/filestream.hpp"
 

@@ -42,11 +42,11 @@ void Joint::setTransform(Mortar::Math::Matrix &transform) {
   this->transform = transform;
 }
 
-const Mortar::Math::Point& Joint::getAttachmentPoint() const {
+const Mortar::Math::Vector& Joint::getAttachmentPoint() const {
   return this->attachmentPoint;
 }
 
-void Joint::setAttachmentPoint(Mortar::Math::Point &attachmentPoint) {
+void Joint::setAttachmentPoint(Mortar::Math::Vector &attachmentPoint) {
   this->attachmentPoint = attachmentPoint;
 }
 

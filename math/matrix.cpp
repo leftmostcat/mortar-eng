@@ -27,31 +27,27 @@ Matrix::Matrix(std::array<float, 16> list)  {
 };
 
 Matrix Matrix::operator*(const Matrix& B) const {
-  // This isn't generalized matrix multiplication, so we make some simplifying
-  // assumptions: we ignore column four in rows 1 through 3 because it will
-  // consistently be zero and we simply add RHS's row 4 because _44 will
-  // consistently be one
   Matrix out;
 
-  out._11 = this->_11 * B._11 + this->_12 * B._21 + this->_13 * B._31;
-  out._12 = this->_11 * B._12 + this->_12 * B._22 + this->_13 * B._32;
-  out._13 = this->_11 * B._13 + this->_12 * B._23 + this->_13 * B._33;
-  out._14 = 0.0f;
+  out._11 = this->_11 * B._11 + this->_12 * B._21 + this->_13 * B._31 + this->_14 * B._41;
+  out._12 = this->_11 * B._12 + this->_12 * B._22 + this->_13 * B._32 + this->_14 * B._42;
+  out._13 = this->_11 * B._13 + this->_12 * B._23 + this->_13 * B._33 + this->_14 * B._43;
+  out._14 = this->_11 * B._14 + this->_12 * B._24 + this->_13 * B._34 + this->_14 * B._44;
 
-  out._21 = this->_21 * B._11 + this->_22 * B._21 + this->_23 * B._31;
-  out._22 = this->_21 * B._12 + this->_22 * B._22 + this->_23 * B._32;
-  out._23 = this->_21 * B._13 + this->_22 * B._23 + this->_23 * B._33;
-  out._24 = 0.0f;
+  out._21 = this->_21 * B._11 + this->_22 * B._21 + this->_23 * B._31 + this->_24 * B._41;
+  out._22 = this->_21 * B._12 + this->_22 * B._22 + this->_23 * B._32 + this->_24 * B._42;
+  out._23 = this->_21 * B._13 + this->_22 * B._23 + this->_23 * B._33 + this->_24 * B._43;
+  out._24 = this->_21 * B._14 + this->_22 * B._24 + this->_23 * B._34 + this->_24 * B._44;
 
-  out._31 = this->_31 * B._11 + this->_32 * B._21 + this->_33 * B._31;
-  out._32 = this->_31 * B._12 + this->_32 * B._22 + this->_33 * B._32;
-  out._33 = this->_31 * B._13 + this->_32 * B._23 + this->_33 * B._33;
-  out._34 = 0.0f;
+  out._31 = this->_31 * B._11 + this->_32 * B._21 + this->_33 * B._31 + this->_34 * B._41;
+  out._32 = this->_31 * B._12 + this->_32 * B._22 + this->_33 * B._32 + this->_34 * B._42;
+  out._33 = this->_31 * B._13 + this->_32 * B._23 + this->_33 * B._33 + this->_34 * B._43;
+  out._34 = this->_31 * B._14 + this->_32 * B._24 + this->_33 * B._34 + this->_34 * B._44;
 
-  out._41 = this->_41 * B._11 + this->_42 * B._21 + this->_43 * B._31 + B._41;
-  out._42 = this->_41 * B._12 + this->_42 * B._22 + this->_43 * B._32 + B._42;
-  out._43 = this->_41 * B._13 + this->_42 * B._23 + this->_43 * B._33 + B._43;
-  out._44 = 1.0f;
+  out._41 = this->_41 * B._11 + this->_42 * B._21 + this->_43 * B._31 + this->_44 * B._41;
+  out._42 = this->_41 * B._12 + this->_42 * B._22 + this->_43 * B._32 + this->_44 * B._42;
+  out._43 = this->_41 * B._13 + this->_42 * B._23 + this->_43 * B._33 + this->_44 * B._43;
+  out._44 = this->_41 * B._14 + this->_42 * B._24 + this->_43 * B._34 + this->_44 * B._44;
 
   return out;
 }
@@ -91,7 +87,51 @@ Matrix Matrix::rotationZYX(float alpha, float beta, float gamma) {
   return out;
 }
 
-void Matrix::setTranslation(Point translation) {
+Matrix Matrix::perspectiveRH(float fov, float aspectRatio, float zNear, float zFar) {
+  Matrix out;
+
+  float scaleY = 1.0f / tan(fov * 0.5f);
+  float scaleZ = zFar / (zFar - zNear);
+
+  out._11 = scaleY * (1.0 / aspectRatio);
+  out._22 = scaleY;
+  out._33 = scaleZ;
+  out._34 = 1.0f;
+  out._43 = -2 * zNear * scaleZ;
+  out._44 = 0.0f;
+
+  return out;
+}
+
+Matrix Matrix::lookAt(Vector eye, Vector at, Vector up) {
+  Matrix out;
+
+  Vector camDir = at - eye;
+
+  Vector zAxis = Vector::normalize(camDir);
+  Vector xAxis = Vector::normalize(Vector::cross(up, zAxis));
+  Vector yAxis = Vector::cross(zAxis, xAxis);
+
+  out._11 = xAxis.x;
+  out._12 = yAxis.x;
+  out._13 = zAxis.x;
+
+  out._21 = xAxis.y;
+  out._22 = yAxis.y;
+  out._23 = zAxis.y;
+
+  out._31 = xAxis.z;
+  out._32 = yAxis.z;
+  out._33 = zAxis.z;
+
+  out._41 = -Vector::dot(xAxis, eye);
+  out._42 = -Vector::dot(yAxis, eye);
+  out._43 = -Vector::dot(zAxis, eye);
+
+  return out;
+}
+
+void Matrix::setTranslation(Vector translation) {
   this->_41 = translation.x;
   this->_42 = translation.y;
   this->_43 = translation.z;
@@ -117,7 +157,7 @@ void Matrix::translate(float x, float y, float z) {
   this->_43 += z;
 }
 
-void Matrix::translate(Point translation) {
+void Matrix::translate(Vector translation) {
   this->translate(translation.x, translation.y, translation.z);
 }
 
@@ -156,24 +196,46 @@ std::string Matrix::toString() {
   return std::string(buf.get(), buf.get() + length);
 }
 
-Point Point::operator*(const Matrix &M) {
-  Point out;
-
-  out.x = this->x * M._11 + this->y * M._21 + this->z * M._31 + M._41;
-  out.y = this->x * M._12 + this->y * M._22 + this->z * M._32 + M._42;
-  out.z = this->x * M._13 + this->y * M._23 + this->z * M._33 + M._43;
-  out.w = 1.0f;
-
-  return out;
-}
-
-Point Point::operator-() {
-  Point out;
+Vector Vector::operator-() const {
+  Vector out;
 
   out.x = -this->x;
   out.y = -this->y;
   out.z = -this->z;
-  out.w = 1.0f;
+  out.w = this->w;
 
   return out;
+}
+
+Vector Vector::operator-(const Vector &b) const {
+  Vector out;
+
+  out.x = this->x - b.x;
+  out.y = this->y - b.y;
+  out.z = this->z - b.z;
+  out.w = this->w - b.w;
+
+  return out;
+}
+
+Vector Vector::operator*(const Matrix &M) const {
+  Vector out;
+
+  out.x = this->x * M._11 + this->y * M._21 + this->z * M._31 + this->w * M._41;
+  out.y = this->x * M._12 + this->y * M._22 + this->z * M._32 + this->w * M._42;
+  out.z = this->x * M._13 + this->y * M._23 + this->z * M._33 + this->w * M._43;
+  out.w = this->x * M._14 + this->y * M._24 + this->z * M._34 + this->w * M._44;
+
+  return out;
+}
+
+float Vector::getMagnitude() const {
+  return sqrt(Vector::dot(*this, *this));
+}
+
+std::string Vector::toString() {
+  std::unique_ptr<char []> buf(new char[256]);
+  sprintf(buf.get(), "(%.4f, %.4f, %.4f, %.4f)", x, y, z, w);
+  size_t length = strlen(buf.get());
+  return std::string(buf.get(), buf.get() + length);
 }

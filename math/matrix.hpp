@@ -17,12 +17,11 @@
 #ifndef MORTAR_MATH_MATRIX_H
 #define MORTAR_MATH_MATRIX_H
 
-#define GLM_FORCE_RADIANS
-
 #include <array>
 #include <math.h>
 #include <string>
 
+#include "../log.hpp"
 #include "../streams/stream.hpp"
 
 namespace Mortar::Math {
@@ -33,32 +32,61 @@ namespace Mortar::Math {
       Vector(float x, float y, float z, float w)
         : x { x }, y { y }, z { z }, w { w } {};
 
-      float& operator[](unsigned i) const;
+      Vector()
+        : Vector { 0.0f, 0.0f, 0.0f, 0.0f } {};
+
+      Vector operator-() const;
+      Vector operator-(const Vector& b) const;
+
+      static inline float dot(const Vector& a, const Vector& b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+      }
+
+      static inline Vector cross(const Vector& a, const Vector& b) {
+        Vector out;
+
+        out.x = a.y * b.z - a.z * b.y;
+        out.y = a.z * b.x - a.x * b.z;
+        out.z = a.x * b.y - a.y * b.x;
+        out.w = a.w;
+
+        return out;
+      }
+
+      static inline Vector normalize(const Vector& v) {
+        Vector out;
+
+        float magnitude = v.getMagnitude();
+        float invMagnitude = 1.0f / magnitude;
+
+        out.x = v.x * invMagnitude;
+        out.y = v.y * invMagnitude;
+        out.z = v.z * invMagnitude;
+        out.w = v.w;
+
+        return out;
+      }
+
+      static inline Vector fromStream(Stream& stream, float w) {
+        std::array<float, 4> vec;
+
+        for (int i = 0; i < 3; i++) {
+          vec[i] = stream.readFloat();
+        }
+
+        return Vector(vec[0], vec[1], vec[2], w);
+      }
+
+      float getMagnitude() const;
+
+      Vector operator*(const Matrix& M) const;
+
+      std::string toString();
 
       float x;
       float y;
       float z;
       float w;
-  };
-
-  class Point : public Vector {
-    public:
-      Point(float x, float y, float z)
-        : Vector { x, y, z, 1.0f } {};
-
-      Point()
-        : Point { 0.0f, 0.0f, 0.0f } {};
-
-      Point operator*(const Matrix& M);
-      Point operator-();
-
-      static inline Point fromStream(Stream& stream) {
-        float x = stream.readFloat();
-        float y = stream.readFloat();
-        float z = stream.readFloat();
-
-        return Point(x, y, z);
-      }
   };
 
   class Matrix {
@@ -85,6 +113,8 @@ namespace Mortar::Math {
       };
 
       static Matrix rotationZYX(float alpha, float beta, float gamma);
+      static Matrix perspectiveRH(float fov, float aspectRatio, float zNear, float zFar);
+      static Matrix lookAt(Vector eye, Vector at, Vector up);
 
       static inline Matrix fromStream(Stream& stream) {
         std::array<float, 16> mtx;
@@ -96,11 +126,11 @@ namespace Mortar::Math {
         return Matrix(mtx);
       }
 
-      void setTranslation(Point translation);
+      void setTranslation(Vector translation);
 
       void scale(float x, float y, float z);
       void translate (float x, float y, float z);
-      void translate(Point translation);
+      void translate(Vector translation);
 
       void transpose();
 

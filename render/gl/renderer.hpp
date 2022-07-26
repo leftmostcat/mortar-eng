@@ -19,7 +19,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtx/matrix_operation.hpp>
-#include <SDL2/SDL_video.h>
+#include <SDL2/SDL.h>
 #include <map>
 
 #include "../renderer.hpp"

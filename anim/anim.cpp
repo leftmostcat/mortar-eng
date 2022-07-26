@@ -184,9 +184,9 @@ std::vector<Mortar::Math::Matrix> Mortar::Animation::runSkeletalAnimation(const 
     transforms[i].translate(transX, transY, transZ);
 
     if (joint->getIsRelativeToAttachment()) {
-      Mortar::Math::Point attachmentPoint = joint->getAttachmentPoint();
+      Mortar::Math::Vector attachmentPoint = joint->getAttachmentPoint();
 
-      Mortar::Math::Point transformedAttachment = attachmentPoint * transforms[i];
+      Mortar::Math::Vector transformedAttachment = attachmentPoint * transforms[i];
       transforms[i].setTranslation(transformedAttachment);
 
       transforms[i].translate(-attachmentPoint);
