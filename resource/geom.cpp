@@ -29,7 +29,7 @@ void GeomObject::setNext(GeomObject *next) {
   this->next = next;
 }
 
-void GeomObject::setMesh(Mortar::Resource::Mesh *mesh) {
+void GeomObject::setMesh(const Mortar::Resource::Mesh *mesh) {
   this->mesh = mesh;
 }
 
@@ -37,6 +37,6 @@ void GeomObject::setWorldTransform(Math::Matrix worldTransform) {
   this->worldTransform = worldTransform;
 }
 
-void GeomObject::setSkinTransforms(std::vector<Math::Matrix> *skinTransforms) {
+void GeomObject::setSkinTransforms(std::vector<Math::Matrix> skinTransforms) {
   this->skinTransforms = skinTransforms;
 }

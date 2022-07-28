@@ -239,12 +239,6 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
     joint->setAttachmentPoint(hgpJoint.attachment);
 
     joint->setIsRelativeToAttachment((hgpJoint.flags & 8) != 0);
-
-    char parentMsg[256] = { 0 };
-    if (joint->getParentIdx() != -1) {
-      sprintf(parentMsg, ", parent is %s", character->getJoint(joint->getParentIdx())->getName());
-    }
-    DEBUG("joint %d is %s%s, flags 0x%x", i, jointName, parentMsg, hgpJoint.flags);
   }
 
   /* Read in information necessary for processing layers and meshes. */

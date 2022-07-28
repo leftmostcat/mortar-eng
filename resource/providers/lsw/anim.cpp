@@ -146,8 +146,6 @@ Mortar::Resource::Animation *AnimProvider::read(const char *name, Stream& stream
     Mortar::Resource::Animation::Element *element = resourceManager.getResource<Mortar::Resource::Animation::Element>(elementName);
     animation->addElement(element);
 
-    DEBUG("element %d flags 0x%x", i, elementFlags.at(i));
-
     uint32_t flags = elementFlags.at(i);
 
     element->setHasRotation((flags & 1) != 0);

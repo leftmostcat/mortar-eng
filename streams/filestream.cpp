@@ -14,6 +14,7 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <SDL2/SDL_error.h>
 #include <SDL2/SDL_rwops.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -105,6 +106,9 @@ FileStream::FileStream(const char *path, const char *mode) : Stream::Stream() {
         closedir(dir);
 
         this->rw = SDL_RWFromFile(newpath, mode);
+        if (this->rw == nullptr) {
+          throw std::ifstream::failure(SDL_GetError());
+        }
 
         free(newpath);
 

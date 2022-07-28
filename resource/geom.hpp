@@ -34,15 +34,15 @@ namespace Mortar::Resource {
 
       void setNext(GeomObject *next);
 
-      void setMesh(Mesh *mesh);
+      void setMesh(const Mesh *mesh);
       void setWorldTransform(Math::Matrix worldTransform);
-      void setSkinTransforms(std::vector<Math::Matrix> *skinTransforms);
+      void setSkinTransforms(std::vector<Math::Matrix> skinTransforms);
 
       GeomObject *next;
-      Mesh *mesh;
+      const Mesh *mesh;
       Math::Matrix worldTransform;
 
-      std::vector<Math::Matrix> *skinTransforms;
+      std::vector<Math::Matrix> skinTransforms;
   };
 }
 

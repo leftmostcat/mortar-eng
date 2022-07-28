@@ -282,7 +282,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
   glm::mat4 projViewMtx = proj * d3dTransform * view;
 
   do {
-    Resource::Mesh *mesh = geometry->mesh;
+    const Resource::Mesh *mesh = geometry->mesh;
 
     GLuint shaderProgram = this->shaderManager.getShaderProgram(mesh->getShaderType());
     glUseProgram(shaderProgram);
@@ -352,7 +352,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
     GLuint vertexArrayId = this->vertexArrayIds.at(meshHandle);
     glBindVertexArray(vertexArrayId);
 
-    std::vector<Math::Matrix> *skinTransforms = geometry->skinTransforms;
+    std::vector<Math::Matrix> skinTransforms = geometry->skinTransforms;
 
     const std::vector<Resource::Surface *>& surfaces = mesh->getSurfaces();
     for (auto surface = surfaces.begin(); surface != surfaces.end(); surface++) {
@@ -370,7 +370,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
             DEBUG("base 0x%lx, 0x%lx", (unsigned long)floats, (unsigned long)floatPtr);
           }
 
-          const float *transform = skinTransforms->at(indices.at(i)).f;
+          const float *transform = skinTransforms.at(indices.at(i)).f;
           memcpy(floatPtr, transform, 16 * sizeof(float));
         }
 

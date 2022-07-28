@@ -85,8 +85,6 @@ void GeometryList::addGeom(Mortar::Resource::GeomObject *geom) {
   tail = geom;
 }
 
-
-
 const std::vector<Mortar::Math::Matrix> calculatePose(const Mortar::Resource::Actor *actor) {
   const Mortar::Resource::Character::Character *character = actor->getCharacter();
 
@@ -144,7 +142,7 @@ void SceneManager::render() {
         }
         boneTransforms[i] = pose.at(i) * boneTransforms[parentIdx];
       } else {
-        boneTransforms[i] = pose.at(i);
+        boneTransforms[i] = pose.at(i) * (*actor)->getWorldTransform();
       }
 
       if (State::printNextFrame) {
@@ -166,7 +164,7 @@ void SceneManager::render() {
         geom->clear();
 
         geom->setMesh(*mesh);
-        geom->setSkinTransforms(&skinTransforms);
+        geom->setSkinTransforms(skinTransforms);
 
         if ((*mesh)->getMaterial()->isAlphaBlended()) {
           alphaGeoms.addGeom(geom);
@@ -181,7 +179,7 @@ void SceneManager::render() {
         geom->clear();
 
         geom->setMesh(*mesh);
-        geom->setSkinTransforms(&skinTransforms);
+        geom->setSkinTransforms(skinTransforms);
 
         if ((*mesh)->getMaterial()->isAlphaBlended()) {
           alphaGeoms.addGeom(geom);
@@ -191,13 +189,12 @@ void SceneManager::render() {
       }
 
       const std::vector<Resource::KinematicMesh *>& kinematicMeshes = layer->getKinematicMeshes();
-        for (auto mesh = kinematicMeshes.begin(); mesh != kinematicMeshes.end(); mesh++) {
+      for (auto mesh = kinematicMeshes.begin(); mesh != kinematicMeshes.end(); mesh++) {
         Resource::GeomObject *geom = resourceManager.getResource();
         geom->clear();
 
         geom->setMesh(*mesh);
-
-        geom->setWorldTransform(boneTransforms.at((*mesh)->getJointIdx()) * (*actor)->getWorldTransform());
+        geom->setWorldTransform(boneTransforms.at((*mesh)->getJointIdx()));
 
         if ((*mesh)->getMaterial()->isAlphaBlended()) {
           alphaGeoms.addGeom(geom);
