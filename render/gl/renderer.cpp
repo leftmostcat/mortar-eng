@@ -210,10 +210,10 @@ void Renderer::registerTextures(const std::vector<Resource::Texture *> &textures
   GLuint *textureIdPtr = textureIds;
   glGenTextures(textures.size(), textureIds);
 
-  DEBUG("texture size %zu", textures.size());
+  size_t start = this->textureSamplers.size();
 
-  for (int i = 0; i < textures.size(); i++, textureIdPtr++) {
-    Resource::Texture *texture = textures.at(i);
+  for (int i = start; i < start + textures.size(); i++, textureIdPtr++) {
+    Resource::Texture *texture = textures.at(i - start);
 
     glActiveTexture(GL_TEXTURE0 + i);
     glBindTexture(GL_TEXTURE_2D, *textureIdPtr);

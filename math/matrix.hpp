@@ -38,6 +38,7 @@ namespace Mortar::Math {
       Vector operator-() const;
       Vector operator-(const Vector& b) const;
       Vector operator+(const Vector& b) const;
+      Vector operator*(const float s) const;
 
       static inline float dot(const Vector& a, const Vector& b) {
         return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
@@ -82,6 +83,7 @@ namespace Mortar::Math {
       const static Vector yAxis;
       const static Vector zAxis;
 
+      float getAngleFrom(const Vector& v) const;
       float getMagnitude() const;
 
       Vector operator*(const Matrix& M) const;
@@ -117,6 +119,7 @@ namespace Mortar::Math {
         return Matrix(mtx);
       };
 
+      static Matrix rotationY(float theta);
       static Matrix rotationZYX(float alpha, float beta, float gamma);
       static Matrix perspectiveRH(float fov, float aspectRatio, float zNear, float zFar);
       static Matrix lookAt(const Vector& eye, const Vector& at, const Vector& up);

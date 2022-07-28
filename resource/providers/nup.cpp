@@ -14,10 +14,11 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <forward_list>
 #include <stdio.h>
+#include <vector>
 
 #include "../../log.hpp"
-#include "../../state.hpp"
 #include "../../math/matrix.hpp"
 #include "../scene.hpp"
 #include "dds.hpp"
@@ -50,7 +51,16 @@ struct NUPModelHeader {
   uint32_t mesh_header_list_offset;
   uint32_t num_instances;
 
-  uint32_t unk_001C[111];
+  uint32_t unk_001C;
+
+  uint32_t num_special_objects;
+
+  uint32_t unk_0024;
+
+  uint32_t num_splines;
+  uint32_t splines_offset;
+
+  uint32_t unk_0030[106];
 };
 
 struct NUPInstance {
@@ -66,16 +76,25 @@ struct NUPInstance {
   uint32_t unk_004C;
 };
 
+struct NUPSpline {
+  uint16_t vertexCount;
+
+  uint16_t unk_0002;
+
+  uint32_t nameOffset;
+  uint32_t verticesOffset;
+};
+
 const int BODY_OFFSET = 0x40;
 
-Mortar::Resource::Scene *NUPReader::read(const char *name, Stream &stream) {
-  const char *path = State::getGameConfig()->getCharacterResourcePath(name);
+Mortar::Resource::Scene *NUPProvider::read(const char *name, Stream &stream) {
+  const char *path = State::getGameConfig()->getSceneResourcePath(0, 0, name);
 
   ResourceManager resourceManager = State::getResourceManager();
   Scene *scene = resourceManager.getResource<Scene>(path);
 
   char *modelName = (char *)calloc(strlen(path) + 7, sizeof(char));
-  sprintf(modelName, "%s.model", path);
+  sprintf(modelName, "%s.scene", path);
   Model *model = resourceManager.getResource<Model>(modelName);
   scene->setModel(model);
 
@@ -106,6 +125,15 @@ Mortar::Resource::Scene *NUPReader::read(const char *name, Stream &stream) {
   model_header.mesh_header_list_offset = stream.readUint32();
   model_header.num_instances = stream.readUint32();
 
+  stream.seek(sizeof(uint32_t), SEEK_CUR);
+
+  model_header.num_special_objects = stream.readUint32();
+
+  stream.seek(sizeof(uint32_t), SEEK_CUR);
+
+  model_header.num_splines = stream.readUint32();
+  model_header.splines_offset = stream.readUint32();
+
   /* Read texture block information. */
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
   std::vector<Texture *> textures;
@@ -135,20 +163,23 @@ Mortar::Resource::Scene *NUPReader::read(const char *name, Stream &stream) {
     mesh_header_offsets[i] = stream.readUint32();
   }
 
-  std::vector<Mesh *> meshes;
+  std::vector<std::forward_list<Mesh *>> meshes;
   for (int i = 0; i < model_header.num_mesh_blocks; i++) {
     stream.seek(BODY_OFFSET + mesh_header_offsets[i], SEEK_SET);
 
-    // XXX: Breaks if we have more than 99 mesh blocks
-    char *meshBlockName = (char *)calloc(strlen(path) + 9, sizeof(char));
-    sprintf(meshBlockName, "%s.block%.2d", path, i);
+    // XXX: Breaks if we have more than 999 mesh blocks
+    char *meshBlockName = (char *)calloc(strlen(path) + 10, sizeof(char));
+    sprintf(meshBlockName, "%s.block%.3d", path, i);
 
     std::vector<Mesh *> blockMeshes;
     LSW::LSWProviders::MeshesProvider::read<Mesh>(blockMeshes, meshBlockName, stream, BODY_OFFSET, materials, vertexBuffers);
-    for (auto mesh = meshes.begin(); mesh != meshes.end(); mesh++) {
+
+    std::forward_list<Mesh *> meshList;
+    for (auto mesh = blockMeshes.begin(); mesh != blockMeshes.end(); mesh++) {
       scene->addMesh(*mesh);
-      meshes.push_back(*mesh);
+      meshList.push_front(*mesh);
     }
+    meshes.push_back(meshList);
   }
 
   delete [] mesh_header_offsets;
@@ -169,9 +200,9 @@ Mortar::Resource::Scene *NUPReader::read(const char *name, Stream &stream) {
   }
 
   for (int i = 0; i < model_header.num_instances; i++) {
-    // XXX: Breaks if we have more than 99 mesh blocks
-    char *instanceName = (char *)calloc(strlen(path) + 8, sizeof(char));
-    sprintf(instanceName, "%s.inst%.2d", path, i);
+    // XXX: Breaks if we have more than 999 instances
+    char *instanceName = (char *)calloc(strlen(path) + 9, sizeof(char));
+    sprintf(instanceName, "%s.inst%.3d", path, i);
 
     Instance *instance = resourceManager.getResource<Instance>(instanceName);
     scene->addInstance(instance);
@@ -180,15 +211,45 @@ Mortar::Resource::Scene *NUPReader::read(const char *name, Stream &stream) {
       stream.seek(BODY_OFFSET + instances_data[i].matrix_offset, SEEK_SET);
       Math::Matrix transform = Math::Matrix::fromStream(stream);
       instance->setWorldTransform(transform);
-    }
-    else {
+    } else {
       instance->setWorldTransform(instances_data[i].transformation);
     }
 
-    instance->setMesh(meshes.at(instances_data[i].mesh_idx));
+    instance->setMeshes(meshes.at(instances_data[i].mesh_idx));
   }
 
   delete [] instances_data;
+
+  std::vector<NUPSpline> nupSplines (model_header.num_splines);
+
+  stream.seek(BODY_OFFSET + model_header.splines_offset, SEEK_SET);
+  for (int i = 0; i < model_header.num_splines; i++) {
+    struct NUPSpline& spline = nupSplines[i];
+
+    spline.vertexCount = stream.readUint16();
+
+    stream.seek(sizeof(uint16_t), SEEK_CUR);
+
+    spline.nameOffset = stream.readUint32();
+    spline.verticesOffset = stream.readUint32();
+  }
+
+  for (int i = 0; i < model_header.num_splines; i++) {
+    stream.seek(BODY_OFFSET + nupSplines[i].nameOffset, SEEK_SET);
+    char *splineName = stream.readString();
+
+    char *splineResourceName = (char *)calloc(strlen(name) + strlen(splineName) + 8, sizeof(char));
+    sprintf(splineResourceName, "%s.spline.%s", name, splineName);
+    Spline *spline = resourceManager.getResource<Spline>(splineResourceName);
+
+    scene->addSpline(splineName, spline);
+
+    stream.seek(BODY_OFFSET + nupSplines[i].verticesOffset, SEEK_SET);
+    for (int j = 0; j < nupSplines[i].vertexCount; j++) {
+      Math::Vector vertex = Math::Vector::fromStream(stream, 1.0f);
+      spline->addVertex(vertex);
+    }
+  }
 
   return scene;
 }

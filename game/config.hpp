@@ -26,7 +26,7 @@ namespace Mortar::Game {
       const char *getDataPath();
       virtual const char *getAnimationResourcePath(const char *character, const char *name) = 0;
       virtual const char *getCharacterResourcePath(const char *name) = 0;
-      virtual const char *getSceneResourcePath(const char *name) = 0;
+      virtual const char *getSceneResourcePath(unsigned episode, unsigned chapter, const char *name) = 0;
 
     protected:
       const char *dataPath;

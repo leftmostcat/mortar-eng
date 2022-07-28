@@ -14,33 +14,26 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_SCENE_MANAGER_H
-#define MORTAR_SCENE_MANAGER_H
+#ifndef MORTAR_RESOURCE_SPLINE_H
+#define MORTAR_RESOURCE_SPLINE_H
 
 #include <vector>
 
-#include "../resource/actor.hpp"
-#include "../resource/character/character.hpp"
-#include "../resource/scene.hpp"
-#include "../render/renderer.hpp"
+#include "../math/matrix.hpp"
+#include "resource.hpp"
 
-namespace Mortar::Scene {
-  class SceneManager {
+namespace Mortar::Resource {
+  class Spline : public Resource {
     public:
-      void initialize(Render::Renderer *renderer);
-      void shutDown();
+      Spline(ResourceHandle handle)
+        : Resource { handle } {};
 
-      Resource::Actor *addActor(Resource::Character::Character *character);
-      void setScene(const Resource::Scene *scene);
-
-      void render();
+      void addVertex(Math::Vector vertex);
+      const Math::Vector& getVertex(size_t n) const;
+      const size_t getVertexCount() const;
 
     private:
-      Render::Renderer *renderer;
-      std::vector<Resource::Actor *> actors;
-      const Resource::Scene *scene;
-
-      std::vector<Math::Matrix> pcStartingTransforms;
+      std::vector<Math::Vector> vertices;
   };
 }
 

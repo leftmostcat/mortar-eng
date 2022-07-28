@@ -27,7 +27,7 @@ namespace Mortar::Game::LSW {
 
       virtual const char *getAnimationResourcePath(const char *character, const char *name) override;
       virtual const char *getCharacterResourcePath(const char *name) override;
-      virtual const char *getSceneResourcePath(const char *name) override;
+      virtual const char *getSceneResourcePath(unsigned episode, unsigned chapter, const char *name) override;
   };
 }
 

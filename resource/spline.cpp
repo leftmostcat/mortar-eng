@@ -14,17 +14,16 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_NUP_H
-#define MORTAR_NUP_H
+ #include "spline.hpp"
 
-#include "../../streams/stream.hpp"
-#include "../scene.hpp"
-
-namespace Mortar::Resource::Providers {
-  class NUPProvider {
-    public:
-      static Scene *read(const char *name, Stream &stream);
-  };
+void Mortar::Resource::Spline::addVertex(Math::Vector vertex) {
+  this->vertices.push_back(vertex);
 }
 
-#endif
+const Mortar::Math::Vector& Mortar::Resource::Spline::getVertex(size_t n) const {
+  return this->vertices.at(n);
+}
+
+const size_t Mortar::Resource::Spline::getVertexCount() const {
+  return this->vertices.size();
+}

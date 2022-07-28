@@ -38,6 +38,7 @@ set(SRCS
   resource/model.cpp
   resource/resource.cpp
   resource/scene.cpp
+  resource/spline.cpp
   resource/texture.cpp
   resource/vertex.cpp
   scene/manager.cpp

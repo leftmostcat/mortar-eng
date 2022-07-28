@@ -17,10 +17,14 @@
 #ifndef MORTAR_RESOURCE_SCENE_H
 #define MORTAR_RESOURCE_SCENE_H
 
+#include <unordered_map>
+
+#include "../math/matrix.hpp"
 #include "instance.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
 #include "resource.hpp"
+#include "spline.hpp"
 
 namespace Mortar::Resource {
   class Scene : public Resource {
@@ -37,10 +41,17 @@ namespace Mortar::Resource {
       void addInstance(Instance *instance);
       const std::vector<Instance *>& getInstances() const;
 
+      void addSpline(const std::string name, const Spline *spline);
+      const Spline *getSplineByName(const std::string name) const;
+
     private:
       Model *model;
       std::vector<Mesh *> meshes;
       std::vector<Instance *> instances;
+
+      std::vector<Math::Matrix> startTransforms;
+
+      std::unordered_map<std::string, const Spline *> splines;
   };
 }
 

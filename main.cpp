@@ -26,7 +26,6 @@
 
 #include "game/lsw/config.hpp"
 #include "render/gl/renderer.hpp"
-#include "math/matrix.hpp"
 #include "log.hpp"
 #include "state.hpp"
 #include "resource/anim.hpp"
@@ -34,6 +33,7 @@
 #include "resource/character/description.hpp"
 #include "resource/providers/lsw/anim.hpp"
 #include "resource/providers/hgp.hpp"
+#include "resource/providers/nup.hpp"
 #include "streams/filestream.hpp"
 
 #define WIDTH 800
@@ -57,28 +57,54 @@ int main(int argc, char **argv) {
   auto config = Game::LSW::Config();
   State::setGameConfig(&config);
 
-  auto description = Resource::Character::CharacterDescription("obiwankenobi");
+  // Load a scene we know we have
+  const char *scenePath = State::getGameConfig()->getSceneResourcePath(0, 0, "negotiations_a");
+  auto sceneStream = FileStream(scenePath, "rb");
+
+  Resource::Scene *scene = Resource::Providers::NUPProvider::read("negotiations_a", sceneStream);
+
+  State::getSceneManager().setScene(scene);
+
+  // XXX: Manually load Qui-Gon
+  auto description = Resource::Character::CharacterDescription("quigonjinn");
 
   const char *charPath = State::getGameConfig()->getCharacterResourcePath(description.getName());
+  auto quiStream = FileStream(charPath, "rb");
+
+  Resource::Character::Character *quigon = Resource::Providers::HGPProvider::read(&description, charPath, quiStream);
+
+  State::getSceneManager().addActor(quigon);
+
+  // Load a basic default character animation
+  const char *animPath = State::getGameConfig()->getAnimationResourcePath("quigonjinn", "idle");
+  auto quiAnimStream = FileStream(animPath, "rb");
+
+  Resource::Animation *animation = Resource::Providers::LSW::AnimProvider::read(animPath, quiAnimStream);
+
+  quigon->addSkeletalAnimation(Resource::Character::Character::AnimationType::IDLE, animation);
+
+  // XXX: Manually load Obi-Wan
+  description = Resource::Character::CharacterDescription("obiwankenobi");
+
+  charPath = State::getGameConfig()->getCharacterResourcePath(description.getName());
   auto charStream = FileStream(charPath, "rb");
 
-  Resource::Character::Character *character = Resource::Providers::HGPProvider::read(&description, charPath, charStream);
+  Resource::Character::Character *obiwan = Resource::Providers::HGPProvider::read(&description, charPath, charStream);
 
-  const char *animPath = State::getGameConfig()->getAnimationResourcePath("obiwankenobi", "idle");
+  State::getSceneManager().addActor(obiwan);
+
+  // Load a basic default character animation
+  animPath = State::getGameConfig()->getAnimationResourcePath("obiwankenobi", "idle");
   auto animStream = FileStream(animPath, "rb");
 
-  Resource::Animation *animation = Resource::Providers::LSW::AnimProvider::read(animPath, animStream);
+  animation = Resource::Providers::LSW::AnimProvider::read(animPath, animStream);
 
-  character->addSkeletalAnimation(Resource::Character::Character::AnimationType::IDLE, animation);
+  obiwan->addSkeletalAnimation(Resource::Character::Character::AnimationType::IDLE, animation);
 
-  State::getSceneManager().addActor(character, Math::Matrix());
-
+  // Start the clock
   State::getClock().initialize();
 
-  State::getCamera().setPosition(Math::Vector(0.1f, 0.4f, -0.6f, 1.0f));
-  State::getCamera().setLookAt(Math::Vector(0.0f, 0.2f, 0.0f, 1.0f));
-
-  /* Main loop. */
+  // Game loop
   bool shouldClose = false;
   while (!shouldClose) {
     State::getClock().update();

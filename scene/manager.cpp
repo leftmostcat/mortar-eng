@@ -14,6 +14,8 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cmath>
+#include <forward_list>
 #include <stdexcept>
 #include <vector>
 
@@ -36,13 +38,42 @@ void SceneManager::shutDown() {
   renderer->shutDown();
 }
 
-Mortar::Resource::Actor *SceneManager::addActor(Mortar::Resource::Character::Character *character, Math::Matrix worldTransform) {
-  // XXX: Make it so there can be more than one actor, duh
-  Mortar::Resource::Actor *actor = State::getResourceManager().getResource<Mortar::Resource::Actor>("foo");
+struct SockSegment {
+  Mortar::Math::Vector minima { INFINITY, INFINITY, INFINITY, 1.0f };
+  Mortar::Math::Vector maxima { -INFINITY, -INFINITY, -INFINITY, 1.0f };
+};
+
+void calculateSplineExtrema(const Mortar::Math::Vector& vertex, Mortar::Math::Vector& minima, Mortar::Math::Vector& maxima) {
+  minima.x = fmin(minima.x, vertex.x);
+  minima.y = fmin(minima.y, vertex.y);
+  minima.z = fmin(minima.z, vertex.z);
+
+  maxima.x = fmax(maxima.x, vertex.x);
+  maxima.y = fmax(maxima.y, vertex.y);
+  maxima.z = fmax(maxima.z, vertex.z);
+}
+
+float getValue(const Mortar::Math::Vector& lookAt, const Mortar::Math::Vector& a, const Mortar::Math::Vector& b) {
+  // XXX: Currently do not understand the geometric significance of this blend calculation
+  float angle;
+  if (a.z - b.z == 0.0f) {
+    angle = 0.0f;
+  }
+  angle = atan((a.x - b.x) / (a.z - b.z));
+
+  return fabs((lookAt.x - b.x) * cos(-angle) + (lookAt.z - b.z) * sin(-angle));
+}
+
+Mortar::Resource::Actor *SceneManager::addActor(Mortar::Resource::Character::Character *character) {
+  static unsigned actorCount = 0;
+
+  char *name = (char *)calloc(8, sizeof(char));
+  sprintf(name, "actor%.2d", actorCount);
+  Mortar::Resource::Actor *actor = State::getResourceManager().getResource<Mortar::Resource::Actor>(name);
   this->actors.push_back(actor);
 
   actor->setCharacter(character);
-  actor->setWorldTransform(worldTransform);
+  actor->setWorldTransform(this->pcStartingTransforms.at(actorCount));
   actor->setAnimation(Resource::Character::Character::AnimationType::IDLE);
 
   this->renderer->registerTextures(character->getModel()->getTextures());
@@ -64,7 +95,129 @@ Mortar::Resource::Actor *SceneManager::addActor(Mortar::Resource::Character::Cha
     this->renderer->registerMeshes(meshes);
   }
 
+  actorCount++;
+
   return actor;
+}
+
+void SceneManager::setScene(const Resource::Scene *scene) {
+  this->scene = scene;
+
+  this->renderer->registerTextures(scene->getModel()->getTextures());
+  this->renderer->registerVertexBuffers(scene->getModel()->getVertexBuffers());
+  this->renderer->registerMeshes(scene->getMeshes());
+
+  Math::Vector player1Pos;
+
+  const Resource::Spline *startSpline = scene->getSplineByName("start");
+  if (startSpline != nullptr) {
+    for (int i = 0; i < startSpline->getVertexCount(); i += 2) {
+      Math::Vector position = startSpline->getVertex(i);
+      Math::Vector lookAt = startSpline->getVertex(i + 1);
+
+      float angleFromZ = lookAt.getAngleFrom(-Math::Vector::zAxis);
+
+      Math::Matrix transform = Math::Matrix::rotationY(angleFromZ);
+      transform.setTranslation(position);
+
+      this->pcStartingTransforms.push_back(transform);
+
+      if (i == 0) {
+        player1Pos = position;
+      }
+    }
+  }
+
+  Math::Vector camPos;
+
+  for (int i = 0; i < 0x20; i++) {
+    char nameBuf[32];
+    sprintf(nameBuf, "sock_cam_%.2d", i);
+
+    const Resource::Spline *camSpline = scene->getSplineByName(nameBuf);
+    if (camSpline != nullptr) {
+      size_t vertexCount = camSpline->getVertexCount();
+
+      sprintf(nameBuf, "sock_a_%.2d", i);
+      const Resource::Spline *aSpline = scene->getSplineByName(nameBuf);
+
+      sprintf(nameBuf, "sock_b_%.2d", i);
+      const Resource::Spline *bSpline = scene->getSplineByName(nameBuf);
+
+      if (aSpline == nullptr || bSpline == nullptr || aSpline->getVertexCount() != vertexCount && bSpline->getVertexCount() != vertexCount) {
+        continue;
+      }
+
+      Math::Vector minima { INFINITY, INFINITY, INFINITY, 1.0f };
+      Math::Vector maxima { -INFINITY, -INFINITY, -INFINITY, 1.0f };
+
+      std::vector<SockSegment> segments (vertexCount - 1);
+
+      // XXX: Factor in C and D splines
+      for (int j = 0; j < vertexCount; j++) {
+        Math::Vector aVertex = aSpline->getVertex(j);
+        Math::Vector bVertex = bSpline->getVertex(j);
+
+        calculateSplineExtrema(aVertex, minima, maxima);
+        calculateSplineExtrema(bVertex, minima, maxima);
+
+        if (j > 0) {
+          calculateSplineExtrema(aVertex, segments[j - 1].minima, segments[j - 1].maxima);
+          calculateSplineExtrema(bVertex, segments[j - 1].minima, segments[j - 1].maxima);
+        }
+
+        if (j < segments.size()) {
+          calculateSplineExtrema(aVertex, segments[j].minima, segments[j].maxima);
+          calculateSplineExtrema(bVertex, segments[j].minima, segments[j].maxima);
+        }
+      }
+
+      // XXX: Create a sock system to be part of the scene manager and maintain
+      // these so that the camera can run this calculation per-frame
+      if (player1Pos.x >= minima.x && player1Pos.y >= minima.y && player1Pos.z >= minima.z && player1Pos.x <= maxima.x && player1Pos.y <= maxima.y && player1Pos.z <= maxima.z) {
+        DEBUG("player 1 in sock %d, %lu segments", i, vertexCount - 1);
+        for (int j = 0; j < segments.size(); j++) {
+          SockSegment segment = segments[j];
+
+          if (player1Pos.x >= segment.minima.x && player1Pos.y >= segment.minima.y && player1Pos.z >= segment.minima.z && player1Pos.x <= segment.maxima.x && player1Pos.y <= segment.maxima.y && player1Pos.z <= segment.maxima.z) {
+            DEBUG("player 1 in segment %d", j);
+
+            // XXX: Don't fully understand the calculation of the blend value here
+            float start = getValue(player1Pos, aSpline->getVertex(j), bSpline->getVertex(j));
+            float end = getValue(player1Pos, aSpline->getVertex(j + 1), bSpline->getVertex(j + 1));
+            float blend = start / (start + end);
+
+            const Math::Vector& camStartVertex = camSpline->getVertex(j);
+            camPos = (camSpline->getVertex(j + 1) - camStartVertex) * blend + camStartVertex;
+
+            // Use the mid spline to provide an upper limit on Y
+            // XXX: Read Y-limiting flag from scene config
+            sprintf(nameBuf, "sock_mid_%.2d", i);
+            const Resource::Spline *midSpline = scene->getSplineByName(nameBuf);
+            if (midSpline == nullptr || midSpline->getVertexCount() != vertexCount) {
+              // XXX: Don't have a way to deal with this right now
+              throw std::runtime_error("missing or invalid mid spline");
+            }
+
+            const Math::Vector& midStartVertex = midSpline->getVertex(j);
+            Math::Vector midBlended = (midSpline->getVertex(j + 1) - midStartVertex) * blend + midStartVertex;
+
+            camPos.y = fmax(camPos.y, fmin(1.2f, midBlended.y));
+          }
+        }
+      }
+    }
+  }
+
+  Math::Vector lookAt = player1Pos;
+
+  // XXX: Pulled the height value out of a text file, need to read it in
+  lookAt.y = 0.42f * 0.5f;
+
+  State::getCamera().setLookAt(lookAt);
+  State::getCamera().setPosition(camPos);
+
+  DEBUG("camera position %s, look at %s", camPos.toString().c_str(), lookAt.toString().c_str());
 }
 
 class GeometryList {
@@ -201,6 +354,24 @@ void SceneManager::render() {
         } else {
           geoms.addGeom(geom);
         }
+      }
+    }
+  }
+
+  const std::vector<Resource::Instance *>& instances = this->scene->getInstances();
+  for (auto instance = instances.begin(); instance != instances.end(); instance++) {
+    std::forward_list<Resource::Mesh *> meshes = (*instance)->getMeshes();
+    for (auto mesh = meshes.begin(); mesh != meshes.end(); mesh++) {
+      Resource::GeomObject *geom = resourceManager.getResource();
+      geom->clear();
+
+      geom->setMesh(*mesh);
+      geom->setWorldTransform((*instance)->getWorldTransform());
+
+      if ((*mesh)->getMaterial()->isAlphaBlended()) {
+        alphaGeoms.addGeom(geom);
+      } else {
+        geoms.addGeom(geom);
       }
     }
   }

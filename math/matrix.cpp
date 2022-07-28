@@ -52,6 +52,20 @@ Matrix Matrix::operator*(const Matrix& B) const {
   return out;
 }
 
+Matrix Matrix::rotationY(float theta) {
+  Matrix out;
+
+  float sinTheta = sin(theta);
+  float cosTheta = cos(theta);
+
+  out._11 = cosTheta;
+  out._13 = sinTheta;
+  out._31 = -sinTheta;
+  out._33 = cosTheta;
+
+  return out;
+}
+
 Matrix Matrix::rotationZYX(float alpha, float beta, float gamma) {
   Matrix out;
 
@@ -239,6 +253,22 @@ Vector Vector::operator*(const Matrix &M) const {
   out.w = this->x * M._14 + this->y * M._24 + this->z * M._34 + this->w * M._44;
 
   return out;
+}
+
+Vector Vector::operator*(const float s) const {
+  Vector out;
+
+  out.x = this->x * s;
+  out.y = this->y * s;
+  out.z = this->z * s;
+  out.w = this->w;
+
+  return out;
+}
+
+float Vector::getAngleFrom(const Vector &v) const {
+  float dot = Vector::dot(*this, v);
+  return acos(dot / (this->getMagnitude() * v.getMagnitude()));
 }
 
 float Vector::getMagnitude() const {

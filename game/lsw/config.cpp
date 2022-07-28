@@ -14,10 +14,12 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../../log.hpp"
 #include "config.hpp"
 
 using namespace Mortar::Game::LSW;
@@ -42,9 +44,25 @@ const char *Config::getCharacterResourcePath(const char *name) {
   return path;
 }
 
-const char *Config::getSceneResourcePath(const char *name) {
+const char *Config::getSceneResourcePath(unsigned episode, unsigned chapter, const char *name) {
+  char episodeStr[4];
+  switch (episode) {
+    case 0:
+      strcpy(episodeStr, "I");
+      break;
+    case 1:
+      strcpy(episodeStr, "II");
+      break;
+    case 2:
+      strcpy(episodeStr, "III");
+      break;
+    default:
+      DEBUG("episode %d", episode);
+      throw std::runtime_error("invalid episode");
+  }
+
   char pathBuf[1024];
-  sprintf(pathBuf, "%s/Levels/%s/%s.nup", this->dataPath, name, name);
+  sprintf(pathBuf, "%s/Levels/episode_%s/chapter_%.2d/%s/%s.nup", this->dataPath, episodeStr, chapter + 1, name, name);
 
   char *path = (char *)calloc(strlen(pathBuf) + 1, sizeof(char));
   strcpy(path, pathBuf);

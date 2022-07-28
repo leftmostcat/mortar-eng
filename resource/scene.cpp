@@ -43,3 +43,15 @@ void Scene::addInstance(Instance *instance) {
 const std::vector<Instance *>& Scene::getInstances() const {
   return this->instances;
 }
+
+void Scene::addSpline(const std::string name, const Spline *spline) {
+  this->splines[name] = spline;
+}
+
+const Spline *Scene::getSplineByName(const std::string name) const {
+  if (!this->splines.contains(name)) {
+    return nullptr;
+  }
+
+  return this->splines.at(name);
+}

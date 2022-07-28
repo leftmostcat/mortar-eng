@@ -18,12 +18,12 @@
 
 using namespace Mortar::Resource;
 
-const Mesh *Instance::getMesh() const {
-  return this->mesh;
+const std::forward_list<Mesh *> Instance::getMeshes() const {
+  return this->meshes;
 }
 
-void Instance::setMesh(Mesh *mesh) {
-  this->mesh = mesh;
+void Instance::setMeshes(std::forward_list<Mesh *> meshes) {
+  this->meshes = meshes;
 }
 
 const Mortar::Math::Matrix& Instance::getWorldTransform() const {

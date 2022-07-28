@@ -17,6 +17,8 @@
 #ifndef MORTAR_RESOURCE_INSTANCE_H
 #define MORTAR_RESOURCE_INSTANCE_H
 
+#include <forward_list>
+
 #include "../math/matrix.hpp"
 #include "mesh.hpp"
 #include "resource.hpp"
@@ -27,14 +29,14 @@ namespace Mortar::Resource {
       Instance(ResourceHandle handle)
         : Resource { handle } {};
 
-      const Mesh *getMesh() const;
-      void setMesh(Mesh *mesh);
+      const std::forward_list<Mesh *> getMeshes() const;
+      void setMeshes(std::forward_list<Mesh *> mesh);
 
       const Math::Matrix& getWorldTransform() const;
       void setWorldTransform(Math::Matrix& worldTransform);
 
     private:
-      Mesh *mesh;
+      std::forward_list<Mesh *> meshes;
       Math::Matrix worldTransform;
   };
 }
