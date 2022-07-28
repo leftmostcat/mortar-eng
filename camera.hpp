@@ -14,27 +14,20 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_RENDER_RENDERER_H
-#define MORTAR_RENDER_RENDERER_H
+#include "math/matrix.hpp"
 
-#include <SDL2/SDL.h>
-#include <vector>
-
-#include "../resource/geom.hpp"
-#include "../resource/mesh.hpp"
-
-namespace Mortar::Render {
-  class Renderer {
+namespace Mortar {
+  class Camera {
     public:
-      virtual void initialize() = 0;
-      virtual void shutDown() = 0;
+      void initialize();
 
-      virtual void registerMeshes(const std::vector<Resource::Mesh *>& meshes) = 0;
-      virtual void registerTextures(const std::vector<Resource::Texture *>& textures) = 0;
-      virtual void registerVertexBuffers(const std::vector<Resource::VertexBuffer *>& vertexBuffers) = 0;
+      void setPosition(const Math::Vector& position);
+      void setLookAt(const Math::Vector& lookAt);
+      const Math::Matrix getViewTransform() const;
+      void translate(const Math::Vector& translate);
 
-      virtual void renderGeometry(const Resource::GeomObject *geometry) = 0;
+    private:
+      Math::Vector cameraLookAt;
+      Math::Vector cameraPosition;
   };
 }
-
-#endif

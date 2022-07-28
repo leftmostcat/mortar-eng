@@ -15,7 +15,6 @@ install:
         - make
         - sudo make install
         - popd
-        - sudo apt-get install libglm-dev
 
 before_script:
         - pushd build/

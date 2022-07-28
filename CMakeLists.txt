@@ -5,13 +5,14 @@ set(OpenGL_GL_PREFERENCE GLVND)
 SET(CMAKE_CXX_STANDARD 20)
 
 find_package(OpenGL REQUIRED)
-find_package(glm REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(SDL2 REQUIRED)
 
 set(SRCS
   anim/anim.cpp
+  camera.cpp
   clock.cpp
+  display.cpp
   game/config.cpp
   game/lsw/config.cpp
   math/matrix.cpp

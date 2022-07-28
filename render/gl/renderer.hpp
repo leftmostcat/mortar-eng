@@ -17,20 +17,18 @@
 #ifndef MORTAR_RENDER_GL_RENDERER_H
 #define MORTAR_RENDER_GL_RENDERER_H
 
-#include <glm/glm.hpp>
-#include <glm/gtx/matrix_operation.hpp>
 #include <SDL2/SDL.h>
 #include <map>
 
+#include "../../math/matrix.hpp"
 #include "../renderer.hpp"
 #include "shader.hpp"
 
 namespace Mortar::Render::GL {
   class Renderer : public Mortar::Render::Renderer {
     public:
-      Renderer(SDL_Window *window) :
-        Mortar::Render::Renderer { window },
-        d3dTransform { glm::diagonal4x4(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f)) } {};
+      Renderer() :
+        d3dTransform { Math::Matrix::diagonal(1.0f, 1.0f, -1.0f) } {};
 
       void initialize() override;
       void shutDown() override;
@@ -51,7 +49,7 @@ namespace Mortar::Render::GL {
       std::map<Resource::ResourceHandle, GLuint> vertexArrayIds;
       std::map<Resource::ResourceHandle, GLuint> vertexBufferIds;
 
-      const glm::mat4 d3dTransform;
+      const Math::Matrix d3dTransform;
   };
 }
 

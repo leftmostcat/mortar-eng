@@ -26,6 +26,7 @@
 
 #include "game/lsw/config.hpp"
 #include "render/gl/renderer.hpp"
+#include "math/matrix.hpp"
 #include "log.hpp"
 #include "state.hpp"
 #include "resource/anim.hpp"
@@ -46,16 +47,11 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  SDL_Window *window = SDL_CreateWindow("Mortar Engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
-  if (!window) {
-    DEBUG("failed to create window");
-    SDL_Quit();
-    return -1;
-  }
-
   State::getResourceManager().initialize();
 
-  auto renderer = Render::GL::Renderer(window);
+  State::getDisplayManager().initialize(Mortar::DisplayManager::GraphicsAPI::OPENGL, WIDTH, HEIGHT);
+
+  auto renderer = Render::GL::Renderer();
   State::getSceneManager().initialize(&renderer);
 
   auto config = Game::LSW::Config();
@@ -78,6 +74,9 @@ int main(int argc, char **argv) {
   State::getSceneManager().addActor(character, Math::Matrix());
 
   State::getClock().initialize();
+
+  State::getCamera().setPosition(Math::Vector(0.1f, 0.4f, -0.6f, 1.0f));
+  State::getCamera().setLookAt(Math::Vector(0.0f, 0.2f, 0.0f, 1.0f));
 
   /* Main loop. */
   bool shouldClose = false;

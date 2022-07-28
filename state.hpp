@@ -17,7 +17,9 @@
 #ifndef MORTAR_STATE_H
 #define MORTAR_STATE_H
 
+#include "camera.hpp"
 #include "clock.hpp"
+#include "display.hpp"
 #include "game/config.hpp"
 #include "resource/manager.hpp"
 #include "scene/manager.hpp"
@@ -27,6 +29,8 @@ namespace Mortar {
     public:
       static Clock& getClock();
       static Game::Config *getGameConfig();
+      static Camera& getCamera();
+      static DisplayManager& getDisplayManager();
       static Resource::ResourceManager& getResourceManager();
       static Scene::SceneManager& getSceneManager();
       static void setGameConfig(Game::Config *config);
@@ -42,8 +46,10 @@ namespace Mortar {
       static InterpolateType interpolate;
 
     private:
+      static Camera camera;
       static Clock clock;
       static Game::Config *gameConfig;
+      static DisplayManager displayManager;
       static Resource::ResourceManager resourceManager;
       static Scene::SceneManager sceneManager;
   };

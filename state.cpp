@@ -17,14 +17,17 @@
 #include <stdexcept>
 
 #include "clock.hpp"
+#include "display.hpp"
 #include "state.hpp"
 #include "resource/manager.hpp"
 #include "scene/manager.hpp"
 
 using namespace Mortar;
 
+Camera State::camera = Camera();
 Clock State::clock = Clock();
 Game::Config *State::gameConfig = nullptr;
+DisplayManager State::displayManager = DisplayManager();
 Resource::ResourceManager State::resourceManager = Resource::ResourceManager();
 Scene::SceneManager State::sceneManager = Scene::SceneManager();
 
@@ -32,6 +35,10 @@ float State::animRate = 1.0f;
 bool State::animEnabled = true;
 bool State::printNextFrame = false;
 State::InterpolateType State::interpolate = InterpolateType::HERMITE;
+
+Camera& State::getCamera() {
+  return State::camera;
+}
 
 Clock& State::getClock() {
   return State::clock;
@@ -43,6 +50,10 @@ Game::Config *State::getGameConfig() {
   }
 
   return State::gameConfig;
+}
+
+DisplayManager& State::getDisplayManager() {
+  return State::displayManager;
 }
 
 Resource::ResourceManager& State::getResourceManager() {

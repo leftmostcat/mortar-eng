@@ -91,19 +91,20 @@ Matrix Matrix::perspectiveRH(float fov, float aspectRatio, float zNear, float zF
   Matrix out;
 
   float scaleY = 1.0f / tan(fov * 0.5f);
-  float scaleZ = zFar / (zFar - zNear);
+  float zInv = 1.0f / (zFar - zNear);
+  float scaleZ = -(zFar + zNear) * zInv;
 
   out._11 = scaleY * (1.0 / aspectRatio);
   out._22 = scaleY;
   out._33 = scaleZ;
-  out._34 = 1.0f;
-  out._43 = -2 * zNear * scaleZ;
+  out._34 = -1.0f;
+  out._43 = -2 * zFar * zNear * zInv;
   out._44 = 0.0f;
 
   return out;
 }
 
-Matrix Matrix::lookAt(Vector eye, Vector at, Vector up) {
+Matrix Matrix::lookAt(const Vector& eye, const Vector& at, const Vector& up) {
   Matrix out;
 
   Vector camDir = at - eye;
@@ -218,6 +219,17 @@ Vector Vector::operator-(const Vector &b) const {
   return out;
 }
 
+Vector Vector::operator+(const Vector &b) const {
+  Vector out;
+
+  out.x = this->x + b.x;
+  out.y = this->y + b.y;
+  out.z = this->z + b.z;
+  out.w = this->w + b.w;
+
+  return out;
+}
+
 Vector Vector::operator*(const Matrix &M) const {
   Vector out;
 
@@ -233,9 +245,13 @@ float Vector::getMagnitude() const {
   return sqrt(Vector::dot(*this, *this));
 }
 
-std::string Vector::toString() {
+std::string Vector::toString() const {
   std::unique_ptr<char []> buf(new char[256]);
   sprintf(buf.get(), "(%.4f, %.4f, %.4f, %.4f)", x, y, z, w);
   size_t length = strlen(buf.get());
   return std::string(buf.get(), buf.get() + length);
 }
+
+const Vector Vector::xAxis = Vector { 1.0, 0.0f, 0.0f, 0.0f};
+const Vector Vector::yAxis = Vector { 0.0, 1.0f, 0.0f, 0.0f};
+const Vector Vector::zAxis = Vector { 0.0, 0.0f, 1.0f, 0.0f};

@@ -37,6 +37,7 @@ namespace Mortar::Math {
 
       Vector operator-() const;
       Vector operator-(const Vector& b) const;
+      Vector operator+(const Vector& b) const;
 
       static inline float dot(const Vector& a, const Vector& b) {
         return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
@@ -77,11 +78,15 @@ namespace Mortar::Math {
         return Vector(vec[0], vec[1], vec[2], w);
       }
 
+      const static Vector xAxis;
+      const static Vector yAxis;
+      const static Vector zAxis;
+
       float getMagnitude() const;
 
       Vector operator*(const Matrix& M) const;
 
-      std::string toString();
+      std::string toString() const;
 
       float x;
       float y;
@@ -114,7 +119,7 @@ namespace Mortar::Math {
 
       static Matrix rotationZYX(float alpha, float beta, float gamma);
       static Matrix perspectiveRH(float fov, float aspectRatio, float zNear, float zFar);
-      static Matrix lookAt(Vector eye, Vector at, Vector up);
+      static Matrix lookAt(const Vector& eye, const Vector& at, const Vector& up);
 
       static inline Matrix fromStream(Stream& stream) {
         std::array<float, 16> mtx;

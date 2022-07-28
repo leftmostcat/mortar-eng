@@ -17,9 +17,8 @@
 #define GL_GLEXT_PROTOTYPES
 
 #include <GL/gl.h>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/matrix_operation.hpp>
 #include <SDL2/SDL_video.h>
+#include <assert.h>
 #include <map>
 #include <stdexcept>
 #include <vector>
@@ -104,7 +103,7 @@ void Renderer::initialize() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-  SDL_GLContext context = SDL_GL_CreateContext(this->window);
+  SDL_GLContext context = SDL_GL_CreateContext(State::getDisplayManager().getWindow());
 
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(glDebugCallback, nullptr);
@@ -265,13 +264,8 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
   /* Initialize transformation matrices. */
-  glm::mat4 proj = glm::perspective(45.0f, (float)WIDTH / HEIGHT, 0.15f, 10000.0f);
-
-  glm::mat4 view = glm::lookAtLH(
-    glm::vec3(0.1f, 0.4f, -0.6f),
-    glm::vec3(0.0f, 0.2f, 0.0f),
-    glm::vec3(0.0f, 1.0f, 0.0f)
-  );
+  const Math::Matrix& proj = State::getDisplayManager().getPerspectiveTransform();
+  const Math::Matrix& view = State::getCamera().getViewTransform();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -279,7 +273,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
     return;
   }
 
-  glm::mat4 projViewMtx = proj * d3dTransform * view;
+  Math::Matrix projViewMtx = view * d3dTransform * proj;
 
   do {
     const Resource::Mesh *mesh = geometry->mesh;
@@ -302,7 +296,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
     //   glUniform2fv(alphaAnimUVUnif, 1, renderObject.material.alphaAnimUV);
     // }
 
-    glUniformMatrix4fv(projViewMtxUnif, 1, GL_FALSE, glm::value_ptr(projViewMtx));
+    glUniformMatrix4fv(projViewMtxUnif, 1, GL_FALSE, projViewMtx.f);
 
     const Resource::Material *material = mesh->getMaterial();
 
@@ -396,5 +390,5 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
     geometry = geometry->next;
   } while(geometry);
 
-  SDL_GL_SwapWindow(this->window);
+  SDL_GL_SwapWindow(State::getDisplayManager().getWindow());
 }
