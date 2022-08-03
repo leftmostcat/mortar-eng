@@ -17,8 +17,8 @@
 #ifndef MORTAR_RESOURCE_MANAGER_H
 #define MORTAR_RESOURCE_MANAGER_H
 
-#include <map>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 #include "geom.hpp"
@@ -36,7 +36,7 @@ namespace Mortar::Resource {
     private:
       static constexpr size_t MAX_GEOMS = 4096;
 
-      std::map<ResourceHandle, Resource *> resources;
+      std::unordered_map<ResourceHandle, Resource *> resources;
       std::vector<GeomObject *> geomObjectPool;
       std::vector<GeomObject *>::iterator geomObjectPoolIter;
   };

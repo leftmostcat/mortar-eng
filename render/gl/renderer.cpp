@@ -19,8 +19,8 @@
 #include <GL/gl.h>
 #include <SDL2/SDL_video.h>
 #include <assert.h>
-#include <map>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 #include "../../log.hpp"
@@ -39,7 +39,7 @@ void glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLs
   std::terminate();
 }
 
-const std::map<Mortar::Resource::PrimitiveType, GLenum> primitiveTypeMap = {
+const std::unordered_map<Mortar::Resource::PrimitiveType, GLenum> primitiveTypeMap = {
   { Mortar::Resource::PrimitiveType::LINE_LIST,      GL_LINES          },
   { Mortar::Resource::PrimitiveType::TRIANGLE_LIST,  GL_TRIANGLES      },
   { Mortar::Resource::PrimitiveType::TRIANGLE_STRIP, GL_TRIANGLE_STRIP },
@@ -53,7 +53,7 @@ static inline GLenum getGLPrimitiveType(Mortar::Resource::PrimitiveType mortarTy
   return primitiveTypeMap.at(mortarType);
 }
 
-const std::map<Mortar::Resource::VertexUsage, std::string> vertexUsageMap = {
+const std::unordered_map<Mortar::Resource::VertexUsage, std::string> vertexUsageMap = {
   { Mortar::Resource::VertexUsage::BLEND_INDICES, "blendIndices" },
   { Mortar::Resource::VertexUsage::BLEND_WEIGHTS, "blendWeights" },
   { Mortar::Resource::VertexUsage::COLOR,         "color"        },
@@ -75,7 +75,7 @@ struct GLVertexPropertyType {
   GLint size;
 };
 
-const std::map<Mortar::Resource::VertexDataType, struct GLVertexPropertyType> vertexDataTypeMap = {
+const std::unordered_map<Mortar::Resource::VertexDataType, struct GLVertexPropertyType> vertexDataTypeMap = {
   {
     Mortar::Resource::VertexDataType::D3DCOLOR,
     { GL_UNSIGNED_BYTE, GL_BGRA }

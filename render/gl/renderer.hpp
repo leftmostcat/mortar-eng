@@ -18,7 +18,7 @@
 #define MORTAR_RENDER_GL_RENDERER_H
 
 #include <SDL2/SDL.h>
-#include <map>
+#include <unordered_map>
 
 #include "../../math/matrix.hpp"
 #include "../renderer.hpp"
@@ -43,11 +43,11 @@ namespace Mortar::Render::GL {
       ShaderManager shaderManager;
       bool isInitialized;
 
-      std::map<Resource::ResourceHandle, GLuint> elementBufferIds;
-      std::map<Resource::ResourceHandle, GLuint> textureIds;
-      std::map<Resource::ResourceHandle, GLuint> textureSamplers;
-      std::map<Resource::ResourceHandle, GLuint> vertexArrayIds;
-      std::map<Resource::ResourceHandle, GLuint> vertexBufferIds;
+      std::unordered_map<Resource::ResourceHandle, GLuint> elementBufferIds;
+      std::unordered_map<Resource::ResourceHandle, GLuint> textureIds;
+      std::unordered_map<Resource::ResourceHandle, GLuint> textureSamplers;
+      std::unordered_map<Resource::ResourceHandle, GLuint> vertexArrayIds;
+      std::unordered_map<Resource::ResourceHandle, GLuint> vertexBufferIds;
 
       const Math::Matrix d3dTransform;
   };

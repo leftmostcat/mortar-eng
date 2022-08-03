@@ -14,8 +14,8 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <map>
 #include <stdexcept>
+#include <unordered_map>
 
 #include "../../../log.hpp"
 #include "../../../state.hpp"
@@ -24,7 +24,7 @@
 
 using namespace Mortar::Resource::Providers::LSW;
 
-static std::map<uint32_t, Mortar::Resource::VertexLayout> vertexLayouts {
+static std::unordered_map<uint32_t, Mortar::Resource::VertexLayout> vertexLayouts {
   {
     0x59, {
       36,
@@ -117,7 +117,7 @@ const struct LSWProviders::LSWSurface LSWProviders::readSurfaceInfo(Stream &stre
   return surface;
 }
 
-std::map<uint32_t, Mortar::Resource::PrimitiveType> primitiveTypes {
+std::unordered_map<uint32_t, Mortar::Resource::PrimitiveType> primitiveTypes {
   { 1, Mortar::Resource::PrimitiveType::LINE_LIST },
   { 2, Mortar::Resource::PrimitiveType::TRIANGLE_LIST },
   { 3, Mortar::Resource::PrimitiveType::TRIANGLE_STRIP },

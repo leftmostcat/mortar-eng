@@ -17,8 +17,8 @@
 #ifndef MORTAR_RESOURCE_CHARACTER_H
 #define MORTAR_RESOURCE_CHARACTER_H
 
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "../../math/matrix.hpp"
@@ -88,8 +88,8 @@ namespace Mortar::Resource::Character {
       std::vector<Math::Matrix> skinTransforms;
       std::vector<Layer *> layers;
       std::vector<Locator *> locators;
-      std::map<unsigned char, unsigned char> externalLocatorMap;
-      std::map<AnimationType, Animation *> skeletalAnimations;
+      std::unordered_map<unsigned char, unsigned char> externalLocatorMap;
+      std::unordered_map<AnimationType, Animation *> skeletalAnimations;
   };
 }
 
