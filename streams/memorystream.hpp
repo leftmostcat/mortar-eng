@@ -21,17 +21,7 @@
 
 class MemoryStream : public Stream {
   public:
-    explicit MemoryStream(void *data, size_t size);
-
-    virtual void seek(long offset, int whence);
-    virtual long tell();
-
-  private:
-    virtual void *read(size_t size);
-
-    uint8_t *data;
-    size_t size;
-    long pos;
+    MemoryStream(const void *data, size_t size);
 };
 
 #endif

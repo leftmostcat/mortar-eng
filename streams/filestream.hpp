@@ -17,22 +17,11 @@
 #ifndef MORTAR_FILESTREAM_H
 #define MORTAR_FILESTREAM_H
 
-#include <SDL2/SDL_rwops.h>
 #include "stream.hpp"
 
 class FileStream : public Stream {
   public:
-    explicit FileStream(const char *path, const char *mode);
-    ~FileStream();
-
-    virtual void seek(long offset, int whence);
-    virtual long tell();
-
-  private:
-    virtual void *read(size_t size);
-
-    FILE *fp;
-    SDL_RWops *rw;
+    FileStream(const char *path, const char *mode);
 };
 
 #endif

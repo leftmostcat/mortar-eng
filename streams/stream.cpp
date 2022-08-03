@@ -18,65 +18,67 @@
 
 #include "stream.hpp"
 
-int8_t Stream::readInt8() {
-  int8_t *val = (int8_t *)this->read(1);
+Stream::~Stream() {
+  if (this->rw != nullptr) {
+    SDL_RWclose(this->rw);
+  }
+}
 
-  return *val;
+void Stream::read(void *ptr, size_t size, size_t count) {
+  SDL_RWread(this->rw, ptr, size, count);
+}
+
+int8_t Stream::readInt8() {
+  return SDL_ReadU8(this->rw);
 }
 
 int16_t Stream::readInt16() {
-  int16_t *val = (int16_t *)this->read(2);
-
-  return *val;
+  return SDL_ReadLE16(this->rw);
 }
 
 int32_t Stream::readInt32() {
-  int32_t *val = (int32_t *)this->read(4);
-
-  return *val;
+  return SDL_ReadLE32(this->rw);
 }
 
 uint8_t Stream::readUint8() {
-  uint8_t *val = (uint8_t *)this->read(1);
-
-  return *val;
+  return SDL_ReadU8(this->rw);
 }
 
 uint16_t Stream::readUint16() {
-  uint16_t *val = (uint16_t *)this->read(2);
-
-  return *val;
+  return SDL_ReadLE16(this->rw);
 }
 
 uint32_t Stream::readUint32() {
-  uint32_t *val = (uint32_t *)this->read(4);
+  return SDL_ReadLE32(this->rw);
+}
 
-  return *val;
+void Stream::seek(long offset, int whence) {
+  SDL_RWseek(this->rw, offset, whence);
+}
+
+long Stream::tell() {
+  return SDL_RWtell(this->rw);
 }
 
 float Stream::readFloat() {
-  float *val = (float *)this->read(4);
+  float val;
 
-  return *val;
+  this->read(&val, sizeof(float), 1);
+
+  return val;
 }
 
 char *Stream::readString() {
   std::vector<char> vec;
-  char *val = (char *)this->read(1);
 
-  while (*val != '\0') {
-    vec.push_back(*val);
-
-    val = (char *)this->read(1);
-  }
+  char val = '\0';
+  do {
+    this->read(&val, sizeof(char), 1);
+    vec.push_back(val);
+  } while (val != '\0');
 
   char *ret = new char[vec.size() + 1];
-
-  for (int i = 0; i < vec.size(); i++) {
-    ret[i] = vec[i];
-  }
-
-  ret[vec.size()] = '\0';
+  memcpy(ret, vec.data(), vec.size());
 
   return ret;
 }

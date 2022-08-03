@@ -27,7 +27,7 @@
 #include "filestream.hpp"
 #include "../log.hpp"
 
-FileStream::FileStream(const char *path, const char *mode) : Stream::Stream() {
+FileStream::FileStream(const char *path, const char *mode) : Stream() {
   if (path == NULL) {
     throw std::ifstream::failure("path must not be null");
   }
@@ -134,24 +134,4 @@ FileStream::FileStream(const char *path, const char *mode) : Stream::Stream() {
 
     throw;
   }
-}
-
-FileStream::~FileStream() {
-  SDL_RWclose(this->rw);
-}
-
-void FileStream::seek(long offset, int whence) {
-  SDL_RWseek(this->rw, offset, whence);
-}
-
-long FileStream::tell() {
-  return SDL_RWtell(this->rw);
-}
-
-void *FileStream::read(size_t size) {
-  uint8_t *ptr = new uint8_t[size];
-
-  SDL_RWread(this->rw, ptr, size, 1);
-
-  return (void *)ptr;
 }

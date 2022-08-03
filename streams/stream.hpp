@@ -17,28 +17,32 @@
 #ifndef MORTAR_STREAM_H
 #define MORTAR_STREAM_H
 
+#include <SDL2/SDL_rwops.h>
 #include <stdint.h>
 #include <stdio.h>
 
 class Stream {
   public:
-    int8_t readInt8();
-    int16_t readInt16();
-    int32_t readInt32();
+    virtual ~Stream();
 
-    uint8_t readUint8();
-    uint16_t readUint16();
-    uint32_t readUint32();
+    virtual void read(void *ptr, size_t size, size_t count);
 
-    float readFloat();
+    virtual int8_t readInt8();
+    virtual int16_t readInt16();
+    virtual int32_t readInt32();
 
-    char *readString();
+    virtual uint8_t readUint8();
+    virtual uint16_t readUint16();
+    virtual uint32_t readUint32();
 
-    virtual void seek(long offset, int whence) = 0;
-    virtual long tell() = 0;
+    virtual float readFloat();
+    virtual char *readString();
 
-  private:
-    virtual void *read(size_t size) = 0;
+    virtual void seek(long offset, int whence);
+    virtual long tell();
+
+  protected:
+    SDL_RWops *rw;
 };
 
 #endif

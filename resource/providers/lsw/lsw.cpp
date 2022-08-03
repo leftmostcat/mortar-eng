@@ -248,11 +248,9 @@ void LSWProviders::VertexBufferProvider::read(std::vector<VertexBuffer *>& verte
     vertexBuffer->setSize(vertex_header.blocks[i].size);
 
     stream.seek(vertexHeaderOffset + vertex_header.blocks[i].offset, SEEK_SET);
-    auto data = new uint8_t[vertex_header.blocks[i].size];
 
-    for (int j = 0; j < vertex_header.blocks[i].size; j++) {
-      data[j] = stream.readUint8();
-    }
+    auto data = new uint8_t[vertex_header.blocks[i].size];
+    stream.read(data, sizeof(uint8_t), vertex_header.blocks[i].size);
 
     vertexBuffer->setData(data);
   }
