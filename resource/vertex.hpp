@@ -74,6 +74,8 @@ namespace Mortar::Resource {
       IndexBuffer(ResourceHandle handle)
         : Resource { handle } {};
 
+      ~IndexBuffer();
+
       unsigned getCount() const;
       void setCount(unsigned count);
 
@@ -89,6 +91,8 @@ namespace Mortar::Resource {
     public:
       VertexBuffer(ResourceHandle handle)
         : Resource { handle } {};
+
+      ~VertexBuffer();
 
       size_t getSize() const;
       void setSize(size_t size);

@@ -42,6 +42,10 @@ VertexDataType VertexLayout::VertexProperty::getDataType() const {
   return this->type;
 }
 
+IndexBuffer::~IndexBuffer() {
+  delete this->data;
+}
+
 unsigned IndexBuffer::getCount() const {
   return this->count;
 }
@@ -56,6 +60,10 @@ const uint16_t *IndexBuffer::getData() const {
 
 void IndexBuffer::setData(uint16_t *data) {
   this->data = data;
+}
+
+VertexBuffer::~VertexBuffer() {
+  delete this->data;
 }
 
 size_t VertexBuffer::getSize() const {

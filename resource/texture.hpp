@@ -32,6 +32,8 @@ namespace Mortar::Resource {
           Level(ResourceHandle handle)
             : Resource { handle } {};
 
+          ~Level();
+
           unsigned getLevel() const;
           void setLevel(unsigned level);
 

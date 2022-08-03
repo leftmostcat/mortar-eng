@@ -58,6 +58,10 @@ const std::vector<Texture::Level *>& Texture::getLevels() const {
   return this->levels;
 }
 
+Texture::Level::~Level() {
+  delete this->data;
+}
+
 unsigned Texture::Level::getLevel() const {
   return this->level;
 }
