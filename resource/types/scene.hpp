@@ -20,12 +20,12 @@
 #include <tsl/sparse_map.h>
 #include <vector>
 
-#include "../math/matrix.hpp"
+#include "../../math/matrix.hpp"
+#include "../resource.hpp"
 #include "character.hpp"
 #include "instance.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
-#include "resource.hpp"
 #include "spline.hpp"
 
 namespace Mortar::Resource {

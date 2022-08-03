@@ -18,7 +18,7 @@
 #define MORTAR_LSW_READERS_DDS_H
 
 #include "../../../streams/stream.hpp"
-#include "../../../resource/texture.hpp"
+#include "../../../resource/types/texture.hpp"
 
 namespace Mortar::Game::LSW::Readers {
   class DDSReader {

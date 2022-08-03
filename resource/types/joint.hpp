@@ -17,8 +17,8 @@
 #ifndef MORTAR_RESOURCE_JOINT_H
 #define MORTAR_RESOURCE_JOINT_H
 
-#include "../math/matrix.hpp"
-#include "resource.hpp"
+#include "../../math/matrix.hpp"
+#include "../resource.hpp"
 
 namespace Mortar::Resource {
   class Joint : public Resource {

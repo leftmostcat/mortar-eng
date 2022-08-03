@@ -17,7 +17,7 @@
 #ifndef MORTAR_RESOURCE_MATERIAL_H
 #define MORTAR_RESOURCE_MATERIAL_H
 
-#include "resource.hpp"
+#include "../resource.hpp"
 #include "texture.hpp"
 
 namespace Mortar::Resource {

@@ -14,30 +14,37 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_RESOURCE_LAYER_H
-#define MORTAR_RESOURCE_LAYER_H
+#ifndef MORTAR_MODEL_H
+#define MORTAR_MODEL_H
 
+#include <vector>
+#include <stdint.h>
+
+#include "../resource.hpp"
+#include "material.hpp"
 #include "mesh.hpp"
-#include "resource.hpp"
+#include "texture.hpp"
+#include "vertex.hpp"
 
 namespace Mortar::Resource {
-  class Layer : public Resource {
+  class Model : public Resource {
     public:
-      Layer(ResourceHandle handle)
+      Model(ResourceHandle handle)
         : Resource { handle } {};
 
-      void addDeformableSkinMesh(Mesh *mesh);
-      void addKinematicMesh(KinematicMesh *mesh);
-      void addSkinMesh(Mesh *mesh);
+      void addMesh(const Mesh *mesh);
+      const std::vector<const Mesh *>& getMeshes() const;
 
-      const std::vector<Mesh *>& getDeformableSkinMeshes() const;
-      const std::vector<KinematicMesh *>& getKinematicMeshes() const;
-      const std::vector<Mesh *>& getSkinMeshes() const;
+      void addTexture(const Texture *texture);
+      const std::vector<const Texture *>& getTextures() const;
+
+      void addVertexBuffer(const VertexBuffer *vertexBuffer);
+      const std::vector<const VertexBuffer *>& getVertexBuffers() const;
 
     private:
-      std::vector<Mesh *> deformableSkinMeshes;
-      std::vector<KinematicMesh *> kinematicMeshes;
-      std::vector<Mesh *> skinMeshes;
+      std::vector<const Mesh *> meshes;
+      std::vector<const Texture *> textures;
+      std::vector<const VertexBuffer *> vertexBuffers;
   };
 }
 

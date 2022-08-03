@@ -21,10 +21,10 @@
 
 #include "../../../state.hpp"
 #include "../../../streams/stream.hpp"
-#include "../../../resource/material.hpp"
-#include "../../../resource/mesh.hpp"
-#include "../../../resource/texture.hpp"
-#include "../../../resource/vertex.hpp"
+#include "../../../resource/types/material.hpp"
+#include "../../../resource/types/mesh.hpp"
+#include "../../../resource/types/texture.hpp"
+#include "../../../resource/types/vertex.hpp"
 
 namespace Mortar::Game::LSW::Readers {
   class MaterialsReader {

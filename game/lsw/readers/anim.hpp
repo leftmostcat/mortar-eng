@@ -18,7 +18,7 @@
 #define MORTAR_LSW_READERS_ANIM_H
 
 #include "../../../streams/stream.hpp"
-#include "../../../resource/anim.hpp"
+#include "../../../resource/types/anim.hpp"
 
 namespace Mortar::Game::LSW::Readers {
   class AnimReader {

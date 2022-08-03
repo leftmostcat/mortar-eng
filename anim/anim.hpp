@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "../math/matrix.hpp"
-#include "../resource/anim.hpp"
-#include "../resource/joint.hpp"
+#include "../resource/types/anim.hpp"
+#include "../resource/types/joint.hpp"
 
 namespace Mortar::Animation {
   std::vector<Mortar::Math::Matrix> runSkeletalAnimation(const Mortar::Resource::Animation *animation, const std::vector<Mortar::Resource::Joint *>& joints, float position);

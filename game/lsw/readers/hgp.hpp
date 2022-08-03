@@ -18,7 +18,7 @@
 #define MORTAR_LSW_READERS_HGP_H
 
 #include "../../../streams/stream.hpp"
-#include "../../../resource/character.hpp"
+#include "../../../resource/types/character.hpp"
 
 namespace Mortar::Game::LSW::Readers {
   class HGPReader {

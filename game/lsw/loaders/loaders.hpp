@@ -19,8 +19,8 @@
 
 #include <filesystem>
 
-#include "../../../resource/character.hpp"
-#include "../../../resource/scene.hpp"
+#include "../../../resource/types/character.hpp"
+#include "../../../resource/types/scene.hpp"
 
 namespace Mortar::Game::LSW {
   const std::filesystem::path dataPath { "lego_data" };

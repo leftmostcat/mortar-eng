@@ -19,10 +19,10 @@
 
 #include <vector>
 
-#include "../math/matrix.hpp"
+#include "../../math/matrix.hpp"
+#include "../resource.hpp"
 #include "material.hpp"
 #include "mesh.hpp"
-#include "resource.hpp"
 
 namespace Mortar::Resource {
   class GeomObject : public Resource {

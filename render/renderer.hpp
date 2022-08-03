@@ -20,8 +20,10 @@
 #include <list>
 #include <vector>
 
-#include "../resource/geom.hpp"
-#include "../resource/mesh.hpp"
+#include "../resource/types/geom.hpp"
+#include "../resource/types/mesh.hpp"
+#include "../resource/types/texture.hpp"
+#include "../resource/types/vertex.hpp"
 
 namespace Mortar::Render {
   class Renderer {

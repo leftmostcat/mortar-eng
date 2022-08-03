@@ -20,7 +20,7 @@
 #include <GL/gl.h>
 #include <vector>
 
-#include "../../resource/shader.hpp"
+#include "../../resource/types/shader.hpp"
 
 namespace Mortar::Render::GL {
   class ShaderManager {

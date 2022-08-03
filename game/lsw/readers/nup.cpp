@@ -19,7 +19,6 @@
 
 #include "../../../log.hpp"
 #include "../../../math/matrix.hpp"
-#include "../../../resource/scene.hpp"
 #include "dds.hpp"
 #include "nup.hpp"
 #include "common.hpp"

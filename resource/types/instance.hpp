@@ -14,37 +14,30 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_MODEL_H
-#define MORTAR_MODEL_H
+#ifndef MORTAR_RESOURCE_INSTANCE_H
+#define MORTAR_RESOURCE_INSTANCE_H
 
-#include <vector>
-#include <stdint.h>
+#include <forward_list>
 
-#include "material.hpp"
+#include "../../math/matrix.hpp"
+#include "../resource.hpp"
 #include "mesh.hpp"
-#include "resource.hpp"
-#include "texture.hpp"
-#include "vertex.hpp"
 
 namespace Mortar::Resource {
-  class Model : public Resource {
+  class Instance : public Resource {
     public:
-      Model(ResourceHandle handle)
+      Instance(ResourceHandle handle)
         : Resource { handle } {};
 
-      void addMesh(const Mesh *mesh);
-      const std::vector<const Mesh *>& getMeshes() const;
+      const std::forward_list<Mesh *> getMeshes() const;
+      void setMeshes(std::forward_list<Mesh *> mesh);
 
-      void addTexture(const Texture *texture);
-      const std::vector<const Texture *>& getTextures() const;
-
-      void addVertexBuffer(const VertexBuffer *vertexBuffer);
-      const std::vector<const VertexBuffer *>& getVertexBuffers() const;
+      const Math::Matrix& getWorldTransform() const;
+      void setWorldTransform(Math::Matrix& worldTransform);
 
     private:
-      std::vector<const Mesh *> meshes;
-      std::vector<const Texture *> textures;
-      std::vector<const VertexBuffer *> vertexBuffers;
+      std::forward_list<Mesh *> meshes;
+      Math::Matrix worldTransform;
   };
 }
 

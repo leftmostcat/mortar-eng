@@ -23,7 +23,6 @@
 #include <tsl/sparse_map.h>
 #include <vector>
 
-#include "geom.hpp"
 #include "pool.hpp"
 #include "resource.hpp"
 

@@ -14,31 +14,23 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../log.hpp"
-#include "layer.hpp"
+#include "geom.hpp"
 
 using namespace Mortar::Resource;
 
-void Layer::addDeformableSkinMesh(Mesh *mesh) {
-  this->deformableSkinMeshes.push_back(mesh);
+void GeomObject::reset() {
+  this->mesh = nullptr;
+  this->worldTransform = Math::Matrix();
 }
 
-void Layer::addKinematicMesh(KinematicMesh *mesh) {
-  this->kinematicMeshes.push_back(mesh);
+void GeomObject::setMesh(const Mortar::Resource::Mesh *mesh) {
+  this->mesh = mesh;
 }
 
-void Layer::addSkinMesh(Mesh *mesh) {
-  this->skinMeshes.push_back(mesh);
+void GeomObject::setWorldTransform(Math::Matrix worldTransform) {
+  this->worldTransform = worldTransform;
 }
 
-const std::vector<Mortar::Resource::Mesh *>& Layer::getDeformableSkinMeshes() const {
-  return this->deformableSkinMeshes;
-}
-
-const std::vector<Mortar::Resource::KinematicMesh *>& Layer::getKinematicMeshes() const {
-  return this->kinematicMeshes;
-}
-
-const std::vector<Mortar::Resource::Mesh *>& Layer::getSkinMeshes() const {
-  return this->skinMeshes;
+void GeomObject::setSkinTransforms(std::vector<Math::Matrix> skinTransforms) {
+  this->skinTransforms = skinTransforms;
 }

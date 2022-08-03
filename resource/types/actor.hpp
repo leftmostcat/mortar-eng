@@ -17,9 +17,9 @@
 #ifndef MORTAR_RESOURCE_ACTOR_H
 #define MORTAR_RESOURCE_ACTOR_H
 
-#include "../math/matrix.hpp"
+#include "../../math/matrix.hpp"
+#include "../resource.hpp"
 #include "character.hpp"
-#include "resource.hpp"
 
 namespace Mortar::Resource {
   class Actor : public Resource {

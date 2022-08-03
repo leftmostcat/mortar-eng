@@ -26,22 +26,22 @@ set(SRCS
   math/matrix.cpp
   render/gl/renderer.cpp
   render/gl/shader.cpp
-  resource/character.cpp
-  resource/actor.cpp
-  resource/anim.cpp
-  resource/geom.cpp
-  resource/instance.cpp
-  resource/joint.cpp
-  resource/layer.cpp
   resource/manager.cpp
-  resource/material.cpp
-  resource/mesh.cpp
-  resource/model.cpp
   resource/resource.cpp
-  resource/scene.cpp
-  resource/spline.cpp
-  resource/texture.cpp
-  resource/vertex.cpp
+  resource/types/actor.cpp
+  resource/types/anim.cpp
+  resource/types/character.cpp
+  resource/types/geom.cpp
+  resource/types/instance.cpp
+  resource/types/joint.cpp
+  resource/types/layer.cpp
+  resource/types/material.cpp
+  resource/types/mesh.cpp
+  resource/types/model.cpp
+  resource/types/scene.cpp
+  resource/types/spline.cpp
+  resource/types/texture.cpp
+  resource/types/vertex.cpp
   scene/manager.cpp
   streams/filestream.cpp
   streams/memorystream.cpp

@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "../../log.hpp"
-#include "../../resource/shader.hpp"
+#include "../../resource/types/shader.hpp"
 #include "shader.hpp"
 
 using namespace Mortar::Render::GL;

@@ -17,7 +17,6 @@
 #include <assert.h>
 #include <stdexcept>
 
-#include "../log.hpp"
 #include "anim.hpp"
 
 using namespace Mortar::Resource;

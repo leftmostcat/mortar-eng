@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "resource.hpp"
+#include "../resource.hpp"
 
 namespace Mortar::Resource {
   enum class VertexUsage {

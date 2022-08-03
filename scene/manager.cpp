@@ -23,8 +23,6 @@
 #include "../anim/anim.hpp"
 #include "../log.hpp"
 #include "../state.hpp"
-#include "../resource/actor.hpp"
-#include "../resource/character.hpp"
 #include "manager.hpp"
 
 using namespace Mortar::Scene;

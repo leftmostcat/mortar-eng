@@ -20,9 +20,9 @@
 #include <stdint.h>
 #include <vector>
 
+#include "../resource.hpp"
 #include "joint.hpp"
 #include "material.hpp"
-#include "resource.hpp"
 #include "shader.hpp"
 #include "vertex.hpp"
 

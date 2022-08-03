@@ -21,12 +21,12 @@
 #include <tsl/sparse_map.h>
 #include <vector>
 
-#include "../math/matrix.hpp"
+#include "../../math/matrix.hpp"
+#include "../resource.hpp"
 #include "anim.hpp"
 #include "layer.hpp"
 #include "joint.hpp"
 #include "model.hpp"
-#include "resource.hpp"
 
 namespace Mortar::Resource {
   class Character : public Resource {

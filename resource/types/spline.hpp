@@ -14,24 +14,27 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../math/matrix.hpp"
-#include "geom.hpp"
+#ifndef MORTAR_RESOURCE_SPLINE_H
+#define MORTAR_RESOURCE_SPLINE_H
 
-using namespace Mortar::Resource;
+#include <vector>
 
-void GeomObject::reset() {
-  this->mesh = nullptr;
-  this->worldTransform = Math::Matrix();
+#include "../../math/matrix.hpp"
+#include "../resource.hpp"
+
+namespace Mortar::Resource {
+  class Spline : public Resource {
+    public:
+      Spline(ResourceHandle handle)
+        : Resource { handle } {};
+
+      void addVertex(Math::Vector vertex);
+      const Math::Vector& getVertex(size_t n) const;
+      const size_t getVertexCount() const;
+
+    private:
+      std::vector<Math::Vector> vertices;
+  };
 }
 
-void GeomObject::setMesh(const Mortar::Resource::Mesh *mesh) {
-  this->mesh = mesh;
-}
-
-void GeomObject::setWorldTransform(Math::Matrix worldTransform) {
-  this->worldTransform = worldTransform;
-}
-
-void GeomObject::setSkinTransforms(std::vector<Math::Matrix> skinTransforms) {
-  this->skinTransforms = skinTransforms;
-}
+#endif

@@ -18,7 +18,7 @@
 #define MORTAR_LSW_READERS_NUP_H
 
 #include "../../../streams/stream.hpp"
-#include "../../../resource/scene.hpp"
+#include "../../../resource/types/scene.hpp"
 
 namespace Mortar::Game::LSW::Readers {
   class NUPReader {

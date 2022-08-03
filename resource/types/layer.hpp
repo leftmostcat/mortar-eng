@@ -14,30 +14,30 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_RESOURCE_INSTANCE_H
-#define MORTAR_RESOURCE_INSTANCE_H
+#ifndef MORTAR_RESOURCE_LAYER_H
+#define MORTAR_RESOURCE_LAYER_H
 
-#include <forward_list>
-
-#include "../math/matrix.hpp"
+#include "../resource.hpp"
 #include "mesh.hpp"
-#include "resource.hpp"
 
 namespace Mortar::Resource {
-  class Instance : public Resource {
+  class Layer : public Resource {
     public:
-      Instance(ResourceHandle handle)
+      Layer(ResourceHandle handle)
         : Resource { handle } {};
 
-      const std::forward_list<Mesh *> getMeshes() const;
-      void setMeshes(std::forward_list<Mesh *> mesh);
+      void addDeformableSkinMesh(Mesh *mesh);
+      void addKinematicMesh(KinematicMesh *mesh);
+      void addSkinMesh(Mesh *mesh);
 
-      const Math::Matrix& getWorldTransform() const;
-      void setWorldTransform(Math::Matrix& worldTransform);
+      const std::vector<Mesh *>& getDeformableSkinMeshes() const;
+      const std::vector<KinematicMesh *>& getKinematicMeshes() const;
+      const std::vector<Mesh *>& getSkinMeshes() const;
 
     private:
-      std::forward_list<Mesh *> meshes;
-      Math::Matrix worldTransform;
+      std::vector<Mesh *> deformableSkinMeshes;
+      std::vector<KinematicMesh *> kinematicMeshes;
+      std::vector<Mesh *> skinMeshes;
   };
 }
 

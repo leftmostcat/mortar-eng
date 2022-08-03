@@ -19,7 +19,7 @@
 
 #include "../../../../log.hpp"
 #include "../../../../state.hpp"
-#include "../../../../resource/mesh.hpp"
+#include "../../../../resource/types/mesh.hpp"
 #include "../common.hpp"
 
 using namespace Mortar::Game::LSW::Readers;

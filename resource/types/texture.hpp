@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "resource.hpp"
+#include "../resource.hpp"
 
 namespace Mortar::Resource {
   class Texture : public Resource {

@@ -14,27 +14,30 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_RESOURCE_SPLINE_H
-#define MORTAR_RESOURCE_SPLINE_H
+#include "layer.hpp"
 
-#include <vector>
+using namespace Mortar::Resource;
 
-#include "../math/matrix.hpp"
-#include "resource.hpp"
-
-namespace Mortar::Resource {
-  class Spline : public Resource {
-    public:
-      Spline(ResourceHandle handle)
-        : Resource { handle } {};
-
-      void addVertex(Math::Vector vertex);
-      const Math::Vector& getVertex(size_t n) const;
-      const size_t getVertexCount() const;
-
-    private:
-      std::vector<Math::Vector> vertices;
-  };
+void Layer::addDeformableSkinMesh(Mesh *mesh) {
+  this->deformableSkinMeshes.push_back(mesh);
 }
 
-#endif
+void Layer::addKinematicMesh(KinematicMesh *mesh) {
+  this->kinematicMeshes.push_back(mesh);
+}
+
+void Layer::addSkinMesh(Mesh *mesh) {
+  this->skinMeshes.push_back(mesh);
+}
+
+const std::vector<Mortar::Resource::Mesh *>& Layer::getDeformableSkinMeshes() const {
+  return this->deformableSkinMeshes;
+}
+
+const std::vector<Mortar::Resource::KinematicMesh *>& Layer::getKinematicMeshes() const {
+  return this->kinematicMeshes;
+}
+
+const std::vector<Mortar::Resource::Mesh *>& Layer::getSkinMeshes() const {
+  return this->skinMeshes;
+}

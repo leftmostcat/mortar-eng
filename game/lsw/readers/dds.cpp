@@ -19,7 +19,6 @@
 
 #include "../../../log.hpp"
 #include "../../../state.hpp"
-#include "../../../resource/texture.hpp"
 #include "dds.hpp"
 
 using namespace Mortar::Game::LSW::Readers;
