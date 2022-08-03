@@ -17,14 +17,14 @@
 #ifndef MORTAR_RESOURCE_MANAGER_H
 #define MORTAR_RESOURCE_MANAGER_H
 
-#include <algorithm>
-#include <cassert>
+#include <forward_list>
 #include <functional>
 #include <stdexcept>
 #include <tsl/sparse_map.h>
 #include <vector>
 
 #include "geom.hpp"
+#include "pool.hpp"
 #include "resource.hpp"
 
 namespace Mortar::Resource {
@@ -40,19 +40,17 @@ namespace Mortar::Resource {
       T *createResource();
 
       template <ResourceType T>
+      ResourcePool<T> *createResourcePool(size_t size);
+
+      template <ResourceType T>
       T *getResource(const std::string& name, bool loadIfAbsent = true);
 
-      GeomObject *getResource();
-      void clearGeomObjectPool();
-
     private:
-      static constexpr size_t MAX_GEOMS = 4096;
-
       tsl::sparse_map<ResourceHandle, Resource *> resources;
       tsl::sparse_map<std::type_index, ResourceLoader<>> loaders;
       tsl::sparse_map<std::string, Resource *> namedResources;
-      std::vector<GeomObject *> geomObjectPool;
-      std::vector<GeomObject *>::iterator geomObjectPoolIter;
+
+      std::vector<ResourcePool<> *> resourcePools;
   };
 
   template <ResourceType T>
@@ -72,6 +70,23 @@ namespace Mortar::Resource {
     this->resources[handle] = resource;
 
     return resource;
+  }
+
+  template <ResourceType T>
+  ResourcePool<T> *ResourceManager::createResourcePool(size_t size) {
+    std::forward_list<T *> resources (size);
+
+    std::generate(resources.begin(), resources.end(), [] () {
+      auto handle = ResourceHandle(typeid(T));
+
+      return new T(handle);
+    });
+
+    auto pool = new ResourcePool<T>(resources);
+
+    this->resourcePools.push_back(reinterpret_cast<ResourcePool<> *>(pool));
+
+    return pool;
   }
 
   template <ResourceType T>

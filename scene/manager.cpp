@@ -33,6 +33,8 @@ void SceneManager::initialize(Render::Renderer *renderer) {
   this->renderer = renderer;
 
   renderer->initialize();
+
+  this->geomPool = State::getResourceManager().createResourcePool<Resource::GeomObject>(4096);
 }
 
 void SceneManager::shutDown() {
@@ -244,8 +246,6 @@ const std::vector<Mortar::Math::Matrix> calculatePose(const Mortar::Resource::Ac
 }
 
 void SceneManager::render() {
-  Resource::ResourceManager resourceManager = State::getResourceManager();
-
   std::list<const Resource::GeomObject *> geoms;
   std::list<const Resource::GeomObject *> alphaGeoms;
 
@@ -303,7 +303,7 @@ void SceneManager::render() {
 
       const std::vector<Resource::DeformableSkinMesh *>& deformableSkinMeshes = layer->getDeformableSkinMeshes();
       for (auto mesh = deformableSkinMeshes.begin(); mesh != deformableSkinMeshes.end(); mesh++) {
-        Resource::GeomObject *geom = resourceManager.getResource();
+        Resource::GeomObject *geom = this->geomPool->getResource();
         geom->reset();
 
         geom->setMesh(*mesh);
@@ -318,7 +318,7 @@ void SceneManager::render() {
 
       const std::vector<Resource::SkinMesh *>& skinMeshes = layer->getSkinMeshes();
       for (auto mesh = skinMeshes.begin(); mesh != skinMeshes.end(); mesh++) {
-        Resource::GeomObject *geom = resourceManager.getResource();
+        Resource::GeomObject *geom = this->geomPool->getResource();
         geom->reset();
 
         geom->setMesh(*mesh);
@@ -333,7 +333,7 @@ void SceneManager::render() {
 
       const std::vector<Resource::KinematicMesh *>& kinematicMeshes = layer->getKinematicMeshes();
       for (auto mesh = kinematicMeshes.begin(); mesh != kinematicMeshes.end(); mesh++) {
-        Resource::GeomObject *geom = resourceManager.getResource();
+        Resource::GeomObject *geom = this->geomPool->getResource();
         geom->reset();
 
         geom->setMesh(*mesh);
@@ -352,7 +352,7 @@ void SceneManager::render() {
   for (auto instance = instances.begin(); instance != instances.end(); instance++) {
     std::forward_list<Resource::Mesh *> meshes = (*instance)->getMeshes();
     for (auto mesh = meshes.begin(); mesh != meshes.end(); mesh++) {
-      Resource::GeomObject *geom = resourceManager.getResource();
+      Resource::GeomObject *geom = this->geomPool->getResource();
       geom->reset();
 
       geom->setMesh(*mesh);
@@ -370,7 +370,7 @@ void SceneManager::render() {
 
   this->renderer->renderGeometry(geoms);
 
-  resourceManager.clearGeomObjectPool();
+  this->geomPool->reset();
 
   State::printNextFrame = false;
 }

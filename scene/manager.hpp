@@ -21,6 +21,7 @@
 
 #include "../resource/actor.hpp"
 #include "../resource/character.hpp"
+#include "../resource/pool.hpp"
 #include "../resource/scene.hpp"
 #include "../render/renderer.hpp"
 
@@ -39,6 +40,7 @@ namespace Mortar::Scene {
       Render::Renderer *renderer;
       std::vector<Resource::Actor *> actors;
       const Resource::Scene *scene;
+      Resource::ResourcePool<Resource::GeomObject> *geomPool;
   };
 }
 

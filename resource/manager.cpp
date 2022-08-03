@@ -14,38 +14,18 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-
 #include "manager.hpp"
 
 using namespace Mortar::Resource;
 
-void ResourceManager::initialize() {
-  this->geomObjectPool.resize(ResourceManager::MAX_GEOMS);
-  for (size_t i = 0; i < ResourceManager::MAX_GEOMS; i++) {
-    this->geomObjectPool[i] = this->createResource<GeomObject>();
-  }
-
-  this->geomObjectPoolIter = this->geomObjectPool.begin();
-}
+void ResourceManager::initialize() {}
 
 void ResourceManager::shutDown() {
   for (auto resource : this->resources) {
     delete resource.second;
   }
-}
 
-GeomObject *ResourceManager::getResource() {
-  if (this->geomObjectPoolIter == this->geomObjectPool.end()) {
-    throw std::runtime_error("out of free geom objects");
+  for (auto pool : this->resourcePools) {
+    delete pool;
   }
-
-  GeomObject *geom = (*this->geomObjectPoolIter);
-  this->geomObjectPoolIter++;
-
-  return geom;
-}
-
-void ResourceManager::clearGeomObjectPool() {
-  this->geomObjectPoolIter = this->geomObjectPool.begin();
 }
