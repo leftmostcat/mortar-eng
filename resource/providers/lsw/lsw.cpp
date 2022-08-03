@@ -130,7 +130,7 @@ void readMaterial(Stream &stream, LSWMaterial *material) {
   material->effectType = stream.readUint8();
 }
 
-void LSWProviders::MaterialsProvider::read(std::vector<Material *>& materials, const char *baseName, Stream &stream, uint32_t bodyOffset, const std::vector<Texture *>& textures) {
+void LSWProviders::MaterialsProvider::read(std::vector<Material *>& materials, Stream &stream, uint32_t bodyOffset, const std::vector<Texture *>& textures) {
   ResourceManager resourceManager = State::getResourceManager();
 
   struct LSWMaterialHeader material_header;
@@ -149,10 +149,7 @@ void LSWProviders::MaterialsProvider::read(std::vector<Material *>& materials, c
 
   /* Initialize per-model materials, consisting of a color and index to an in-model texture. */
   for (int i = 0; i < material_header.num_materials; i++) {
-    // XXX: Breaks if we have more than 99 materials
-    char *name = (char *)calloc(strlen(baseName) + 6, sizeof(char));
-    sprintf(name, "%s.mat%d", baseName, i);
-    Material *material = resourceManager.getResource<Material>(name);
+    Material *material = resourceManager.createResource<Material>();
 
     struct LSWMaterial lswMaterial;
 
@@ -177,7 +174,7 @@ void LSWProviders::MaterialsProvider::read(std::vector<Material *>& materials, c
   delete[] material_header.material_offsets;
 }
 
-void LSWProviders::TexturesProvider::read(std::vector<Texture *>& textures, const char *baseName, Stream &stream, uint32_t texturesOffset) {
+void LSWProviders::TexturesProvider::read(std::vector<Texture *>& textures, Stream &stream, uint32_t texturesOffset) {
   struct LSWTextureHeader texture_header;
 
   texture_header.texture_block_offset = stream.readUint32();
@@ -217,18 +214,14 @@ void LSWProviders::TexturesProvider::read(std::vector<Texture *>& textures, cons
 
     auto textureStream = MemoryStream(texture_data, size);
 
-    // XXX: Breaks if we have more than 99 textures
-    char *textureName = (char *)calloc(strlen(baseName) + 6, sizeof(char));
-    sprintf(textureName, "%s.tex%.2d", baseName, i);
-
-    Texture *texture = DDSProvider::read(textureName, textureStream);
+    Texture *texture = DDSProvider::read(textureStream);
     textures.push_back(texture);
   }
 
   delete[] texture_header.texture_block_headers;
 }
 
-void LSWProviders::VertexBufferProvider::read(std::vector<VertexBuffer *>& vertexBuffers, const char *baseName, Stream &stream, uint32_t vertexHeaderOffset) {
+void LSWProviders::VertexBufferProvider::read(std::vector<VertexBuffer *>& vertexBuffers, Stream &stream, uint32_t vertexHeaderOffset) {
   struct LSWVertexHeader vertex_header;
 
   vertex_header.num_vertex_blocks = stream.readUint32();
@@ -249,11 +242,7 @@ void LSWProviders::VertexBufferProvider::read(std::vector<VertexBuffer *>& verte
 
   /* Read vertex blocks into individual, indexed buffers. */
    for (int i = 0; i < vertex_header.num_vertex_blocks; i++) {
-    // XXX: Breaks if we have more than 99 vertex buffers
-    char *vertexBufferName = (char *)calloc(strlen(baseName) + 7, sizeof(char));
-    sprintf(vertexBufferName, "%s.vbuf%.2d", baseName, i);
-
-    VertexBuffer *vertexBuffer = State::getResourceManager().getResource<VertexBuffer>(vertexBufferName);
+    VertexBuffer *vertexBuffer = State::getResourceManager().createResource<VertexBuffer>();
     vertexBuffers.push_back(vertexBuffer);
 
     vertexBuffer->setSize(vertex_header.blocks[i].size);

@@ -24,7 +24,7 @@
 namespace Mortar::Resource {
   class Actor : public Resource {
     public:
-      Actor(ResourceHandle handle)
+      Actor(ResourceHandle& handle)
         : Resource { handle } {};
 
       const Character::Character *getCharacter() const;

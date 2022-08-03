@@ -23,19 +23,15 @@ using namespace Mortar::Resource;
 void ResourceManager::initialize() {
   this->geomObjectPool.resize(ResourceManager::MAX_GEOMS);
   for (size_t i = 0; i < ResourceManager::MAX_GEOMS; i++) {
-    this->geomObjectPool[i] = new GeomObject();
+    this->geomObjectPool[i] = this->createResource<GeomObject>();
   }
 
   this->geomObjectPoolIter = this->geomObjectPool.begin();
 }
 
 void ResourceManager::shutDown() {
-  for (auto geomObject = this->geomObjectPool.begin(); geomObject != this->geomObjectPool.end(); geomObject++) {
-    delete *geomObject;
-  }
-
-  for (auto resource = this->resources.begin(); resource != this->resources.end(); resource++) {
-    delete resource->second;
+  for (auto resource : this->resources) {
+    delete resource;
   }
 }
 

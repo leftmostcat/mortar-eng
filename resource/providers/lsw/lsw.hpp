@@ -32,23 +32,23 @@ namespace Mortar::Resource::Providers::LSW {
     public:
       class MaterialsProvider {
         public:
-          static void read(std::vector<Material *>& materials, const char *baseName, Stream& stream, uint32_t bodyOffset, const std::vector<Texture *>& textures);
+          static void read(std::vector<Material *>& materials, Stream& stream, uint32_t bodyOffset, const std::vector<Texture *>& textures);
       };
 
       class TexturesProvider {
         public:
-          static void read(std::vector<Texture *>& textures, const char *baseName, Stream& stream, uint32_t texturesOffset);
+          static void read(std::vector<Texture *>& textures, Stream& stream, uint32_t texturesOffset);
       };
 
       class VertexBufferProvider {
         public:
-          static void read(std::vector<VertexBuffer *>& vertexBuffers, const char *baseName, Stream& stream, uint32_t bodyOffset);
+          static void read(std::vector<VertexBuffer *>& vertexBuffers, Stream& stream, uint32_t bodyOffset);
       };
 
       class MeshesProvider {
         public:
           template <class T>
-          static void read(std::vector<T *>& meshes, const char *baseName, Stream& stream, uint32_t bodyOffset, const std::vector<Material *>& materials, const std::vector<VertexBuffer *>& vertexBuffers);
+          static void read(std::vector<T *>& meshes, Stream& stream, uint32_t bodyOffset, const std::vector<Material *>& materials, const std::vector<VertexBuffer *>& vertexBuffers);
       };
 
     private:
@@ -114,12 +114,12 @@ namespace Mortar::Resource::Providers::LSW {
 
       static Mortar::Resource::ShaderType getShaderTypeFromMesh(LSWMesh& mesh, const Mortar::Resource::Material *material);
       static const Mortar::Resource::VertexLayout& getVertexLayoutFromMesh(LSWMesh& mesh);
-      static void processSurfaces(const char *baseName, Stream &stream, const uint32_t bodyOffset, uint32_t surfacesOffset, Mortar::Resource::Mesh *mesh);
+      static void processSurfaces(Stream &stream, const uint32_t bodyOffset, uint32_t surfacesOffset, Mortar::Resource::Mesh *mesh);
       static const struct LSWMesh readMeshInfo(Stream &stream, const uint32_t body_offset, uint32_t mesh_offset);
       static const struct LSWSurface readSurfaceInfo(Stream &stream, const uint32_t bodyOffset, uint32_t surfaceOffset);
   };
 
-  template <class T> void LSWProviders::MeshesProvider::read(std::vector<T *>& meshes, const char *baseName, Stream &stream, uint32_t bodyOffset, const std::vector<Material *>& materials, const std::vector<VertexBuffer *>& vertexBuffers) {
+  template <class T> void LSWProviders::MeshesProvider::read(std::vector<T *>& meshes, Stream &stream, uint32_t bodyOffset, const std::vector<Material *>& materials, const std::vector<VertexBuffer *>& vertexBuffers) {
     static_assert(std::is_base_of<Mesh, T>::value, "T must be derived from Mesh");
 
     ResourceManager resourceManager = State::getResourceManager();
@@ -139,11 +139,7 @@ namespace Mortar::Resource::Providers::LSW {
     do {
       struct LSWProviders::LSWMesh lswMesh = LSWProviders::readMeshInfo(stream, bodyOffset, nextOffset);
 
-      // XXX: Breaks if we have more than 99 meshes in this chain
-      char *name = (char *)calloc(strlen(baseName) + 7, sizeof(char));
-      sprintf(name, "%s.mesh%.2d", baseName, i);
-
-      T *mesh = resourceManager.getResource<T>(name);
+      T *mesh = resourceManager.createResource<T>();
       meshes.push_back(mesh);
 
       Material *material = materials.at(lswMesh.materialIdx);
@@ -158,7 +154,7 @@ namespace Mortar::Resource::Providers::LSW {
       VertexBuffer *vertexBuffer = vertexBuffers.at(lswMesh.vertexBlockIdx - 1);
       mesh->setVertexBuffer(vertexBuffer);
 
-      processSurfaces(name, stream, bodyOffset, lswMesh.surfacesOffset, mesh);
+      processSurfaces(stream, bodyOffset, lswMesh.surfacesOffset, mesh);
 
       nextOffset = lswMesh.next_offset;
       i++;

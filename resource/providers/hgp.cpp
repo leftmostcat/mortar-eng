@@ -119,13 +119,11 @@ struct HGPLocator {
 
 const uint32_t BODY_OFFSET = 0x30;
 
-Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDescription *description, const char *resourceName, Stream& stream) {
+Mortar::Resource::Character::Character *HGPProvider::read(Stream& stream) {
   ResourceManager resourceManager = State::getResourceManager();
-  Character::Character *character = resourceManager.getResource<Character::Character>(resourceName);
+  Character::Character *character = resourceManager.createResource<Character::Character>();
 
-  char *modelName = (char *)calloc(strlen(resourceName) + 7, sizeof(char));
-  sprintf(modelName, "%s.model", resourceName);
-  Model *model = resourceManager.getResource<Model>(modelName);
+  Model *model = resourceManager.createResource<Model>();
   character->setModel(model);
 
   /* Read in HGP header at the top of the file. */
@@ -175,7 +173,7 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
   /* Read texture block information. */
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
   std::vector<Texture *> textures;
-  LSW::LSWProviders::TexturesProvider::read(textures, resourceName, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
+  LSW::LSWProviders::TexturesProvider::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
   for (auto texture = textures.begin(); texture != textures.end(); texture++) {
     model->addTexture(*texture);
   }
@@ -183,12 +181,12 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
   /* Read materials. */
   stream.seek(BODY_OFFSET + file_header.material_header_offset, SEEK_SET);
   std::vector<Material *> materials;
-  LSW::LSWProviders::MaterialsProvider::read(materials, resourceName, stream, BODY_OFFSET, textures);
+  LSW::LSWProviders::MaterialsProvider::read(materials, stream, BODY_OFFSET, textures);
 
   /* Read vertex data. */
   stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
   std::vector<VertexBuffer *> vertexBuffers;
-  LSW::LSWProviders::VertexBufferProvider::read(vertexBuffers, resourceName, stream, BODY_OFFSET + file_header.vertex_header_offset);
+  LSW::LSWProviders::VertexBufferProvider::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
   for (auto vertexBuffer = vertexBuffers.begin(); vertexBuffer != vertexBuffers.end(); vertexBuffer++) {
     model->addVertexBuffer(*vertexBuffer);
   }
@@ -225,10 +223,7 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
     stream.seek(BODY_OFFSET + file_header.strings_offset + file_header.strings_offset - model_header.string_table_adjust - model_header.skeleton_offset + hgpJoint.name_offset, SEEK_SET);
     char *jointName = stream.readString();
 
-    char *jointResourceName = (char *)calloc(strlen(resourceName) + strlen(jointName) + 8, sizeof(char));
-    sprintf(jointResourceName, "%s.joint.%s", resourceName, jointName);
-
-    Joint *joint = resourceManager.getResource<Joint>(jointResourceName);
+    Joint *joint = resourceManager.createResource<Joint>();
     character->addJoint(joint);
 
     joint->setName(jointName);
@@ -264,10 +259,7 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
     stream.seek(BODY_OFFSET + layer_headers[i].name_offset, SEEK_SET);
     char *layerName = stream.readString();
 
-    char *layerResourceName = (char *)calloc(strlen(resourceName) + strlen(layerName) + 8, sizeof(char));
-    sprintf(layerResourceName, "%s.layer.%s", resourceName, layerName);
-
-    Layer *layer = resourceManager.getResource<Layer>(layerResourceName);
+    Layer *layer = resourceManager.createResource<Layer>();
     character->addLayer(layer);
 
     for (int j = 0; j < 4; j++) {
@@ -291,33 +283,24 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
 
           const char *jointName = character->getJoint(k)->getName();
 
-          char *meshBlockName = (char *)calloc(strlen(layerResourceName) + strlen(jointName) + 8, sizeof(char));
-          sprintf(meshBlockName, "%s.joint.%s", layerResourceName, jointName);
-
           stream.seek(BODY_OFFSET + mesh_header_offsets[k], SEEK_SET);
           std::vector<KinematicMesh *> kinematicMeshes;
-          LSW::LSWProviders::MeshesProvider::read<KinematicMesh>(kinematicMeshes, meshBlockName, stream, BODY_OFFSET, materials, vertexBuffers);
+          LSW::LSWProviders::MeshesProvider::read<KinematicMesh>(kinematicMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
           for (auto mesh = kinematicMeshes.begin(); mesh != kinematicMeshes.end(); mesh++) {
             (*mesh)->setJointIdx(k);
             layer->addKinematicMesh(*mesh);
           }
         }
       } else if (j == 1) {
-        char *meshBlockName = (char *)calloc(strlen(layerResourceName) + 6, sizeof(char));
-        sprintf(meshBlockName, "%s.skin", layerResourceName);
-
         std::vector<SkinMesh *> skinMeshes;
-        LSW::LSWProviders::MeshesProvider::read<SkinMesh>(skinMeshes, meshBlockName, stream, BODY_OFFSET, materials, vertexBuffers);
+        LSW::LSWProviders::MeshesProvider::read<SkinMesh>(skinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
         for (auto mesh = skinMeshes.begin(); mesh != skinMeshes.end(); mesh++) {
           layer->addSkinMesh(*mesh);
         }
       }
       else if (j == 3) {
-        char *meshBlockName = (char *)calloc(strlen(layerResourceName) + 8, sizeof(char));
-        sprintf(meshBlockName, "%s.deform", layerResourceName);
-
         std::vector<DeformableSkinMesh *> deformableSkinMeshes;
-        LSW::LSWProviders::MeshesProvider::read<DeformableSkinMesh>(deformableSkinMeshes, meshBlockName, stream, BODY_OFFSET, materials, vertexBuffers);
+        LSW::LSWProviders::MeshesProvider::read<DeformableSkinMesh>(deformableSkinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
         for (auto mesh = deformableSkinMeshes.begin(); mesh != deformableSkinMeshes.end(); mesh++) {
           layer->addDeformableSkinMesh(*mesh);
         }
@@ -336,11 +319,7 @@ Mortar::Resource::Character::Character *HGPProvider::read(Character::CharacterDe
 
     stream.seek(11 * sizeof(uint8_t), SEEK_CUR);
 
-    // XXX: Breaks if we have more than 99 locators
-    char *locatorName = (char *)calloc(strlen(resourceName) + 7, sizeof(char));
-    sprintf(locatorName, "%s.loc%.2d", resourceName, i);
-
-    Character::Character::Locator *locator = resourceManager.getResource<Character::Character::Locator>(locatorName);
+    Character::Character::Locator *locator = resourceManager.createResource<Character::Character::Locator>();
     character->addLocator(locator);
 
     locator->setTransform(hgpLocator.transform);

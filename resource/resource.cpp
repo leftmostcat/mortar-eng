@@ -18,6 +18,12 @@
 
 using namespace Mortar::Resource;
 
-ResourceHandle Resource::getHandle() const {
+std::size_t ResourceHandle::nextId = 0;
+
+bool ResourceHandle::operator==(const ResourceHandle &other) const {
+  return this->id == other.id && this->type == other.type;
+}
+
+const ResourceHandle& Resource::getHandle() const {
   return this->handle;
 }

@@ -360,7 +360,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
         float *floatPtr = floats;
         for (int i = 0; i < count; i++, floatPtr += 16) {
           if (State::printNextFrame && (*surface)->getIndexBuffer()->getCount() == 30) {
-            DEBUG("index for %s at %d is %d", (*surface)->getHandle(), i, indices.at(i));
+            DEBUG("index at %d is %d", i, indices.at(i));
             DEBUG("base 0x%lx, 0x%lx", (unsigned long)floats, (unsigned long)floatPtr);
           }
 

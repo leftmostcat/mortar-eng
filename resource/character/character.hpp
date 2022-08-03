@@ -38,7 +38,7 @@ namespace Mortar::Resource::Character {
 
       class Locator : public Resource {
         public:
-          Locator(ResourceHandle handle)
+          Locator(ResourceHandle& handle)
             : Resource { handle } {};
 
           const Math::Matrix& getTransform() const;
@@ -52,7 +52,7 @@ namespace Mortar::Resource::Character {
           unsigned char jointIdx;
       };
 
-      Character(ResourceHandle handle)
+      Character(ResourceHandle& handle)
         : Resource { handle } {};
 
       const Model *getModel() const;

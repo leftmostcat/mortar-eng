@@ -27,8 +27,8 @@
 namespace Mortar::Resource {
   class GeomObject : public Resource {
     public:
-      GeomObject()
-        : Resource { "" } {};
+      GeomObject(ResourceHandle& handle)
+        : Resource { handle } {};
 
       void clear();
 

@@ -17,21 +17,60 @@
 #ifndef MORTAR_RESOURCE_H
 #define MORTAR_RESOURCE_H
 
+#include <functional>
+#include <typeindex>
+
+#include "../log.hpp"
+
 namespace Mortar::Resource {
-  typedef const char * ResourceHandle;
+  // ResourceHandle is an opaque unique identifier for resources
+  class ResourceHandle {
+    public:
+      bool operator==(const ResourceHandle& other) const;
+
+      friend std::hash<ResourceHandle>;
+      friend class ResourceManager;
+
+    private:
+      // Restrict construction of ResourceHandles; only the ResourceManager
+      // should be creating new ones
+      ResourceHandle(std::type_index type)
+        : id { ResourceHandle::nextId++ }, type { type } {};
+
+      static std::size_t nextId;
+
+      std::size_t id;
+      std::type_index type;
+  };
 
   class Resource {
     public:
-      Resource(ResourceHandle handle)
+      Resource(ResourceHandle& handle)
         : handle { handle } {};
 
       virtual ~Resource() {}
 
-      ResourceHandle getHandle() const;
+      const ResourceHandle& getHandle() const;
+
+      friend class ResourceManager;
 
     private:
       ResourceHandle handle;
   };
+
+  template <typename T>
+  concept ResourceType = std::derived_from<T, Resource>;
 }
+
+// Specialize std::hash for ResourceHandle to allow use as map key
+template <>
+struct std::hash<Mortar::Resource::ResourceHandle> {
+  std::size_t operator()(const Mortar::Resource::ResourceHandle& handle) const noexcept {
+    std::size_t h1 = std::hash<std::size_t>{}(handle.id);
+    std::size_t h2 = std::hash<std::type_index>{}(handle.type);
+
+    return h1 ^ (h2 << 1);
+  }
+};
 
 #endif

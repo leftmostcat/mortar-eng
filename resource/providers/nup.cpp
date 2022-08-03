@@ -87,15 +87,11 @@ struct NUPSpline {
 
 const int BODY_OFFSET = 0x40;
 
-Mortar::Resource::Scene *NUPProvider::read(const char *name, Stream &stream) {
-  const char *path = State::getGameConfig()->getSceneResourcePath(0, 0, name);
-
+Mortar::Resource::Scene *NUPProvider::read(Stream &stream) {
   ResourceManager resourceManager = State::getResourceManager();
-  Scene *scene = resourceManager.getResource<Scene>(path);
+  Scene *scene = resourceManager.createResource<Scene>();
 
-  char *modelName = (char *)calloc(strlen(path) + 7, sizeof(char));
-  sprintf(modelName, "%s.scene", path);
-  Model *model = resourceManager.getResource<Model>(modelName);
+  Model *model = resourceManager.createResource<Model>();
   scene->setModel(model);
 
   /* Read in NUP header at the top of the file. */
@@ -137,7 +133,7 @@ Mortar::Resource::Scene *NUPProvider::read(const char *name, Stream &stream) {
   /* Read texture block information. */
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
   std::vector<Texture *> textures;
-  LSW::LSWProviders::TexturesProvider::read(textures, path, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
+  LSW::LSWProviders::TexturesProvider::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
   for (auto texture = textures.begin(); texture != textures.end(); texture++) {
     model->addTexture(*texture);
   }
@@ -145,12 +141,12 @@ Mortar::Resource::Scene *NUPProvider::read(const char *name, Stream &stream) {
   /* Read materials. */
   stream.seek(BODY_OFFSET + file_header.material_header_offset, SEEK_SET);
   std::vector<Material *> materials;
-  LSW::LSWProviders::MaterialsProvider::read(materials, path, stream, BODY_OFFSET, textures);
+  LSW::LSWProviders::MaterialsProvider::read(materials, stream, BODY_OFFSET, textures);
 
   /* Read vertex data. */
   stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
   std::vector<VertexBuffer *> vertexBuffers;
-  LSW::LSWProviders::VertexBufferProvider::read(vertexBuffers, path, stream, BODY_OFFSET + file_header.vertex_header_offset);
+  LSW::LSWProviders::VertexBufferProvider::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
   for (auto vertexBuffer = vertexBuffers.begin(); vertexBuffer != vertexBuffers.end(); vertexBuffer++) {
     model->addVertexBuffer(*vertexBuffer);
   }
@@ -167,12 +163,8 @@ Mortar::Resource::Scene *NUPProvider::read(const char *name, Stream &stream) {
   for (int i = 0; i < model_header.num_mesh_blocks; i++) {
     stream.seek(BODY_OFFSET + mesh_header_offsets[i], SEEK_SET);
 
-    // XXX: Breaks if we have more than 999 mesh blocks
-    char *meshBlockName = (char *)calloc(strlen(path) + 10, sizeof(char));
-    sprintf(meshBlockName, "%s.block%.3d", path, i);
-
     std::vector<Mesh *> blockMeshes;
-    LSW::LSWProviders::MeshesProvider::read<Mesh>(blockMeshes, meshBlockName, stream, BODY_OFFSET, materials, vertexBuffers);
+    LSW::LSWProviders::MeshesProvider::read<Mesh>(blockMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
 
     std::forward_list<Mesh *> meshList;
     for (auto mesh = blockMeshes.begin(); mesh != blockMeshes.end(); mesh++) {
@@ -200,11 +192,7 @@ Mortar::Resource::Scene *NUPProvider::read(const char *name, Stream &stream) {
   }
 
   for (int i = 0; i < model_header.num_instances; i++) {
-    // XXX: Breaks if we have more than 999 instances
-    char *instanceName = (char *)calloc(strlen(path) + 9, sizeof(char));
-    sprintf(instanceName, "%s.inst%.3d", path, i);
-
-    Instance *instance = resourceManager.getResource<Instance>(instanceName);
+    Instance *instance = resourceManager.createResource<Instance>();
     scene->addInstance(instance);
 
     if (instances_data[i].matrix_offset) {
@@ -238,9 +226,7 @@ Mortar::Resource::Scene *NUPProvider::read(const char *name, Stream &stream) {
     stream.seek(BODY_OFFSET + nupSplines[i].nameOffset, SEEK_SET);
     char *splineName = stream.readString();
 
-    char *splineResourceName = (char *)calloc(strlen(name) + strlen(splineName) + 8, sizeof(char));
-    sprintf(splineResourceName, "%s.spline.%s", name, splineName);
-    Spline *spline = resourceManager.getResource<Spline>(splineResourceName);
+    Spline *spline = resourceManager.createResource<Spline>();
 
     scene->addSpline(splineName, spline);
 

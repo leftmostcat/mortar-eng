@@ -66,7 +66,7 @@ inline Mortar::Resource::Animation::KeyframeType translateKeyframeType(uint8_t t
 
 Mortar::Resource::Animation *AnimProvider::read(const char *name, Stream& stream) {
   Mortar::Resource::ResourceManager resourceManager = Mortar::State::getResourceManager();
-  Mortar::Resource::Animation *animation = resourceManager.getResource<Mortar::Resource::Animation>(name);
+  Mortar::Resource::Animation *animation = resourceManager.createResource<Mortar::Resource::Animation>();
 
   struct LSWAnimFileHeader fileHeader;
   fileHeader.version = stream.readUint32();
@@ -139,11 +139,7 @@ Mortar::Resource::Animation *AnimProvider::read(const char *name, Stream& stream
   }
 
   for (int i = 0; i < dataHeader.elementCount; i++) {
-    // XXX: Breaks if we have more than 99 elements
-    char *elementName = (char *)calloc(strlen(name) + 8, sizeof(char));
-    sprintf(elementName, "%s.elem%.2d", name, i);
-
-    Mortar::Resource::Animation::Element *element = resourceManager.getResource<Mortar::Resource::Animation::Element>(elementName);
+    Mortar::Resource::Animation::Element *element = resourceManager.createResource<Mortar::Resource::Animation::Element>();
     animation->addElement(element);
 
     uint32_t flags = elementFlags.at(i);
@@ -155,11 +151,7 @@ Mortar::Resource::Animation *AnimProvider::read(const char *name, Stream& stream
     for (int j = 0; j < dataHeader.channelsPerElementCount; j++) {
       unsigned channelIdx = i * dataHeader.channelsPerElementCount + j;
 
-      // XXX: Breaks if we have more than 99 channels
-      char *channelName = (char *)calloc(strlen(elementName) + 8, sizeof(char));
-      sprintf(channelName, "%s.chan%.2d", elementName, i);
-
-      Mortar::Resource::Animation::Channel *channel = resourceManager.getResource<Mortar::Resource::Animation::Channel>(channelName);
+      Mortar::Resource::Animation::Channel *channel = resourceManager.createResource<Mortar::Resource::Animation::Channel>();
       element->addChannel(channel);
 
       Mortar::Resource::Animation::KeyframeType keyframeType = translateKeyframeType(keyframeTypes[channelIdx]);

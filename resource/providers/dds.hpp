@@ -23,8 +23,8 @@
 namespace Mortar::Resource::Providers {
   class DDSProvider {
     public:
-      static Texture *read(const char *name, Stream &stream);
-};
+      static Texture *read(Stream &stream);
+  };
 }
 
 #endif

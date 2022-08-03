@@ -67,9 +67,7 @@ float getValue(const Mortar::Math::Vector& lookAt, const Mortar::Math::Vector& a
 Mortar::Resource::Actor *SceneManager::addActor(Mortar::Resource::Character::Character *character) {
   static unsigned actorCount = 0;
 
-  char *name = (char *)calloc(8, sizeof(char));
-  sprintf(name, "actor%.2d", actorCount);
-  Mortar::Resource::Actor *actor = State::getResourceManager().getResource<Mortar::Resource::Actor>(name);
+  Mortar::Resource::Actor *actor = State::getResourceManager().createResource<Mortar::Resource::Actor>();
   this->actors.push_back(actor);
 
   actor->setCharacter(character);

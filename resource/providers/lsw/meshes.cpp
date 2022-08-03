@@ -126,34 +126,25 @@ std::unordered_map<uint32_t, Mortar::Resource::PrimitiveType> primitiveTypes {
   { 6, Mortar::Resource::PrimitiveType::TRIANGLE_STRIP },
 };
 
-void LSWProviders::processSurfaces(const char *baseName, Stream &stream, const uint32_t bodyOffset, uint32_t surfacesOffset, Mortar::Resource::Mesh *mesh) {
+void LSWProviders::processSurfaces(Stream &stream, const uint32_t bodyOffset, uint32_t surfacesOffset, Mortar::Resource::Mesh *mesh) {
   Mortar::Resource::ResourceManager resourceManager = Mortar::State::getResourceManager();
 
   uint32_t nextOffset = surfacesOffset;
   unsigned i = 0;
   do {
-    // XXX: Breaks if we have more than 99 surfaces in this chain
-    char *surfaceName = (char *)calloc(strlen(baseName) + 11, sizeof(char));
-    sprintf(surfaceName, "%s.surface%.2d", baseName, i);
-
-    Mortar::Resource::Surface *surface = resourceManager.getResource<Mortar::Resource::Surface>(surfaceName);
+    Mortar::Resource::Surface *surface = resourceManager.createResource<Mortar::Resource::Surface>();
     mesh->addSurface(surface);
 
     struct LSWSurface lswSurface = readSurfaceInfo(stream, bodyOffset, nextOffset);
 
-    uint16_t *elementData = new uint16_t[lswSurface.elementCount];
-
     stream.seek(bodyOffset + lswSurface.elementsOffset, SEEK_SET);
 
+    uint16_t *elementData = new uint16_t[lswSurface.elementCount];
     for (int i = 0; i < lswSurface.elementCount; i++) {
       elementData[i] = stream.readUint16();
     }
 
-    // XXX: Breaks if we have more than 99 surfaces in this chain
-    char *indexBufferName = (char *)calloc(strlen(baseName) + 8, sizeof(char));
-    sprintf(indexBufferName, "%s.ibuf%.2d", baseName, i);
-
-    Mortar::Resource::IndexBuffer *indexBuffer = resourceManager.getResource<Mortar::Resource::IndexBuffer>(indexBufferName);
+    Mortar::Resource::IndexBuffer *indexBuffer = resourceManager.createResource<Mortar::Resource::IndexBuffer>();
 
     indexBuffer->setCount(lswSurface.elementCount);
     indexBuffer->setData(elementData);

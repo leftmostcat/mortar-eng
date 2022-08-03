@@ -17,11 +17,13 @@
 #ifndef MORTAR_RESOURCE_MANAGER_H
 #define MORTAR_RESOURCE_MANAGER_H
 
+#include <algorithm>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
 #include "geom.hpp"
+#include "resource.hpp"
 
 namespace Mortar::Resource {
   class ResourceManager {
@@ -29,32 +31,39 @@ namespace Mortar::Resource {
       void initialize();
       void shutDown();
 
-      template <class T> T *getResource(const char *name);
+      template <ResourceType T>
+      T *createResource();
+
       GeomObject *getResource();
       void clearGeomObjectPool();
 
     private:
       static constexpr size_t MAX_GEOMS = 4096;
 
-      std::unordered_map<ResourceHandle, Resource *> resources;
+      std::vector<Resource *> resources;
       std::vector<GeomObject *> geomObjectPool;
       std::vector<GeomObject *>::iterator geomObjectPoolIter;
   };
 
-  template <class T> T *ResourceManager::getResource(const char *name) {
-    static_assert(std::is_base_of<Resource, T>::value, "T must inherit from Resource");
+  template <ResourceType T>
+  T *ResourceManager::createResource() {
+    auto handle = ResourceHandle(typeid(T));
 
-    if (this->resources.contains(name)) {
-      T *resource = dynamic_cast<T *>(this->resources.at(name));
-      if (resource == nullptr) {
-        throw std::runtime_error("resource of different type already exists");
+    auto resource = new T(handle);
+
+    // unordered_map feels like the obvious choice to use here, but insertion
+    // massively tanks performance and we don't need to retrieve by handle
+    // often, so a sorted vector works out better
+    auto upper = std::upper_bound(
+      this->resources.begin(),
+      this->resources.end(),
+      resource,
+      [] (const Resource *a, const Resource *b) {
+        return a->handle.id < b->handle.id;
       }
+    );
 
-      return resource;
-    }
-
-    T *resource = new T(name);
-    this->resources[name] = resource;
+    this->resources.insert(upper, resource);
 
     return resource;
   }

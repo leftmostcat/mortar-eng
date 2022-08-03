@@ -30,7 +30,6 @@
 #include "state.hpp"
 #include "resource/anim.hpp"
 #include "resource/character/character.hpp"
-#include "resource/character/description.hpp"
 #include "resource/providers/lsw/anim.hpp"
 #include "resource/providers/hgp.hpp"
 #include "resource/providers/nup.hpp"
@@ -61,17 +60,15 @@ int main(int argc, char **argv) {
   const char *scenePath = State::getGameConfig()->getSceneResourcePath(0, 0, "negotiations_a");
   auto sceneStream = FileStream(scenePath, "rb");
 
-  Resource::Scene *scene = Resource::Providers::NUPProvider::read("negotiations_a", sceneStream);
+  Resource::Scene *scene = Resource::Providers::NUPProvider::read(sceneStream);
 
   State::getSceneManager().setScene(scene);
 
   // XXX: Manually load Qui-Gon
-  auto description = Resource::Character::CharacterDescription("quigonjinn");
-
-  const char *charPath = State::getGameConfig()->getCharacterResourcePath(description.getName());
+  const char *charPath = State::getGameConfig()->getCharacterResourcePath("quigonjinn");
   auto quiStream = FileStream(charPath, "rb");
 
-  Resource::Character::Character *quigon = Resource::Providers::HGPProvider::read(&description, charPath, quiStream);
+  Resource::Character::Character *quigon = Resource::Providers::HGPProvider::read(quiStream);
 
   State::getSceneManager().addActor(quigon);
 
@@ -84,12 +81,10 @@ int main(int argc, char **argv) {
   quigon->addSkeletalAnimation(Resource::Character::Character::AnimationType::IDLE, animation);
 
   // XXX: Manually load Obi-Wan
-  description = Resource::Character::CharacterDescription("obiwankenobi");
-
-  charPath = State::getGameConfig()->getCharacterResourcePath(description.getName());
+  charPath = State::getGameConfig()->getCharacterResourcePath("obiwankenobi");
   auto charStream = FileStream(charPath, "rb");
 
-  Resource::Character::Character *obiwan = Resource::Providers::HGPProvider::read(&description, charPath, charStream);
+  Resource::Character::Character *obiwan = Resource::Providers::HGPProvider::read(charStream);
 
   State::getSceneManager().addActor(obiwan);
 

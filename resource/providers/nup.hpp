@@ -23,7 +23,7 @@
 namespace Mortar::Resource::Providers {
   class NUPProvider {
     public:
-      static Scene *read(const char *name, Stream &stream);
+      static Scene *read(Stream &stream);
   };
 }
 

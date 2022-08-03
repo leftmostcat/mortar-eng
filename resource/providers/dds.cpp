@@ -69,9 +69,9 @@ struct DDSHeader {
   uint32_t reserved2;
 };
 
-Mortar::Resource::Texture *DDSProvider::read(const char *name, Stream &stream) {
+Mortar::Resource::Texture *DDSProvider::read(Stream &stream) {
   ResourceManager resourceManager = State::getResourceManager();
-  Texture *texture = resourceManager.getResource<Texture>(name);
+  Texture *texture = resourceManager.createResource<Texture>();
 
   struct DDSHeader file_header;
 
@@ -103,10 +103,7 @@ Mortar::Resource::Texture *DDSProvider::read(const char *name, Stream &stream) {
 
         /* Read in mipmap levels one by one. */
         for (int i = 0; i < file_header.num_levels; i++) {
-          // XXX: Breaks if we have more than 99 levels
-          char *levelName = (char *)calloc(strlen(name) + 9, sizeof(char));
-          sprintf(levelName, "%s.level%.2d", name, i);
-          Texture::Level *level = resourceManager.getResource<Texture::Level>(levelName);
+          Texture::Level *level = resourceManager.createResource<Texture::Level>();
 
           level->setLevel(i);
           level->setSize((((file_header.width >> i) + 3) >> 2) * (((file_header.height >> i) + 3) >> 2) * 16);

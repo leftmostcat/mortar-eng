@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(mortar)
 
 set(OpenGL_GL_PREFERENCE GLVND)
-SET(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 20)
 
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -19,7 +19,6 @@ set(SRCS
   render/gl/renderer.cpp
   render/gl/shader.cpp
   resource/character/character.cpp
-  resource/character/description.cpp
   resource/providers/lsw/anim.cpp
   resource/providers/lsw/lsw.cpp
   resource/providers/lsw/meshes.cpp

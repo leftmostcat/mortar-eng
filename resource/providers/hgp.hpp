@@ -19,12 +19,11 @@
 
 #include "../../streams/stream.hpp"
 #include "../character/character.hpp"
-#include "../character/description.hpp"
 
 namespace Mortar::Resource::Providers {
   class HGPProvider {
     public:
-      static Character::Character *read(Character::CharacterDescription *description, const char *resourceName, Stream& stream);
+      static Character::Character *read(Stream& stream);
   };
 }
 
