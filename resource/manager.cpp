@@ -31,7 +31,7 @@ void ResourceManager::initialize() {
 
 void ResourceManager::shutDown() {
   for (auto resource : this->resources) {
-    delete resource;
+    delete resource.second;
   }
 }
 

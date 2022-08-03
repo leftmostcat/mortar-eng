@@ -7,24 +7,26 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(SDL2 REQUIRED)
+find_package(tsl-sparse-map REQUIRED)
 
 set(SRCS
   anim/anim.cpp
   camera.cpp
   clock.cpp
   display.cpp
-  game/config.cpp
-  game/lsw/config.cpp
+  game/lsw/game.cpp
+  game/lsw/loaders/character.cpp
+  game/lsw/loaders/scene.cpp
+  game/lsw/readers/anim.cpp
+  game/lsw/readers/dds.cpp
+  game/lsw/readers/hgp.cpp
+  game/lsw/readers/common.cpp
+  game/lsw/readers/meshes.cpp
+  game/lsw/readers/nup.cpp
   math/matrix.cpp
   render/gl/renderer.cpp
   render/gl/shader.cpp
-  resource/character/character.cpp
-  resource/providers/lsw/anim.cpp
-  resource/providers/lsw/lsw.cpp
-  resource/providers/lsw/meshes.cpp
-  resource/providers/dds.cpp
-  resource/providers/hgp.cpp
-  resource/providers/nup.cpp
+  resource/character.cpp
   resource/actor.cpp
   resource/anim.cpp
   resource/geom.cpp

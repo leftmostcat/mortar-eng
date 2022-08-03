@@ -18,9 +18,8 @@
 #define MORTAR_RESOURCE_H
 
 #include <functional>
+#include <string>
 #include <typeindex>
-
-#include "../log.hpp"
 
 namespace Mortar::Resource {
   // ResourceHandle is an opaque unique identifier for resources
@@ -45,14 +44,15 @@ namespace Mortar::Resource {
 
   class Resource {
     public:
-      Resource(ResourceHandle& handle)
-        : handle { handle } {};
-
-      virtual ~Resource() {}
+      virtual ~Resource() = default;
 
       const ResourceHandle& getHandle() const;
 
       friend class ResourceManager;
+
+    protected:
+      Resource(ResourceHandle& handle)
+        : handle { handle } {};
 
     private:
       ResourceHandle handle;
@@ -60,6 +60,9 @@ namespace Mortar::Resource {
 
   template <typename T>
   concept ResourceType = std::derived_from<T, Resource>;
+
+  template <ResourceType T = Resource>
+  using ResourceLoader = std::function<T* (const std::string&)>;
 }
 
 // Specialize std::hash for ResourceHandle to allow use as map key

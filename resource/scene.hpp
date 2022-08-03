@@ -17,9 +17,11 @@
 #ifndef MORTAR_RESOURCE_SCENE_H
 #define MORTAR_RESOURCE_SCENE_H
 
-#include <unordered_map>
+#include <tsl/sparse_map.h>
+#include <vector>
 
 #include "../math/matrix.hpp"
+#include "character.hpp"
 #include "instance.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
@@ -29,9 +31,6 @@
 namespace Mortar::Resource {
   class Scene : public Resource {
     public:
-      Scene(ResourceHandle handle)
-        : Resource { handle } {};
-
       const Model *getModel() const;
       void setModel(Model *model);
 
@@ -44,14 +43,26 @@ namespace Mortar::Resource {
       void addSpline(const std::string name, const Spline *spline);
       const Spline *getSplineByName(const std::string name) const;
 
+      void addPlayerCharacter(const Character *character);
+      const std::vector<const Character *>& getPlayerCharacters() const;
+
+      friend class ResourceManager;
+
+    protected:
+      Scene(ResourceHandle handle)
+        : Resource { handle } {};
+
     private:
       Model *model;
       std::vector<Mesh *> meshes;
+
       std::vector<Instance *> instances;
 
       std::vector<Math::Matrix> startTransforms;
 
-      std::unordered_map<std::string, const Spline *> splines;
+      tsl::sparse_map<std::string, const Spline *> splines;
+
+      std::vector<const Character *> playerCharacters;
   };
 }
 

@@ -14,22 +14,15 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_GAME_CONFIG_H
-#define MORTAR_GAME_CONFIG_H
+#ifndef MORTAR_GAME_LSW_H
+#define MORTAR_GAME_LSW_H
 
-namespace Mortar::Game {
-  class Config {
+#include "../game.hpp"
+
+namespace Mortar::Game::LSW {
+  class Game : public Mortar::Game::Game {
     public:
-      Config(const char *dataPath)
-        : dataPath { dataPath } {};
-
-      const char *getDataPath();
-      virtual const char *getAnimationResourcePath(const char *character, const char *name) = 0;
-      virtual const char *getCharacterResourcePath(const char *name) = 0;
-      virtual const char *getSceneResourcePath(unsigned episode, unsigned chapter, const char *name) = 0;
-
-    protected:
-      const char *dataPath;
+      virtual void initialize() override;
   };
 }
 

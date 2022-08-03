@@ -18,8 +18,10 @@
 #define MORTAR_RESOURCE_MANAGER_H
 
 #include <algorithm>
+#include <cassert>
+#include <functional>
 #include <stdexcept>
-#include <unordered_map>
+#include <tsl/sparse_map.h>
 #include <vector>
 
 #include "geom.hpp"
@@ -32,7 +34,13 @@ namespace Mortar::Resource {
       void shutDown();
 
       template <ResourceType T>
+      void registerResourceLoader(ResourceLoader<T> loader);
+
+      template <ResourceType T>
       T *createResource();
+
+      template <ResourceType T>
+      T *getResource(const std::string& name, bool loadIfAbsent = true);
 
       GeomObject *getResource();
       void clearGeomObjectPool();
@@ -40,30 +48,44 @@ namespace Mortar::Resource {
     private:
       static constexpr size_t MAX_GEOMS = 4096;
 
-      std::vector<Resource *> resources;
+      tsl::sparse_map<ResourceHandle, Resource *> resources;
+      tsl::sparse_map<std::type_index, ResourceLoader<>> loaders;
+      tsl::sparse_map<std::string, Resource *> namedResources;
       std::vector<GeomObject *> geomObjectPool;
       std::vector<GeomObject *>::iterator geomObjectPoolIter;
   };
+
+  template <ResourceType T>
+  void ResourceManager::registerResourceLoader(ResourceLoader<T> loader) {
+    if (loaders.contains(typeid(T))) {
+      throw std::runtime_error("resource loader already registered for type");
+    }
+
+    loaders[typeid(T)] = loader;
+  }
 
   template <ResourceType T>
   T *ResourceManager::createResource() {
     auto handle = ResourceHandle(typeid(T));
 
     auto resource = new T(handle);
+    this->resources[handle] = resource;
 
-    // unordered_map feels like the obvious choice to use here, but insertion
-    // massively tanks performance and we don't need to retrieve by handle
-    // often, so a sorted vector works out better
-    auto upper = std::upper_bound(
-      this->resources.begin(),
-      this->resources.end(),
-      resource,
-      [] (const Resource *a, const Resource *b) {
-        return a->handle.id < b->handle.id;
-      }
-    );
+    return resource;
+  }
 
-    this->resources.insert(upper, resource);
+  template <ResourceType T>
+  T *ResourceManager::getResource(const std::string& name, bool loadIfAbsent) {
+    if (this->namedResources.contains(name)) {
+      return static_cast<T *>(this->namedResources.at(name));
+    }
+
+    if (!loadIfAbsent || !this->loaders.contains(typeid(T))) {
+      throw std::runtime_error("named resource does not exist and can't be loaded");
+    }
+
+    auto loader = this->loaders.at(typeid(T));
+    T *resource = static_cast<T *>(loader(name));
 
     return resource;
   }

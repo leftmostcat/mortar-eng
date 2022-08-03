@@ -23,7 +23,7 @@
 #include "../../../state.hpp"
 #include "anim.hpp"
 
-using namespace Mortar::Resource::Providers::LSW;
+using namespace Mortar::Game::LSW::Readers;
 
 struct LSWAnimFileHeader {
   uint32_t version;
@@ -64,7 +64,7 @@ inline Mortar::Resource::Animation::KeyframeType translateKeyframeType(uint8_t t
   }
 }
 
-Mortar::Resource::Animation *AnimProvider::read(const char *name, Stream& stream) {
+Mortar::Resource::Animation *AnimReader::read(Stream& stream) {
   Mortar::Resource::ResourceManager resourceManager = Mortar::State::getResourceManager();
   Mortar::Resource::Animation *animation = resourceManager.createResource<Mortar::Resource::Animation>();
 
@@ -111,7 +111,7 @@ Mortar::Resource::Animation *AnimProvider::read(const char *name, Stream& stream
 
   stream.seek(dataHeader.channelsOffset - fileHeader.globalAdjust, SEEK_SET);
   for (int i = 0; i < totalChannelCount; i++) {
-    if (translateKeyframeType(keyframeTypes[i]) == Animation::KeyframeType::NONE) {
+    if (translateKeyframeType(keyframeTypes[i]) == Resource::Animation::KeyframeType::NONE) {
       // NONE-type keyframes don't use the same structure all the other types
       // do; in place of the offset to that struct there's a single float
       noneTypeValues[i] = stream.readFloat();
@@ -123,7 +123,7 @@ Mortar::Resource::Animation *AnimProvider::read(const char *name, Stream& stream
 
   std::vector<LSWAnimChannel> lswChannels (totalChannelCount);
   for (int i = 0; i < totalChannelCount; i++) {
-    if (translateKeyframeType(keyframeTypes[i]) == Animation::KeyframeType::NONE) {
+    if (translateKeyframeType(keyframeTypes[i]) == Resource::Animation::KeyframeType::NONE) {
       continue;
     }
 

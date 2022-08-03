@@ -14,16 +14,16 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_RESOURCE_PROVIDERS_HGP_H
-#define MORTAR_RESOURCE_PROVIDERS_HGP_H
+#ifndef MORTAR_LSW_READERS_DDS_H
+#define MORTAR_LSW_READERS_DDS_H
 
-#include "../../streams/stream.hpp"
-#include "../character/character.hpp"
+#include "../../../streams/stream.hpp"
+#include "../../../resource/texture.hpp"
 
-namespace Mortar::Resource::Providers {
-  class HGPProvider {
+namespace Mortar::Game::LSW::Readers {
+  class DDSReader {
     public:
-      static Character::Character *read(Stream& stream);
+      static Resource::Texture *read(Stream &stream);
   };
 }
 

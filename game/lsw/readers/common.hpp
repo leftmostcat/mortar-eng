@@ -14,41 +14,40 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_RESOURCE_PROVIDERS_LSW_H
-#define MORTAR_RESOURCE_PROVIDERS_LSW_H
+#ifndef MORTAR_LSW_READERS_COMMON_H
+#define MORTAR_LSW_READERS_COMMON_H
 
 #include <cstdint>
-#include <stdint.h>
 
 #include "../../../state.hpp"
 #include "../../../streams/stream.hpp"
-#include "../../material.hpp"
-#include "../../mesh.hpp"
-#include "../../texture.hpp"
-#include "../../vertex.hpp"
+#include "../../../resource/material.hpp"
+#include "../../../resource/mesh.hpp"
+#include "../../../resource/texture.hpp"
+#include "../../../resource/vertex.hpp"
 
-namespace Mortar::Resource::Providers::LSW {
-  class LSWProviders {
+namespace Mortar::Game::LSW::Readers {
+  class CommonReaders {
     public:
-      class MaterialsProvider {
+      class MaterialsReader {
         public:
-          static void read(std::vector<Material *>& materials, Stream& stream, uint32_t bodyOffset, const std::vector<Texture *>& textures);
+          static void read(std::vector<Resource::Material *>& materials, Stream& stream, uint32_t bodyOffset, const std::vector<Resource::Texture *>& textures);
       };
 
-      class TexturesProvider {
+      class TexturesReader {
         public:
-          static void read(std::vector<Texture *>& textures, Stream& stream, uint32_t texturesOffset);
+          static void read(std::vector<Resource::Texture *>& textures, Stream& stream, uint32_t texturesOffset);
       };
 
-      class VertexBufferProvider {
+      class VertexBufferReader {
         public:
-          static void read(std::vector<VertexBuffer *>& vertexBuffers, Stream& stream, uint32_t bodyOffset);
+          static void read(std::vector<Resource::VertexBuffer *>& vertexBuffers, Stream& stream, uint32_t bodyOffset);
       };
 
-      class MeshesProvider {
+      class MeshesReader {
         public:
           template <class T>
-          static void read(std::vector<T *>& meshes, Stream& stream, uint32_t bodyOffset, const std::vector<Material *>& materials, const std::vector<VertexBuffer *>& vertexBuffers);
+          static void read(std::vector<T *>& meshes, Stream& stream, uint32_t bodyOffset, const std::vector<Resource::Material *>& materials, const std::vector<Resource::VertexBuffer *>& vertexBuffers);
       };
 
     private:
@@ -119,10 +118,10 @@ namespace Mortar::Resource::Providers::LSW {
       static const struct LSWSurface readSurfaceInfo(Stream &stream, const uint32_t bodyOffset, uint32_t surfaceOffset);
   };
 
-  template <class T> void LSWProviders::MeshesProvider::read(std::vector<T *>& meshes, Stream &stream, uint32_t bodyOffset, const std::vector<Material *>& materials, const std::vector<VertexBuffer *>& vertexBuffers) {
-    static_assert(std::is_base_of<Mesh, T>::value, "T must be derived from Mesh");
+  template <class T> void CommonReaders::MeshesReader::read(std::vector<T *>& meshes, Stream &stream, uint32_t bodyOffset, const std::vector<Resource::Material *>& materials, const std::vector<Resource::VertexBuffer *>& vertexBuffers) {
+    static_assert(std::is_base_of<Resource::Mesh, T>::value, "T must be derived from Mesh");
 
-    ResourceManager resourceManager = State::getResourceManager();
+    Resource::ResourceManager resourceManager = State::getResourceManager();
 
     struct LSWMeshHeader mesh_header;
 
@@ -137,21 +136,21 @@ namespace Mortar::Resource::Providers::LSW {
     uint32_t nextOffset = mesh_header.mesh_offset;
     unsigned i = 0;
     do {
-      struct LSWProviders::LSWMesh lswMesh = LSWProviders::readMeshInfo(stream, bodyOffset, nextOffset);
+      struct CommonReaders::LSWMesh lswMesh = CommonReaders::readMeshInfo(stream, bodyOffset, nextOffset);
 
       T *mesh = resourceManager.createResource<T>();
       meshes.push_back(mesh);
 
-      Material *material = materials.at(lswMesh.materialIdx);
+      Resource::Material *material = materials.at(lswMesh.materialIdx);
       mesh->setMaterial(material);
 
-      ShaderType shaderType = LSWProviders::getShaderTypeFromMesh(lswMesh, material);
+      Resource::ShaderType shaderType = CommonReaders::getShaderTypeFromMesh(lswMesh, material);
       mesh->setShaderType(shaderType);
 
-      const VertexLayout& vertexLayout = LSWProviders::getVertexLayoutFromMesh(lswMesh);
+      const Resource::VertexLayout& vertexLayout = CommonReaders::getVertexLayoutFromMesh(lswMesh);
       mesh->setVertexLayout(vertexLayout);
 
-      VertexBuffer *vertexBuffer = vertexBuffers.at(lswMesh.vertexBlockIdx - 1);
+      Resource::VertexBuffer *vertexBuffer = vertexBuffers.at(lswMesh.vertexBlockIdx - 1);
       mesh->setVertexBuffer(vertexBuffer);
 
       processSurfaces(stream, bodyOffset, lswMesh.surfacesOffset, mesh);
@@ -161,7 +160,7 @@ namespace Mortar::Resource::Providers::LSW {
     } while (nextOffset);
   }
 
-  inline const struct LSWProviders::LSWMesh LSWProviders::readMeshInfo(Stream &stream, const uint32_t body_offset, uint32_t mesh_offset) {
+  inline const struct CommonReaders::LSWMesh CommonReaders::readMeshInfo(Stream &stream, const uint32_t body_offset, uint32_t mesh_offset) {
     stream.seek(body_offset + mesh_offset, SEEK_SET);
     struct LSWMesh mesh;
 

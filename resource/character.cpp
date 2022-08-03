@@ -19,7 +19,7 @@
 
 #include "character.hpp"
 
-using namespace Mortar::Resource::Character;
+using namespace Mortar::Resource;
 
 const Mortar::Resource::Model *Character::getModel() const {
   return this->model;

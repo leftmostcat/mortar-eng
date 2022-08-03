@@ -15,17 +15,16 @@
  */
 
 #include <forward_list>
-#include <stdio.h>
 #include <vector>
 
-#include "../../log.hpp"
-#include "../../math/matrix.hpp"
-#include "../scene.hpp"
+#include "../../../log.hpp"
+#include "../../../math/matrix.hpp"
+#include "../../../resource/scene.hpp"
 #include "dds.hpp"
 #include "nup.hpp"
-#include "lsw/lsw.hpp"
+#include "common.hpp"
 
-using namespace Mortar::Resource::Providers;
+using namespace Mortar::Game::LSW::Readers;
 
 struct NUPHeader {
   uint32_t unk_0000;
@@ -87,11 +86,9 @@ struct NUPSpline {
 
 const int BODY_OFFSET = 0x40;
 
-Mortar::Resource::Scene *NUPProvider::read(Stream &stream) {
-  ResourceManager resourceManager = State::getResourceManager();
-  Scene *scene = resourceManager.createResource<Scene>();
-
-  Model *model = resourceManager.createResource<Model>();
+void NUPReader::read(Mortar::Resource::Scene *scene, Stream &stream) {
+  Resource::ResourceManager resourceManager = State::getResourceManager();
+  Resource::Model *model = resourceManager.createResource<Resource::Model>();
   scene->setModel(model);
 
   /* Read in NUP header at the top of the file. */
@@ -132,21 +129,21 @@ Mortar::Resource::Scene *NUPProvider::read(Stream &stream) {
 
   /* Read texture block information. */
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
-  std::vector<Texture *> textures;
-  LSW::LSWProviders::TexturesProvider::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
+  std::vector<Resource::Texture *> textures;
+  CommonReaders::TexturesReader::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
   for (auto texture = textures.begin(); texture != textures.end(); texture++) {
     model->addTexture(*texture);
   }
 
   /* Read materials. */
   stream.seek(BODY_OFFSET + file_header.material_header_offset, SEEK_SET);
-  std::vector<Material *> materials;
-  LSW::LSWProviders::MaterialsProvider::read(materials, stream, BODY_OFFSET, textures);
+  std::vector<Resource::Material *> materials;
+  CommonReaders::MaterialsReader::read(materials, stream, BODY_OFFSET, textures);
 
   /* Read vertex data. */
   stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
-  std::vector<VertexBuffer *> vertexBuffers;
-  LSW::LSWProviders::VertexBufferProvider::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
+  std::vector<Resource::VertexBuffer *> vertexBuffers;
+  CommonReaders::VertexBufferReader::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
   for (auto vertexBuffer = vertexBuffers.begin(); vertexBuffer != vertexBuffers.end(); vertexBuffer++) {
     model->addVertexBuffer(*vertexBuffer);
   }
@@ -159,14 +156,14 @@ Mortar::Resource::Scene *NUPProvider::read(Stream &stream) {
     mesh_header_offsets[i] = stream.readUint32();
   }
 
-  std::vector<std::forward_list<Mesh *>> meshes;
+  std::vector<std::forward_list<Resource::Mesh *>> meshes;
   for (int i = 0; i < model_header.num_mesh_blocks; i++) {
     stream.seek(BODY_OFFSET + mesh_header_offsets[i], SEEK_SET);
 
-    std::vector<Mesh *> blockMeshes;
-    LSW::LSWProviders::MeshesProvider::read<Mesh>(blockMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
+    std::vector<Resource::Mesh *> blockMeshes;
+    CommonReaders::MeshesReader::read<Resource::Mesh>(blockMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
 
-    std::forward_list<Mesh *> meshList;
+    std::forward_list<Resource::Mesh *> meshList;
     for (auto mesh = blockMeshes.begin(); mesh != blockMeshes.end(); mesh++) {
       scene->addMesh(*mesh);
       meshList.push_front(*mesh);
@@ -192,7 +189,7 @@ Mortar::Resource::Scene *NUPProvider::read(Stream &stream) {
   }
 
   for (int i = 0; i < model_header.num_instances; i++) {
-    Instance *instance = resourceManager.createResource<Instance>();
+    Resource::Instance *instance = resourceManager.createResource<Resource::Instance>();
     scene->addInstance(instance);
 
     if (instances_data[i].matrix_offset) {
@@ -226,7 +223,7 @@ Mortar::Resource::Scene *NUPProvider::read(Stream &stream) {
     stream.seek(BODY_OFFSET + nupSplines[i].nameOffset, SEEK_SET);
     char *splineName = stream.readString();
 
-    Spline *spline = resourceManager.createResource<Spline>();
+    Resource::Spline *spline = resourceManager.createResource<Resource::Spline>();
 
     scene->addSpline(splineName, spline);
 
@@ -236,6 +233,4 @@ Mortar::Resource::Scene *NUPProvider::read(Stream &stream) {
       spline->addVertex(vertex);
     }
   }
-
-  return scene;
 }

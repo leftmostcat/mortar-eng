@@ -14,31 +14,16 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_SCENE_MANAGER_H
-#define MORTAR_SCENE_MANAGER_H
+#ifndef MORTAR_LSW_READERS_HGP_H
+#define MORTAR_LSW_READERS_HGP_H
 
-#include <vector>
+#include "../../../streams/stream.hpp"
+#include "../../../resource/character.hpp"
 
-#include "../resource/actor.hpp"
-#include "../resource/character.hpp"
-#include "../resource/scene.hpp"
-#include "../render/renderer.hpp"
-
-namespace Mortar::Scene {
-  class SceneManager {
+namespace Mortar::Game::LSW::Readers {
+  class HGPReader {
     public:
-      void initialize(Render::Renderer *renderer);
-      void shutDown();
-
-      Resource::Actor *addActor(const Resource::Character *character, Math::Matrix worldTransform);
-      void setScene(const Resource::Scene *scene);
-
-      void render();
-
-    private:
-      Render::Renderer *renderer;
-      std::vector<Resource::Actor *> actors;
-      const Resource::Scene *scene;
+      static void read(Resource::Character *character, Stream& stream);
   };
 }
 

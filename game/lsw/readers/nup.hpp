@@ -14,20 +14,16 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_GAME_LSW_CONFIG_H
-#define MORTAR_GAME_LSW_CONFIG_H
+#ifndef MORTAR_LSW_READERS_NUP_H
+#define MORTAR_LSW_READERS_NUP_H
 
-#include "../config.hpp"
+#include "../../../streams/stream.hpp"
+#include "../../../resource/scene.hpp"
 
-namespace Mortar::Game::LSW {
-  class Config : public Mortar::Game::Config {
+namespace Mortar::Game::LSW::Readers {
+  class NUPReader {
     public:
-      Config()
-        : Mortar::Game::Config { "lego_data" } {};
-
-      virtual const char *getAnimationResourcePath(const char *character, const char *name) override;
-      virtual const char *getCharacterResourcePath(const char *name) override;
-      virtual const char *getSceneResourcePath(unsigned episode, unsigned chapter, const char *name) override;
+      static void read(Resource::Scene *scene, Stream &stream);
   };
 }
 

@@ -18,27 +18,30 @@
 #define MORTAR_RESOURCE_ACTOR_H
 
 #include "../math/matrix.hpp"
-#include "character/character.hpp"
+#include "character.hpp"
 #include "resource.hpp"
 
 namespace Mortar::Resource {
   class Actor : public Resource {
     public:
-      Actor(ResourceHandle& handle)
-        : Resource { handle } {};
-
-      const Character::Character *getCharacter() const;
-      void setCharacter(Character::Character *character);
+      const Character *getCharacter() const;
+      void setCharacter(const Character *character);
 
       const Math::Matrix& getWorldTransform() const;
       void setWorldTransform(Math::Matrix& worldTransform);
 
-      Character::Character::AnimationType getAnimation() const;
-      void setAnimation(Character::Character::AnimationType animType);
-      void setAnimation(Character::Character::AnimationType animType, float position);
+      Character::AnimationType getAnimation() const;
+      void setAnimation(Character::AnimationType animType);
+      void setAnimation(Character::AnimationType animType, float position);
 
       void advanceAnimation(float timeDelta);
       float getAnimationPosition() const;
+
+      friend class ResourceManager;
+
+    protected:
+      Actor(ResourceHandle& handle)
+        : Resource { handle } {};
 
     private:
       class AnimState {
@@ -48,7 +51,7 @@ namespace Mortar::Resource {
       };
 
       AnimState animState;
-      Character::Character *character;
+      const Character *character;
       Math::Matrix worldTransform;
   };
 }

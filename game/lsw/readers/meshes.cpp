@@ -15,16 +15,16 @@
  */
 
 #include <stdexcept>
-#include <unordered_map>
+#include <tsl/sparse_map.h>
 
 #include "../../../log.hpp"
 #include "../../../state.hpp"
-#include "../../mesh.hpp"
-#include "lsw.hpp"
+#include "../../../resource/mesh.hpp"
+#include "common.hpp"
 
-using namespace Mortar::Resource::Providers::LSW;
+using namespace Mortar::Game::LSW::Readers;
 
-static std::unordered_map<uint32_t, Mortar::Resource::VertexLayout> vertexLayouts {
+static tsl::sparse_map<uint32_t, Mortar::Resource::VertexLayout> vertexLayouts {
   {
     0x59, {
       36,
@@ -51,7 +51,7 @@ static std::unordered_map<uint32_t, Mortar::Resource::VertexLayout> vertexLayout
   },
 };
 
-const Mortar::Resource::VertexLayout& LSWProviders::getVertexLayoutFromMesh(LSWMesh& mesh) {
+const Mortar::Resource::VertexLayout& CommonReaders::getVertexLayoutFromMesh(LSWMesh& mesh) {
   if (!vertexLayouts.contains(mesh.vertexType)) {
     throw std::runtime_error("unimplemented vertex layout");
   }
@@ -59,7 +59,7 @@ const Mortar::Resource::VertexLayout& LSWProviders::getVertexLayoutFromMesh(LSWM
   return vertexLayouts.at(mesh.vertexType);
 }
 
-Mortar::Resource::ShaderType LSWProviders::getShaderTypeFromMesh(LSWMesh& mesh, const Mortar::Resource::Material *material) {
+Mortar::Resource::ShaderType CommonReaders::getShaderTypeFromMesh(LSWMesh& mesh, const Mortar::Resource::Material *material) {
   bool skinned = mesh.vertexType == 0x5d || mesh.unk_0038 != 0;
   bool blended = mesh.unk_0024 != 0 && mesh.unk_003C != 0;
 
@@ -88,7 +88,7 @@ Mortar::Resource::ShaderType LSWProviders::getShaderTypeFromMesh(LSWMesh& mesh, 
   return Mortar::Resource::ShaderType::INVALID;
 }
 
-const struct LSWProviders::LSWSurface LSWProviders::readSurfaceInfo(Stream &stream, const uint32_t bodyOffset, uint32_t surfaceOffset) {
+const struct CommonReaders::LSWSurface CommonReaders::readSurfaceInfo(Stream &stream, const uint32_t bodyOffset, uint32_t surfaceOffset) {
   stream.seek(bodyOffset + surfaceOffset, SEEK_SET);
   struct LSWSurface surface;
 
@@ -117,7 +117,7 @@ const struct LSWProviders::LSWSurface LSWProviders::readSurfaceInfo(Stream &stre
   return surface;
 }
 
-std::unordered_map<uint32_t, Mortar::Resource::PrimitiveType> primitiveTypes {
+tsl::sparse_map<uint32_t, Mortar::Resource::PrimitiveType> primitiveTypes {
   { 1, Mortar::Resource::PrimitiveType::LINE_LIST },
   { 2, Mortar::Resource::PrimitiveType::TRIANGLE_LIST },
   { 3, Mortar::Resource::PrimitiveType::TRIANGLE_STRIP },
@@ -126,7 +126,7 @@ std::unordered_map<uint32_t, Mortar::Resource::PrimitiveType> primitiveTypes {
   { 6, Mortar::Resource::PrimitiveType::TRIANGLE_STRIP },
 };
 
-void LSWProviders::processSurfaces(Stream &stream, const uint32_t bodyOffset, uint32_t surfacesOffset, Mortar::Resource::Mesh *mesh) {
+void CommonReaders::processSurfaces(Stream &stream, const uint32_t bodyOffset, uint32_t surfacesOffset, Mortar::Resource::Mesh *mesh) {
   Mortar::Resource::ResourceManager resourceManager = Mortar::State::getResourceManager();
 
   uint32_t nextOffset = surfacesOffset;

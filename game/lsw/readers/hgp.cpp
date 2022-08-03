@@ -18,21 +18,21 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "../../log.hpp"
-#include "../../state.hpp"
-#include "../../math/matrix.hpp"
-#include "../../streams/filestream.hpp"
-#include "../../streams/memorystream.hpp"
-#include "../character/character.hpp"
-#include "../joint.hpp"
-#include "../layer.hpp"
-#include "../mesh.hpp"
-#include "../shader.hpp"
+#include "../../../log.hpp"
+#include "../../../state.hpp"
+#include "../../../math/matrix.hpp"
+#include "../../../streams/filestream.hpp"
+#include "../../../streams/memorystream.hpp"
+#include "../../../resource/character.hpp"
+#include "../../../resource/joint.hpp"
+#include "../../../resource/layer.hpp"
+#include "../../../resource/mesh.hpp"
+#include "../../../resource/shader.hpp"
 #include "dds.hpp"
 #include "hgp.hpp"
-#include "lsw/lsw.hpp"
+#include "common.hpp"
 
-using namespace Mortar::Resource::Providers;
+using namespace Mortar::Game::LSW::Readers;
 
 struct HGPHeader {
   uint32_t unk_0000;
@@ -119,11 +119,9 @@ struct HGPLocator {
 
 const uint32_t BODY_OFFSET = 0x30;
 
-Mortar::Resource::Character::Character *HGPProvider::read(Stream& stream) {
-  ResourceManager resourceManager = State::getResourceManager();
-  Character::Character *character = resourceManager.createResource<Character::Character>();
-
-  Model *model = resourceManager.createResource<Model>();
+void HGPReader::read(Resource::Character *character, Stream& stream) {
+  Resource::ResourceManager resourceManager = State::getResourceManager();
+  Resource::Model *model = resourceManager.createResource<Resource::Model>();
   character->setModel(model);
 
   /* Read in HGP header at the top of the file. */
@@ -172,21 +170,21 @@ Mortar::Resource::Character::Character *HGPProvider::read(Stream& stream) {
 
   /* Read texture block information. */
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
-  std::vector<Texture *> textures;
-  LSW::LSWProviders::TexturesProvider::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
+  std::vector<Resource::Texture *> textures;
+  CommonReaders::TexturesReader::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
   for (auto texture = textures.begin(); texture != textures.end(); texture++) {
     model->addTexture(*texture);
   }
 
   /* Read materials. */
   stream.seek(BODY_OFFSET + file_header.material_header_offset, SEEK_SET);
-  std::vector<Material *> materials;
-  LSW::LSWProviders::MaterialsProvider::read(materials, stream, BODY_OFFSET, textures);
+  std::vector<Resource::Material *> materials;
+  CommonReaders::MaterialsReader::read(materials, stream, BODY_OFFSET, textures);
 
   /* Read vertex data. */
   stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
-  std::vector<VertexBuffer *> vertexBuffers;
-  LSW::LSWProviders::VertexBufferProvider::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
+  std::vector<Resource::VertexBuffer *> vertexBuffers;
+  CommonReaders::VertexBufferReader::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
   for (auto vertexBuffer = vertexBuffers.begin(); vertexBuffer != vertexBuffers.end(); vertexBuffer++) {
     model->addVertexBuffer(*vertexBuffer);
   }
@@ -223,7 +221,7 @@ Mortar::Resource::Character::Character *HGPProvider::read(Stream& stream) {
     stream.seek(BODY_OFFSET + file_header.strings_offset + file_header.strings_offset - model_header.string_table_adjust - model_header.skeleton_offset + hgpJoint.name_offset, SEEK_SET);
     char *jointName = stream.readString();
 
-    Joint *joint = resourceManager.createResource<Joint>();
+    Resource::Joint *joint = resourceManager.createResource<Resource::Joint>();
     character->addJoint(joint);
 
     joint->setName(jointName);
@@ -256,10 +254,10 @@ Mortar::Resource::Character::Character *HGPProvider::read(Stream& stream) {
 
     /* Break the layers down into meshes and add those to the model's list. */
   for (int i = 0; i < model_header.num_layers; i++) {
-    stream.seek(BODY_OFFSET + layer_headers[i].name_offset, SEEK_SET);
-    char *layerName = stream.readString();
+    // stream.seek(BODY_OFFSET + layer_headers[i].name_offset, SEEK_SET);
+    // char *layerName = stream.readString();
 
-    Layer *layer = resourceManager.createResource<Layer>();
+    Resource::Layer *layer = resourceManager.createResource<Resource::Layer>();
     character->addLayer(layer);
 
     for (int j = 0; j < 4; j++) {
@@ -284,23 +282,23 @@ Mortar::Resource::Character::Character *HGPProvider::read(Stream& stream) {
           const char *jointName = character->getJoint(k)->getName();
 
           stream.seek(BODY_OFFSET + mesh_header_offsets[k], SEEK_SET);
-          std::vector<KinematicMesh *> kinematicMeshes;
-          LSW::LSWProviders::MeshesProvider::read<KinematicMesh>(kinematicMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
+          std::vector<Resource::KinematicMesh *> kinematicMeshes;
+          CommonReaders::MeshesReader::read<Resource::KinematicMesh>(kinematicMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
           for (auto mesh = kinematicMeshes.begin(); mesh != kinematicMeshes.end(); mesh++) {
             (*mesh)->setJointIdx(k);
             layer->addKinematicMesh(*mesh);
           }
         }
       } else if (j == 1) {
-        std::vector<SkinMesh *> skinMeshes;
-        LSW::LSWProviders::MeshesProvider::read<SkinMesh>(skinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
+        std::vector<Resource::SkinMesh *> skinMeshes;
+        CommonReaders::MeshesReader::read<Resource::SkinMesh>(skinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
         for (auto mesh = skinMeshes.begin(); mesh != skinMeshes.end(); mesh++) {
           layer->addSkinMesh(*mesh);
         }
       }
       else if (j == 3) {
-        std::vector<DeformableSkinMesh *> deformableSkinMeshes;
-        LSW::LSWProviders::MeshesProvider::read<DeformableSkinMesh>(deformableSkinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
+        std::vector<Resource::DeformableSkinMesh *> deformableSkinMeshes;
+        CommonReaders::MeshesReader::read<Resource::DeformableSkinMesh>(deformableSkinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
         for (auto mesh = deformableSkinMeshes.begin(); mesh != deformableSkinMeshes.end(); mesh++) {
           layer->addDeformableSkinMesh(*mesh);
         }
@@ -319,7 +317,7 @@ Mortar::Resource::Character::Character *HGPProvider::read(Stream& stream) {
 
     stream.seek(11 * sizeof(uint8_t), SEEK_CUR);
 
-    Character::Character::Locator *locator = resourceManager.createResource<Character::Character::Locator>();
+    Resource::Character::Locator *locator = resourceManager.createResource<Resource::Character::Locator>();
     character->addLocator(locator);
 
     locator->setTransform(hgpLocator.transform);
@@ -331,6 +329,4 @@ Mortar::Resource::Character::Character *HGPProvider::read(Stream& stream) {
     uint8_t internal = stream.readUint8();
     character->addExternalLocatorMapping(i, internal);
   }
-
-  return character;
 }

@@ -17,12 +17,12 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "../../log.hpp"
-#include "../../state.hpp"
-#include "../texture.hpp"
+#include "../../../log.hpp"
+#include "../../../state.hpp"
+#include "../../../resource/texture.hpp"
 #include "dds.hpp"
 
-using namespace Mortar::Resource::Providers;
+using namespace Mortar::Game::LSW::Readers;
 
 #define MKTAG(a, b, c, d) ((uint32_t)((a) | ((b) << 8) | ((c) << 16) | ((d) << 24)))
 
@@ -69,9 +69,9 @@ struct DDSHeader {
   uint32_t reserved2;
 };
 
-Mortar::Resource::Texture *DDSProvider::read(Stream &stream) {
-  ResourceManager resourceManager = State::getResourceManager();
-  Texture *texture = resourceManager.createResource<Texture>();
+Mortar::Resource::Texture *DDSReader::read(Stream &stream) {
+  Resource::ResourceManager resourceManager = State::getResourceManager();
+  Resource::Texture *texture = resourceManager.createResource<Resource::Texture>();
 
   struct DDSHeader file_header;
 
@@ -103,7 +103,7 @@ Mortar::Resource::Texture *DDSProvider::read(Stream &stream) {
 
         /* Read in mipmap levels one by one. */
         for (int i = 0; i < file_header.num_levels; i++) {
-          Texture::Level *level = resourceManager.createResource<Texture::Level>();
+          Resource::Texture::Level *level = resourceManager.createResource<Resource::Texture::Level>();
 
           level->setLevel(i);
           level->setSize((((file_header.width >> i) + 3) >> 2) * (((file_header.height >> i) + 3) >> 2) * 16);

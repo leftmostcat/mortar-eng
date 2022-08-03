@@ -14,16 +14,16 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "character/character.hpp"
+#include "character.hpp"
 #include "actor.hpp"
 
 using namespace Mortar::Resource;
 
-const Character::Character *Actor::getCharacter() const {
+const Character *Actor::getCharacter() const {
   return this->character;
 }
 
-void Actor::setCharacter(Character::Character *character) {
+void Actor::setCharacter(const Character *character) {
   this->character = character;
 }
 
@@ -35,16 +35,16 @@ void Actor::setWorldTransform(Math::Matrix &worldTransform) {
   this->worldTransform = worldTransform;
 }
 
-Character::Character::AnimationType Actor::getAnimation() const {
+Character::AnimationType Actor::getAnimation() const {
   return this->animState.animType;
 }
 
-void Actor::setAnimation(Character::Character::AnimationType animType) {
+void Actor::setAnimation(Character::AnimationType animType) {
   this->animState.animType = animType;
   this->animState.position = 0.0f;
 }
 
-void Actor::setAnimation(Character::Character::AnimationType animType, float position) {
+void Actor::setAnimation(Character::AnimationType animType, float position) {
   this->animState.animType = animType;
   this->animState.position = position;
 }

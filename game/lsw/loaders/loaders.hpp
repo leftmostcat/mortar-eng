@@ -14,10 +14,26 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.hpp"
+#ifndef MORTAR_GAME_LSW_LOADERS_H
+#define MORTAR_GAME_LSW_LOADERS_H
 
-using namespace Mortar::Game;
+#include <filesystem>
 
-const char *Config::getDataPath() {
-  return this->dataPath;
+#include "../../../resource/character.hpp"
+#include "../../../resource/scene.hpp"
+
+namespace Mortar::Game::LSW {
+  const std::filesystem::path dataPath { "lego_data" };
+
+  class CharacterLoader {
+    public:
+      Resource::Character *operator()(const std::string& name);
+  };
+
+  class SceneLoader {
+    public:
+      Resource::Scene *operator()(const std::string& name);
+  };
 }
+
+#endif

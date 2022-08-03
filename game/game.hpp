@@ -14,16 +14,13 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_RESOURCE_READERS_DDS_H
-#define MORTAR_RESOURCE_READERS_DDS_H
+#ifndef MORTAR_GAME_H
+#define MORTAR_GAME_H
 
-#include "../../streams/stream.hpp"
-#include "../texture.hpp"
-
-namespace Mortar::Resource::Providers {
-  class DDSProvider {
+namespace Mortar::Game {
+  class Game {
     public:
-      static Texture *read(Stream &stream);
+      virtual void initialize() = 0;
   };
 }
 

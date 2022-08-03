@@ -22,15 +22,15 @@
 #include "../../../log.hpp"
 #include "../../../state.hpp"
 #include "../../../streams/memorystream.hpp"
-#include "../../material.hpp"
-#include "../../mesh.hpp"
-#include "../../shader.hpp"
-#include "../../texture.hpp"
-#include "../../vertex.hpp"
-#include "../dds.hpp"
-#include "lsw.hpp"
+#include "../../../resource/material.hpp"
+#include "../../../resource/mesh.hpp"
+#include "../../../resource/shader.hpp"
+#include "../../../resource/texture.hpp"
+#include "../../../resource/vertex.hpp"
+#include "dds.hpp"
+#include "common.hpp"
 
-using namespace Mortar::Resource::Providers::LSW;
+using namespace Mortar::Game::LSW::Readers;
 
 struct LSWVertexBlock {
   uint32_t size;
@@ -130,8 +130,8 @@ void readMaterial(Stream &stream, LSWMaterial *material) {
   material->effectType = stream.readUint8();
 }
 
-void LSWProviders::MaterialsProvider::read(std::vector<Material *>& materials, Stream &stream, uint32_t bodyOffset, const std::vector<Texture *>& textures) {
-  ResourceManager resourceManager = State::getResourceManager();
+void CommonReaders::MaterialsReader::read(std::vector<Resource::Material *>& materials, Stream &stream, uint32_t bodyOffset, const std::vector<Resource::Texture *>& textures) {
+  Resource::ResourceManager resourceManager = State::getResourceManager();
 
   struct LSWMaterialHeader material_header;
 
@@ -149,7 +149,7 @@ void LSWProviders::MaterialsProvider::read(std::vector<Material *>& materials, S
 
   /* Initialize per-model materials, consisting of a color and index to an in-model texture. */
   for (int i = 0; i < material_header.num_materials; i++) {
-    Material *material = resourceManager.createResource<Material>();
+    Resource::Material *material = resourceManager.createResource<Resource::Material>();
 
     struct LSWMaterial lswMaterial;
 
@@ -174,7 +174,7 @@ void LSWProviders::MaterialsProvider::read(std::vector<Material *>& materials, S
   delete[] material_header.material_offsets;
 }
 
-void LSWProviders::TexturesProvider::read(std::vector<Texture *>& textures, Stream &stream, uint32_t texturesOffset) {
+void CommonReaders::TexturesReader::read(std::vector<Resource::Texture *>& textures, Stream &stream, uint32_t texturesOffset) {
   struct LSWTextureHeader texture_header;
 
   texture_header.texture_block_offset = stream.readUint32();
@@ -214,14 +214,14 @@ void LSWProviders::TexturesProvider::read(std::vector<Texture *>& textures, Stre
 
     auto textureStream = MemoryStream(texture_data, size);
 
-    Texture *texture = DDSProvider::read(textureStream);
+    Resource::Texture *texture = DDSReader::read(textureStream);
     textures.push_back(texture);
   }
 
   delete[] texture_header.texture_block_headers;
 }
 
-void LSWProviders::VertexBufferProvider::read(std::vector<VertexBuffer *>& vertexBuffers, Stream &stream, uint32_t vertexHeaderOffset) {
+void CommonReaders::VertexBufferReader::read(std::vector<Resource::VertexBuffer *>& vertexBuffers, Stream &stream, uint32_t vertexHeaderOffset) {
   struct LSWVertexHeader vertex_header;
 
   vertex_header.num_vertex_blocks = stream.readUint32();
@@ -242,7 +242,7 @@ void LSWProviders::VertexBufferProvider::read(std::vector<VertexBuffer *>& verte
 
   /* Read vertex blocks into individual, indexed buffers. */
    for (int i = 0; i < vertex_header.num_vertex_blocks; i++) {
-    VertexBuffer *vertexBuffer = State::getResourceManager().createResource<VertexBuffer>();
+    Resource::VertexBuffer *vertexBuffer = State::getResourceManager().createResource<Resource::VertexBuffer>();
     vertexBuffers.push_back(vertexBuffer);
 
     vertexBuffer->setSize(vertex_header.blocks[i].size);

@@ -26,7 +26,6 @@ using namespace Mortar;
 
 Camera State::camera = Camera();
 Clock State::clock = Clock();
-Game::Config *State::gameConfig = nullptr;
 DisplayManager State::displayManager = DisplayManager();
 Resource::ResourceManager State::resourceManager = Resource::ResourceManager();
 Scene::SceneManager State::sceneManager = Scene::SceneManager();
@@ -44,14 +43,6 @@ Clock& State::getClock() {
   return State::clock;
 }
 
-Game::Config *State::getGameConfig() {
-  if (!State::gameConfig) {
-    throw std::runtime_error("game configuration has not been set");
-  }
-
-  return State::gameConfig;
-}
-
 DisplayManager& State::getDisplayManager() {
   return State::displayManager;
 }
@@ -62,8 +53,4 @@ Resource::ResourceManager& State::getResourceManager() {
 
 Scene::SceneManager& State::getSceneManager() {
   return State::sceneManager;
-}
-
-void State::setGameConfig(Game::Config *config) {
-  State::gameConfig = config;
 }

@@ -16,6 +16,7 @@
 
 #include <vector>
 
+#include "character.hpp"
 #include "scene.hpp"
 
 using namespace Mortar::Resource;
@@ -54,4 +55,12 @@ const Spline *Scene::getSplineByName(const std::string name) const {
   }
 
   return this->splines.at(name);
+}
+
+void Scene::addPlayerCharacter(const Character *character) {
+  this->playerCharacters.push_back(character);
+}
+
+const std::vector<const Character *>& Scene::getPlayerCharacters() const {
+  return this->playerCharacters;
 }

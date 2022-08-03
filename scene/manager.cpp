@@ -14,6 +14,7 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cassert>
 #include <cmath>
 #include <forward_list>
 #include <stdexcept>
@@ -23,7 +24,7 @@
 #include "../log.hpp"
 #include "../state.hpp"
 #include "../resource/actor.hpp"
-#include "../resource/character/character.hpp"
+#include "../resource/character.hpp"
 #include "manager.hpp"
 
 using namespace Mortar::Scene;
@@ -64,15 +65,15 @@ float getValue(const Mortar::Math::Vector& lookAt, const Mortar::Math::Vector& a
   return fabs((lookAt.x - b.x) * cos(-angle) + (lookAt.z - b.z) * sin(-angle));
 }
 
-Mortar::Resource::Actor *SceneManager::addActor(Mortar::Resource::Character::Character *character) {
+Mortar::Resource::Actor *SceneManager::addActor(const Resource::Character *character, Math::Matrix worldTransform) {
   static unsigned actorCount = 0;
 
   Mortar::Resource::Actor *actor = State::getResourceManager().createResource<Mortar::Resource::Actor>();
   this->actors.push_back(actor);
 
   actor->setCharacter(character);
-  actor->setWorldTransform(this->pcStartingTransforms.at(actorCount));
-  actor->setAnimation(Resource::Character::Character::AnimationType::IDLE);
+  actor->setWorldTransform(worldTransform);
+  actor->setAnimation(Resource::Character::AnimationType::IDLE);
 
   this->renderer->registerTextures(character->getModel()->getTextures());
   this->renderer->registerVertexBuffers(character->getModel()->getVertexBuffers());
@@ -107,6 +108,8 @@ void SceneManager::setScene(const Resource::Scene *scene) {
 
   Math::Vector player1Pos;
 
+  std::vector<Math::Matrix> pcStartingTransforms;
+
   const Resource::Spline *startSpline = scene->getSplineByName("start");
   if (startSpline != nullptr) {
     for (int i = 0; i < startSpline->getVertexCount(); i += 2) {
@@ -118,7 +121,7 @@ void SceneManager::setScene(const Resource::Scene *scene) {
       Math::Matrix transform = Math::Matrix::rotationY(angleFromZ);
       transform.setTranslation(position);
 
-      this->pcStartingTransforms.push_back(transform);
+      pcStartingTransforms.push_back(transform);
 
       if (i == 0) {
         player1Pos = position;
@@ -216,6 +219,13 @@ void SceneManager::setScene(const Resource::Scene *scene) {
   State::getCamera().setPosition(camPos);
 
   DEBUG("camera position %s, look at %s", camPos.toString().c_str(), lookAt.toString().c_str());
+
+  const std::vector<const Resource::Character *>& playerCharacters = scene->getPlayerCharacters();
+  assert(playerCharacters.size() == pcStartingTransforms.size());
+
+  for (int i = 0; i < playerCharacters.size(); i++) {
+    this->addActor(playerCharacters.at(i), pcStartingTransforms.at(i));
+  }
 }
 
 class GeometryList {
@@ -237,7 +247,7 @@ void GeometryList::addGeom(Mortar::Resource::GeomObject *geom) {
 }
 
 const std::vector<Mortar::Math::Matrix> calculatePose(const Mortar::Resource::Actor *actor) {
-  const Mortar::Resource::Character::Character *character = actor->getCharacter();
+  const Mortar::Resource::Character *character = actor->getCharacter();
 
   if (actor->getAnimation() == Mortar::Resource::Character::Character::AnimationType::NONE) {
     return character->getRestPose();
@@ -269,7 +279,7 @@ void SceneManager::render() {
       (*actor)->setAnimation(Resource::Character::Character::AnimationType::NONE);
     }
 
-    const Resource::Character::Character *character = (*actor)->getCharacter();
+    const Resource::Character *character = (*actor)->getCharacter();
 
     (*actor)->advanceAnimation(timeDelta);
 

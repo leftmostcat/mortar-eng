@@ -14,17 +14,22 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_RESOURCE_PROVIDERS_LSW_ANIM_H
-#define MORTAR_RESOURCE_PROVIDERS_LSW_ANIM_H
+#include "../../state.hpp"
+#include "game.hpp"
+#include "loaders/loaders.hpp"
+#include "../../resource/manager.hpp"
 
-#include "../../../streams/stream.hpp"
-#include "../../anim.hpp"
+using namespace Mortar::Game::LSW;
 
-namespace Mortar::Resource::Providers::LSW {
-  class AnimProvider {
-    public:
-      static Animation *read(const char *name, Stream& stream);
-  };
+void Game::initialize() {
+  Resource::ResourceManager& resourceManager = State::getResourceManager();
+
+  resourceManager.registerResourceLoader<Resource::Character>(CharacterLoader());
+  resourceManager.registerResourceLoader<Resource::Scene>(SceneLoader());
+
+  Scene::SceneManager& sceneManager = State::getSceneManager();
+
+  // Load a scene we know we have
+  Resource::Scene *scene = resourceManager.getResource<Resource::Scene>("negotiations_a");
+  sceneManager.setScene(scene);
 }
-
-#endif

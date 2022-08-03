@@ -18,17 +18,17 @@
 #define MORTAR_RESOURCE_CHARACTER_H
 
 #include <string>
-#include <unordered_map>
+#include <tsl/sparse_map.h>
 #include <vector>
 
-#include "../../math/matrix.hpp"
-#include "../anim.hpp"
-#include "../layer.hpp"
-#include "../joint.hpp"
-#include "../model.hpp"
-#include "../resource.hpp"
+#include "../math/matrix.hpp"
+#include "anim.hpp"
+#include "layer.hpp"
+#include "joint.hpp"
+#include "model.hpp"
+#include "resource.hpp"
 
-namespace Mortar::Resource::Character {
+namespace Mortar::Resource {
   class Character : public Resource {
     public:
       enum class AnimationType {
@@ -88,8 +88,8 @@ namespace Mortar::Resource::Character {
       std::vector<Math::Matrix> skinTransforms;
       std::vector<Layer *> layers;
       std::vector<Locator *> locators;
-      std::unordered_map<unsigned char, unsigned char> externalLocatorMap;
-      std::unordered_map<AnimationType, Animation *> skeletalAnimations;
+      tsl::sparse_map<unsigned char, unsigned char> externalLocatorMap;
+      tsl::sparse_map<AnimationType, Animation *> skeletalAnimations;
   };
 }
 

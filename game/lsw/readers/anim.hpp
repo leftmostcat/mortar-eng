@@ -14,16 +14,16 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MORTAR_NUP_H
-#define MORTAR_NUP_H
+#ifndef MORTAR_LSW_READERS_ANIM_H
+#define MORTAR_LSW_READERS_ANIM_H
 
-#include "../../streams/stream.hpp"
-#include "../scene.hpp"
+#include "../../../streams/stream.hpp"
+#include "../../../resource/anim.hpp"
 
-namespace Mortar::Resource::Providers {
-  class NUPProvider {
+namespace Mortar::Game::LSW::Readers {
+  class AnimReader {
     public:
-      static Scene *read(Stream &stream);
+      static Resource::Animation *read(Stream& stream);
   };
 }
 
