@@ -255,7 +255,7 @@ void Renderer::registerVertexBuffers(const std::vector<Resource::VertexBuffer *>
   delete[] vertexBufferIds;
 }
 
-void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
+void Renderer::renderGeometry(const std::list<const Resource::GeomObject *>& geometry) {
   if (!this->isInitialized) {
     DEBUG("renderer not initialized");
   }
@@ -269,14 +269,14 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  if (geometry == nullptr) {
+  if (geometry.empty()) {
     return;
   }
 
   Math::Matrix projViewMtx = view * d3dTransform * proj;
 
-  do {
-    const Resource::Mesh *mesh = geometry->mesh;
+  for (auto geom : geometry) {
+    const Resource::Mesh *mesh = geom->mesh;
 
     GLuint shaderProgram = this->shaderManager.getShaderProgram(mesh->getShaderType());
     glUseProgram(shaderProgram);
@@ -338,7 +338,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
     glUniform3fv(color_unif, 1, adjustedColor);
 
     if (worldTransformUnif != -1) {
-      glUniformMatrix4fv(worldTransformUnif, 1, GL_FALSE, geometry->worldTransform.f);
+      glUniformMatrix4fv(worldTransformUnif, 1, GL_FALSE, geom->worldTransform.f);
     }
 
     Resource::ResourceHandle meshHandle = mesh->getHandle();
@@ -346,7 +346,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
     GLuint vertexArrayId = this->vertexArrayIds.at(meshHandle);
     glBindVertexArray(vertexArrayId);
 
-    std::vector<Math::Matrix> skinTransforms = geometry->skinTransforms;
+    std::vector<Math::Matrix> skinTransforms = geom->skinTransforms;
 
     const std::vector<Resource::Surface *>& surfaces = mesh->getSurfaces();
     for (auto surface = surfaces.begin(); surface != surfaces.end(); surface++) {
@@ -386,9 +386,7 @@ void Renderer::renderGeometry(const Resource::GeomObject *geometry) {
       glDisable(GL_BLEND);
       // glDisable(GL_ALPHA_TEST);
     }
-
-    geometry = geometry->next;
-  } while(geometry);
+  }
 
   SDL_GL_SwapWindow(State::getDisplayManager().getWindow());
 }

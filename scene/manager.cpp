@@ -14,9 +14,9 @@
  * along with mortar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cassert>
 #include <cmath>
 #include <forward_list>
+#include <list>
 #include <stdexcept>
 #include <vector>
 
@@ -228,24 +228,6 @@ void SceneManager::setScene(const Resource::Scene *scene) {
   }
 }
 
-class GeometryList {
-  public:
-    void addGeom(Mortar::Resource::GeomObject *geom);
-
-    Mortar::Resource::GeomObject *head;
-    Mortar::Resource::GeomObject *tail;
-};
-
-void GeometryList::addGeom(Mortar::Resource::GeomObject *geom) {
-  if (head == nullptr) {
-    head = geom;
-  } else {
-    tail->setNext(geom);
-  }
-
-  tail = geom;
-}
-
 const std::vector<Mortar::Math::Matrix> calculatePose(const Mortar::Resource::Actor *actor) {
   const Mortar::Resource::Character *character = actor->getCharacter();
 
@@ -264,8 +246,8 @@ const std::vector<Mortar::Math::Matrix> calculatePose(const Mortar::Resource::Ac
 void SceneManager::render() {
   Resource::ResourceManager resourceManager = State::getResourceManager();
 
-  struct GeometryList geoms { nullptr, nullptr };
-  struct GeometryList alphaGeoms { nullptr, nullptr };
+  std::list<const Resource::GeomObject *> geoms;
+  std::list<const Resource::GeomObject *> alphaGeoms;
 
   // XXX: use character config to determine enabled layers
   std::vector<unsigned> enabledLayers { 0, 2 };
@@ -322,45 +304,45 @@ void SceneManager::render() {
       const std::vector<Resource::DeformableSkinMesh *>& deformableSkinMeshes = layer->getDeformableSkinMeshes();
       for (auto mesh = deformableSkinMeshes.begin(); mesh != deformableSkinMeshes.end(); mesh++) {
         Resource::GeomObject *geom = resourceManager.getResource();
-        geom->clear();
+        geom->reset();
 
         geom->setMesh(*mesh);
         geom->setSkinTransforms(skinTransforms);
 
         if ((*mesh)->getMaterial()->isAlphaBlended()) {
-          alphaGeoms.addGeom(geom);
+          alphaGeoms.push_back(geom);
         } else {
-          geoms.addGeom(geom);
+          geoms.push_back(geom);
         }
       }
 
       const std::vector<Resource::SkinMesh *>& skinMeshes = layer->getSkinMeshes();
       for (auto mesh = skinMeshes.begin(); mesh != skinMeshes.end(); mesh++) {
         Resource::GeomObject *geom = resourceManager.getResource();
-        geom->clear();
+        geom->reset();
 
         geom->setMesh(*mesh);
         geom->setSkinTransforms(skinTransforms);
 
         if ((*mesh)->getMaterial()->isAlphaBlended()) {
-          alphaGeoms.addGeom(geom);
+          alphaGeoms.push_back(geom);
         } else {
-          geoms.addGeom(geom);
+          geoms.push_back(geom);
         }
       }
 
       const std::vector<Resource::KinematicMesh *>& kinematicMeshes = layer->getKinematicMeshes();
       for (auto mesh = kinematicMeshes.begin(); mesh != kinematicMeshes.end(); mesh++) {
         Resource::GeomObject *geom = resourceManager.getResource();
-        geom->clear();
+        geom->reset();
 
         geom->setMesh(*mesh);
         geom->setWorldTransform(boneTransforms.at((*mesh)->getJointIdx()));
 
         if ((*mesh)->getMaterial()->isAlphaBlended()) {
-          alphaGeoms.addGeom(geom);
+          alphaGeoms.push_back(geom);
         } else {
-          geoms.addGeom(geom);
+          geoms.push_back(geom);
         }
       }
     }
@@ -371,26 +353,22 @@ void SceneManager::render() {
     std::forward_list<Resource::Mesh *> meshes = (*instance)->getMeshes();
     for (auto mesh = meshes.begin(); mesh != meshes.end(); mesh++) {
       Resource::GeomObject *geom = resourceManager.getResource();
-      geom->clear();
+      geom->reset();
 
       geom->setMesh(*mesh);
       geom->setWorldTransform((*instance)->getWorldTransform());
 
       if ((*mesh)->getMaterial()->isAlphaBlended()) {
-        alphaGeoms.addGeom(geom);
+        alphaGeoms.push_back(geom);
       } else {
-        geoms.addGeom(geom);
+        geoms.push_back(geom);
       }
     }
   }
 
-  if (geoms.tail) {
-    geoms.tail->setNext(alphaGeoms.head);
-  } else {
-    geoms.head = alphaGeoms.head;
-  }
+  geoms.splice(geoms.end(), alphaGeoms);
 
-  this->renderer->renderGeometry(geoms.head);
+  this->renderer->renderGeometry(geoms);
 
   resourceManager.clearGeomObjectPool();
 

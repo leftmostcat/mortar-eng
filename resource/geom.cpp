@@ -19,14 +19,9 @@
 
 using namespace Mortar::Resource;
 
-void GeomObject::clear() {
-  this->next = nullptr;
+void GeomObject::reset() {
   this->mesh = nullptr;
   this->worldTransform = Math::Matrix();
-}
-
-void GeomObject::setNext(GeomObject *next) {
-  this->next = next;
 }
 
 void GeomObject::setMesh(const Mortar::Resource::Mesh *mesh) {

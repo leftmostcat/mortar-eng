@@ -17,7 +17,7 @@
 #ifndef MORTAR_RENDER_RENDERER_H
 #define MORTAR_RENDER_RENDERER_H
 
-#include <SDL2/SDL.h>
+#include <list>
 #include <vector>
 
 #include "../resource/geom.hpp"
@@ -33,7 +33,7 @@ namespace Mortar::Render {
       virtual void registerTextures(const std::vector<Resource::Texture *>& textures) = 0;
       virtual void registerVertexBuffers(const std::vector<Resource::VertexBuffer *>& vertexBuffers) = 0;
 
-      virtual void renderGeometry(const Resource::GeomObject *geometry) = 0;
+      virtual void renderGeometry(const std::list<const Resource::GeomObject *>& geometry) = 0;
   };
 }
 

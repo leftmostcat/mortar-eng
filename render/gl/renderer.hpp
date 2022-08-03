@@ -18,6 +18,7 @@
 #define MORTAR_RENDER_GL_RENDERER_H
 
 #include <SDL2/SDL.h>
+#include <list>
 #include <tsl/sparse_map.h>
 
 #include "../../math/matrix.hpp"
@@ -37,7 +38,7 @@ namespace Mortar::Render::GL {
       void registerTextures(const std::vector<Resource::Texture *>& textures) override;
       void registerVertexBuffers(const std::vector<Resource::VertexBuffer *>& vertexBuffers) override;
 
-      void renderGeometry(const Resource::GeomObject *geometry) override;
+      void renderGeometry(const std::list<const Resource::GeomObject *>& geometry) override;
 
     private:
       ShaderManager shaderManager;
