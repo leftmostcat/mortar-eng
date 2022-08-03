@@ -22,18 +22,26 @@
 
 using namespace Mortar::Resource;
 
-void Model::addTexture(Texture *texture) {
+void Model::addMesh(const Mesh *mesh) {
+  this->meshes.push_back(mesh);
+}
+
+const std::vector<const Mesh *>& Model::getMeshes() const {
+  return this->meshes;
+}
+
+void Model::addTexture(const Texture *texture) {
   this->textures.push_back(texture);
 }
 
-const std::vector<Texture *>& Model::getTextures() const {
+const std::vector<const Texture *>& Model::getTextures() const {
   return this->textures;
 }
 
-void Model::addVertexBuffer(VertexBuffer *vertexBuffer) {
+void Model::addVertexBuffer(const VertexBuffer *vertexBuffer) {
   this->vertexBuffers.push_back(vertexBuffer);
 }
 
-const std::vector<VertexBuffer *>& Model::getVertexBuffers() const {
+const std::vector<const VertexBuffer *>& Model::getVertexBuffers() const {
   return this->vertexBuffers;
 }

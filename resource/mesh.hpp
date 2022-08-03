@@ -91,28 +91,20 @@ namespace Mortar::Resource {
       VertexLayout vertexLayout;
   };
 
-  class KinematicMesh : public Mesh {
+  class KinematicMesh : public Resource {
     public:
       KinematicMesh(ResourceHandle handle)
-        : Mesh { handle } {};
+        : Resource { handle } {};
+
+      const Mesh *getMesh() const;
+      void setMesh(Mesh *);
 
       unsigned getJointIdx() const;
       void setJointIdx(unsigned jointIdx);
 
     private:
       unsigned jointIdx;
-  };
-
-  class SkinMesh : public Mesh {
-    public:
-      SkinMesh(ResourceHandle handle)
-        : Mesh { handle } {};
-  };
-
-  class DeformableSkinMesh : public Mesh {
-    public:
-      DeformableSkinMesh(ResourceHandle handle)
-        : Mesh { handle } {};
+      const Mesh *mesh;
   };
 }
 

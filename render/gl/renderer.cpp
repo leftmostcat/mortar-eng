@@ -152,7 +152,7 @@ void Renderer::shutDown() {
   delete[] elementBufferIds;
 }
 
-void Renderer::registerMeshes(const std::vector<Resource::Mesh *>& meshes) {
+void Renderer::registerMeshes(const std::vector<const Resource::Mesh *>& meshes) {
   /* Initialize a vertex array for each mesh. */
   GLuint *vertexArrayIds = new GLuint[meshes.size()];
   GLuint *vertexArrayIdPtr = vertexArrayIds;
@@ -205,7 +205,7 @@ void Renderer::registerMeshes(const std::vector<Resource::Mesh *>& meshes) {
   delete[] vertexArrayIds;
 }
 
-void Renderer::registerTextures(const std::vector<Resource::Texture *> &textures) {
+void Renderer::registerTextures(const std::vector<const Resource::Texture *> &textures) {
   GLuint *textureIds = new GLuint[textures.size()];
   GLuint *textureIdPtr = textureIds;
   glGenTextures(textures.size(), textureIds);
@@ -213,7 +213,7 @@ void Renderer::registerTextures(const std::vector<Resource::Texture *> &textures
   size_t start = this->textureSamplers.size();
 
   for (int i = start; i < start + textures.size(); i++, textureIdPtr++) {
-    Resource::Texture *texture = textures.at(i - start);
+    const Resource::Texture *texture = textures.at(i - start);
 
     glActiveTexture(GL_TEXTURE0 + i);
     glBindTexture(GL_TEXTURE_2D, *textureIdPtr);
@@ -239,7 +239,7 @@ void Renderer::registerTextures(const std::vector<Resource::Texture *> &textures
   delete[] textureIds;
 }
 
-void Renderer::registerVertexBuffers(const std::vector<Resource::VertexBuffer *> &vertexBuffers) {
+void Renderer::registerVertexBuffers(const std::vector<const Resource::VertexBuffer *> &vertexBuffers) {
   GLuint *vertexBufferIds = new GLuint[vertexBuffers.size()];
   GLuint *vertexBufferIdPtr = vertexBufferIds;
   glGenBuffers(vertexBuffers.size(), vertexBufferIds);

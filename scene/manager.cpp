@@ -77,24 +77,13 @@ Mortar::Resource::Actor *SceneManager::addActor(const Resource::Character *chara
   actor->setWorldTransform(worldTransform);
   actor->setAnimation(Resource::Character::AnimationType::IDLE);
 
-  this->renderer->registerTextures(character->getModel()->getTextures());
-  this->renderer->registerVertexBuffers(character->getModel()->getVertexBuffers());
+  const Resource::Model *model = character->getModel();
 
-  const std::vector<Resource::Layer *>& layers = character->getLayers();
-  for (auto layer = layers.begin(); layer != layers.end(); layer++) {
-    const std::vector<Resource::DeformableSkinMesh *>& deformableSkinMeshes = (*layer)->getDeformableSkinMeshes();
-    const std::vector<Resource::KinematicMesh *>& kinematicMeshes = (*layer)->getKinematicMeshes();
-    const std::vector<Resource::SkinMesh *>& skinMeshes = (*layer)->getSkinMeshes();
+  this->renderer->registerTextures(model->getTextures());
+  this->renderer->registerVertexBuffers(model->getVertexBuffers());
 
-    std::vector<Resource::Mesh *> meshes;
-    meshes.reserve(deformableSkinMeshes.size() + kinematicMeshes.size() + skinMeshes.size());
-
-    meshes.insert(meshes.end(), deformableSkinMeshes.begin(), deformableSkinMeshes.end());
-    meshes.insert(meshes.end(), kinematicMeshes.begin(), kinematicMeshes.end());
-    meshes.insert(meshes.end(), skinMeshes.begin(), skinMeshes.end());
-
-    this->renderer->registerMeshes(meshes);
-  }
+  // Must not be called until after registering vertex buffers
+  this->renderer->registerMeshes(model->getMeshes());
 
   actorCount++;
 
@@ -104,9 +93,13 @@ Mortar::Resource::Actor *SceneManager::addActor(const Resource::Character *chara
 void SceneManager::setScene(const Resource::Scene *scene) {
   this->scene = scene;
 
-  this->renderer->registerTextures(scene->getModel()->getTextures());
-  this->renderer->registerVertexBuffers(scene->getModel()->getVertexBuffers());
-  this->renderer->registerMeshes(scene->getMeshes());
+  const Resource::Model *model = scene->getModel();
+
+  this->renderer->registerTextures(model->getTextures());
+  this->renderer->registerVertexBuffers(model->getVertexBuffers());
+
+  // Must not be called until after registering vertex buffers
+  this->renderer->registerMeshes(model->getMeshes());
 
   Math::Vector player1Pos;
 
@@ -301,30 +294,30 @@ void SceneManager::render() {
     for (auto enabledLayer = enabledLayers.begin(); enabledLayer != enabledLayers.end(); enabledLayer++) {
       const Resource::Layer *layer = character->getLayer(*enabledLayer);
 
-      const std::vector<Resource::DeformableSkinMesh *>& deformableSkinMeshes = layer->getDeformableSkinMeshes();
-      for (auto mesh = deformableSkinMeshes.begin(); mesh != deformableSkinMeshes.end(); mesh++) {
+      const std::vector<Resource::Mesh *>& deformableSkinMeshes = layer->getDeformableSkinMeshes();
+      for (auto mesh : deformableSkinMeshes) {
         Resource::GeomObject *geom = this->geomPool->getResource();
         geom->reset();
 
-        geom->setMesh(*mesh);
+        geom->setMesh(mesh);
         geom->setSkinTransforms(skinTransforms);
 
-        if ((*mesh)->getMaterial()->isAlphaBlended()) {
+        if (mesh->getMaterial()->isAlphaBlended()) {
           alphaGeoms.push_back(geom);
         } else {
           geoms.push_back(geom);
         }
       }
 
-      const std::vector<Resource::SkinMesh *>& skinMeshes = layer->getSkinMeshes();
-      for (auto mesh = skinMeshes.begin(); mesh != skinMeshes.end(); mesh++) {
+      const std::vector<Resource::Mesh *>& skinMeshes = layer->getSkinMeshes();
+      for (auto mesh : skinMeshes) {
         Resource::GeomObject *geom = this->geomPool->getResource();
         geom->reset();
 
-        geom->setMesh(*mesh);
+        geom->setMesh(mesh);
         geom->setSkinTransforms(skinTransforms);
 
-        if ((*mesh)->getMaterial()->isAlphaBlended()) {
+        if (mesh->getMaterial()->isAlphaBlended()) {
           alphaGeoms.push_back(geom);
         } else {
           geoms.push_back(geom);
@@ -332,14 +325,16 @@ void SceneManager::render() {
       }
 
       const std::vector<Resource::KinematicMesh *>& kinematicMeshes = layer->getKinematicMeshes();
-      for (auto mesh = kinematicMeshes.begin(); mesh != kinematicMeshes.end(); mesh++) {
+      for (auto kinematic : kinematicMeshes) {
         Resource::GeomObject *geom = this->geomPool->getResource();
         geom->reset();
 
-        geom->setMesh(*mesh);
-        geom->setWorldTransform(boneTransforms.at((*mesh)->getJointIdx()));
+        const Resource::Mesh *mesh = kinematic->getMesh();
 
-        if ((*mesh)->getMaterial()->isAlphaBlended()) {
+        geom->setMesh(mesh);
+        geom->setWorldTransform(boneTransforms.at(kinematic->getJointIdx()));
+
+        if (mesh->getMaterial()->isAlphaBlended()) {
           alphaGeoms.push_back(geom);
         } else {
           geoms.push_back(geom);
@@ -351,14 +346,14 @@ void SceneManager::render() {
   const std::vector<Resource::Instance *>& instances = this->scene->getInstances();
   for (auto instance = instances.begin(); instance != instances.end(); instance++) {
     std::forward_list<Resource::Mesh *> meshes = (*instance)->getMeshes();
-    for (auto mesh = meshes.begin(); mesh != meshes.end(); mesh++) {
+    for (auto mesh : meshes) {
       Resource::GeomObject *geom = this->geomPool->getResource();
       geom->reset();
 
-      geom->setMesh(*mesh);
+      geom->setMesh(mesh);
       geom->setWorldTransform((*instance)->getWorldTransform());
 
-      if ((*mesh)->getMaterial()->isAlphaBlended()) {
+      if (mesh->getMaterial()->isAlphaBlended()) {
         alphaGeoms.push_back(geom);
       } else {
         geoms.push_back(geom);

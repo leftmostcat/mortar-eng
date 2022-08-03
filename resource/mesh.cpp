@@ -92,6 +92,14 @@ void Mesh::setVertexLayout(const VertexLayout &vertexLayout) {
   this->vertexLayout = vertexLayout;
 }
 
+const Mesh *KinematicMesh::getMesh() const {
+  return this->mesh;
+}
+
+void KinematicMesh::setMesh(Mesh *mesh) {
+  this->mesh = mesh;
+}
+
 unsigned KinematicMesh::getJointIdx() const {
   return this->jointIdx;
 }

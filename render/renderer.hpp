@@ -29,9 +29,9 @@ namespace Mortar::Render {
       virtual void initialize() = 0;
       virtual void shutDown() = 0;
 
-      virtual void registerMeshes(const std::vector<Resource::Mesh *>& meshes) = 0;
-      virtual void registerTextures(const std::vector<Resource::Texture *>& textures) = 0;
-      virtual void registerVertexBuffers(const std::vector<Resource::VertexBuffer *>& vertexBuffers) = 0;
+      virtual void registerMeshes(const std::vector<const Resource::Mesh *>& meshes) = 0;
+      virtual void registerTextures(const std::vector<const Resource::Texture *>& textures) = 0;
+      virtual void registerVertexBuffers(const std::vector<const Resource::VertexBuffer *>& vertexBuffers) = 0;
 
       virtual void renderGeometry(const std::list<const Resource::GeomObject *>& geometry) = 0;
   };

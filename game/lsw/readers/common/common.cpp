@@ -19,16 +19,16 @@
 #include <stdint.h>
 #include <vector>
 
-#include "../../../log.hpp"
-#include "../../../state.hpp"
-#include "../../../streams/memorystream.hpp"
-#include "../../../resource/material.hpp"
-#include "../../../resource/mesh.hpp"
-#include "../../../resource/shader.hpp"
-#include "../../../resource/texture.hpp"
-#include "../../../resource/vertex.hpp"
-#include "dds.hpp"
-#include "common.hpp"
+#include "../../../../log.hpp"
+#include "../../../../state.hpp"
+#include "../../../../streams/memorystream.hpp"
+#include "../../../../resource/material.hpp"
+#include "../../../../resource/mesh.hpp"
+#include "../../../../resource/shader.hpp"
+#include "../../../../resource/texture.hpp"
+#include "../../../../resource/vertex.hpp"
+#include "../dds.hpp"
+#include "../common.hpp"
 
 using namespace Mortar::Game::LSW::Readers;
 
@@ -130,7 +130,7 @@ void readMaterial(Stream &stream, LSWMaterial *material) {
   material->effectType = stream.readUint8();
 }
 
-void CommonReaders::MaterialsReader::read(std::vector<Resource::Material *>& materials, Stream &stream, uint32_t bodyOffset, const std::vector<Resource::Texture *>& textures) {
+void MaterialsReader::read(std::vector<Resource::Material *>& materials, Stream &stream, uint32_t bodyOffset, const std::vector<Resource::Texture *>& textures) {
   Resource::ResourceManager resourceManager = State::getResourceManager();
 
   struct LSWMaterialHeader material_header;
@@ -174,7 +174,7 @@ void CommonReaders::MaterialsReader::read(std::vector<Resource::Material *>& mat
   delete[] material_header.material_offsets;
 }
 
-void CommonReaders::TexturesReader::read(std::vector<Resource::Texture *>& textures, Stream &stream, uint32_t texturesOffset) {
+void TexturesReader::read(std::vector<Resource::Texture *>& textures, Stream &stream, uint32_t texturesOffset) {
   struct LSWTextureHeader texture_header;
 
   texture_header.texture_block_offset = stream.readUint32();
@@ -221,7 +221,7 @@ void CommonReaders::TexturesReader::read(std::vector<Resource::Texture *>& textu
   delete[] texture_header.texture_block_headers;
 }
 
-void CommonReaders::VertexBufferReader::read(std::vector<Resource::VertexBuffer *>& vertexBuffers, Stream &stream, uint32_t vertexHeaderOffset) {
+void VertexBufferReader::read(std::vector<Resource::VertexBuffer *>& vertexBuffers, Stream &stream, uint32_t vertexHeaderOffset) {
   struct LSWVertexHeader vertex_header;
 
   vertex_header.num_vertex_blocks = stream.readUint32();

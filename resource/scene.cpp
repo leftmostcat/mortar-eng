@@ -29,14 +29,6 @@ void Scene::setModel(Model *model) {
   this->model = model;
 }
 
-void Scene::addMesh(Mesh *mesh) {
-  this->meshes.push_back(mesh);
-}
-
-const std::vector<Mesh *>& Scene::getMeshes() const {
-  return this->meshes;
-}
-
 void Scene::addInstance(Instance *instance) {
   this->instances.push_back(instance);
 }

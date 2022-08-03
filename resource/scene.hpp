@@ -34,9 +34,6 @@ namespace Mortar::Resource {
       const Model *getModel() const;
       void setModel(Model *model);
 
-      void addMesh(Mesh *mesh);
-      const std::vector<Mesh *>& getMeshes() const;
-
       void addInstance(Instance *instance);
       const std::vector<Instance *>& getInstances() const;
 
@@ -54,7 +51,6 @@ namespace Mortar::Resource {
 
     private:
       Model *model;
-      std::vector<Mesh *> meshes;
 
       std::vector<Instance *> instances;
 

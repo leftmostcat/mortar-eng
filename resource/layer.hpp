@@ -26,18 +26,18 @@ namespace Mortar::Resource {
       Layer(ResourceHandle handle)
         : Resource { handle } {};
 
-      void addDeformableSkinMesh(DeformableSkinMesh *mesh);
+      void addDeformableSkinMesh(Mesh *mesh);
       void addKinematicMesh(KinematicMesh *mesh);
-      void addSkinMesh(SkinMesh *mesh);
+      void addSkinMesh(Mesh *mesh);
 
-      const std::vector<DeformableSkinMesh *>& getDeformableSkinMeshes() const;
+      const std::vector<Mesh *>& getDeformableSkinMeshes() const;
       const std::vector<KinematicMesh *>& getKinematicMeshes() const;
-      const std::vector<SkinMesh *>& getSkinMeshes() const;
+      const std::vector<Mesh *>& getSkinMeshes() const;
 
     private:
-      std::vector<DeformableSkinMesh *> deformableSkinMeshes;
+      std::vector<Mesh *> deformableSkinMeshes;
       std::vector<KinematicMesh *> kinematicMeshes;
-      std::vector<SkinMesh *> skinMeshes;
+      std::vector<Mesh *> skinMeshes;
   };
 }
 

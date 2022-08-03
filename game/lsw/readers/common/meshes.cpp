@@ -17,12 +17,72 @@
 #include <stdexcept>
 #include <tsl/sparse_map.h>
 
-#include "../../../log.hpp"
-#include "../../../state.hpp"
-#include "../../../resource/mesh.hpp"
-#include "common.hpp"
+#include "../../../../log.hpp"
+#include "../../../../state.hpp"
+#include "../../../../resource/mesh.hpp"
+#include "../common.hpp"
 
 using namespace Mortar::Game::LSW::Readers;
+
+struct LSWMeshHeader {
+  uint32_t unk_0000[3];
+
+  uint32_t mesh_offset;
+
+  uint32_t unk_0010;
+};
+
+struct LSWMesh {
+  uint32_t next_offset;
+
+  uint32_t unk_0004;
+
+  uint32_t materialIdx;
+  uint32_t vertexType;
+
+  uint32_t unk_0010[3];
+
+  uint32_t vertexBlockIdx;
+
+  uint32_t unk_0020;
+
+  uint32_t unk_0024;
+
+  uint32_t unk_0028[2];
+
+  uint32_t surfacesOffset;
+
+  uint32_t unk_0034;
+
+  uint32_t unk_0038;
+  uint32_t unk_003C;
+};
+
+struct LSWSurface {
+  uint32_t next_offset;
+  uint32_t primitiveType;
+
+  uint16_t elementCount;
+  uint16_t unk_000A;
+
+  uint32_t elementsOffset;
+
+  uint32_t unk_0010;
+
+  uint8_t num_skin_matrices;
+
+  uint8_t unk_0015;
+
+  uint16_t skin_matrix_indices[16];
+
+  uint16_t unk_0036;
+  uint32_t unk_0038;
+  uint32_t unk_003C;
+  uint32_t unk_0040;
+  uint32_t unk_0044;
+  uint32_t unk_0048;
+  uint32_t unk_004C;
+};
 
 static tsl::sparse_map<uint32_t, Mortar::Resource::VertexLayout> vertexLayouts {
   {
@@ -51,7 +111,7 @@ static tsl::sparse_map<uint32_t, Mortar::Resource::VertexLayout> vertexLayouts {
   },
 };
 
-const Mortar::Resource::VertexLayout& CommonReaders::getVertexLayoutFromMesh(LSWMesh& mesh) {
+const Mortar::Resource::VertexLayout& getVertexLayoutFromMesh(LSWMesh& mesh) {
   if (!vertexLayouts.contains(mesh.vertexType)) {
     throw std::runtime_error("unimplemented vertex layout");
   }
@@ -59,7 +119,7 @@ const Mortar::Resource::VertexLayout& CommonReaders::getVertexLayoutFromMesh(LSW
   return vertexLayouts.at(mesh.vertexType);
 }
 
-Mortar::Resource::ShaderType CommonReaders::getShaderTypeFromMesh(LSWMesh& mesh, const Mortar::Resource::Material *material) {
+Mortar::Resource::ShaderType getShaderTypeFromMesh(LSWMesh& mesh, const Mortar::Resource::Material *material) {
   bool skinned = mesh.vertexType == 0x5d || mesh.unk_0038 != 0;
   bool blended = mesh.unk_0024 != 0 && mesh.unk_003C != 0;
 
@@ -88,7 +148,7 @@ Mortar::Resource::ShaderType CommonReaders::getShaderTypeFromMesh(LSWMesh& mesh,
   return Mortar::Resource::ShaderType::INVALID;
 }
 
-const struct CommonReaders::LSWSurface CommonReaders::readSurfaceInfo(Stream &stream, const uint32_t bodyOffset, uint32_t surfaceOffset) {
+const struct LSWSurface readSurfaceInfo(Stream &stream, const uint32_t bodyOffset, uint32_t surfaceOffset) {
   stream.seek(bodyOffset + surfaceOffset, SEEK_SET);
   struct LSWSurface surface;
 
@@ -126,7 +186,7 @@ tsl::sparse_map<uint32_t, Mortar::Resource::PrimitiveType> primitiveTypes {
   { 6, Mortar::Resource::PrimitiveType::TRIANGLE_STRIP },
 };
 
-void CommonReaders::processSurfaces(Stream &stream, const uint32_t bodyOffset, uint32_t surfacesOffset, Mortar::Resource::Mesh *mesh) {
+void processSurfaces(Stream &stream, const uint32_t bodyOffset, uint32_t surfacesOffset, Mortar::Resource::Mesh *mesh) {
   Mortar::Resource::ResourceManager resourceManager = Mortar::State::getResourceManager();
 
   uint32_t nextOffset = surfacesOffset;
@@ -160,5 +220,74 @@ void CommonReaders::processSurfaces(Stream &stream, const uint32_t bodyOffset, u
 
     nextOffset = lswSurface.next_offset;
     i++;
+  } while (nextOffset);
+}
+
+const struct LSWMesh readMeshInfo(Stream &stream, const uint32_t body_offset, uint32_t mesh_offset) {
+  stream.seek(body_offset + mesh_offset, SEEK_SET);
+  struct LSWMesh mesh;
+
+  mesh.next_offset = stream.readUint32();
+
+  stream.seek(1 * sizeof(uint32_t), SEEK_CUR);
+
+  mesh.materialIdx = stream.readUint32();
+  mesh.vertexType = stream.readUint32();
+
+  stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
+
+  mesh.vertexBlockIdx = stream.readUint32();
+
+  stream.seek(1 * sizeof(uint32_t), SEEK_CUR);
+
+  mesh.unk_0024 = stream.readUint32();
+
+  stream.seek(2 * sizeof(uint32_t), SEEK_CUR);
+
+  mesh.surfacesOffset = stream.readUint32();
+
+  stream.seek(4, SEEK_CUR);
+
+  mesh.unk_0038 = stream.readUint32();
+  mesh.unk_003C = stream.readUint32();
+
+  return mesh;
+}
+
+void MeshesReader::read(std::vector<Resource::Mesh *>& meshes, Stream &stream, uint32_t bodyOffset, const std::vector<Resource::Material *>& materials, const std::vector<Resource::VertexBuffer *>& vertexBuffers) {
+  Resource::ResourceManager resourceManager = State::getResourceManager();
+
+  struct LSWMeshHeader mesh_header;
+
+  stream.seek(3 * sizeof(uint32_t), SEEK_CUR);
+
+  mesh_header.mesh_offset = stream.readUint32();
+
+  if (!mesh_header.mesh_offset) {
+    return;
+  }
+
+  uint32_t nextOffset = mesh_header.mesh_offset;
+  do {
+    struct LSWMesh lswMesh = readMeshInfo(stream, bodyOffset, nextOffset);
+
+    Resource::Mesh *mesh = resourceManager.createResource<Resource::Mesh>();
+    meshes.push_back(mesh);
+
+    Resource::Material *material = materials.at(lswMesh.materialIdx);
+    mesh->setMaterial(material);
+
+    Resource::ShaderType shaderType = getShaderTypeFromMesh(lswMesh, material);
+    mesh->setShaderType(shaderType);
+
+    const Resource::VertexLayout& vertexLayout = getVertexLayoutFromMesh(lswMesh);
+    mesh->setVertexLayout(vertexLayout);
+
+    Resource::VertexBuffer *vertexBuffer = vertexBuffers.at(lswMesh.vertexBlockIdx - 1);
+    mesh->setVertexBuffer(vertexBuffer);
+
+    processSurfaces(stream, bodyOffset, lswMesh.surfacesOffset, mesh);
+
+    nextOffset = lswMesh.next_offset;
   } while (nextOffset);
 }

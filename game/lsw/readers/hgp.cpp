@@ -171,7 +171,7 @@ void HGPReader::read(Resource::Character *character, Stream& stream) {
   /* Read texture block information. */
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
   std::vector<Resource::Texture *> textures;
-  CommonReaders::TexturesReader::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
+  TexturesReader::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
   for (auto texture = textures.begin(); texture != textures.end(); texture++) {
     model->addTexture(*texture);
   }
@@ -179,12 +179,12 @@ void HGPReader::read(Resource::Character *character, Stream& stream) {
   /* Read materials. */
   stream.seek(BODY_OFFSET + file_header.material_header_offset, SEEK_SET);
   std::vector<Resource::Material *> materials;
-  CommonReaders::MaterialsReader::read(materials, stream, BODY_OFFSET, textures);
+  MaterialsReader::read(materials, stream, BODY_OFFSET, textures);
 
   /* Read vertex data. */
   stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
   std::vector<Resource::VertexBuffer *> vertexBuffers;
-  CommonReaders::VertexBufferReader::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
+  VertexBufferReader::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
   for (auto vertexBuffer = vertexBuffers.begin(); vertexBuffer != vertexBuffers.end(); vertexBuffer++) {
     model->addVertexBuffer(*vertexBuffer);
   }
@@ -282,25 +282,32 @@ void HGPReader::read(Resource::Character *character, Stream& stream) {
           const char *jointName = character->getJoint(k)->getName();
 
           stream.seek(BODY_OFFSET + mesh_header_offsets[k], SEEK_SET);
-          std::vector<Resource::KinematicMesh *> kinematicMeshes;
-          CommonReaders::MeshesReader::read<Resource::KinematicMesh>(kinematicMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
-          for (auto mesh = kinematicMeshes.begin(); mesh != kinematicMeshes.end(); mesh++) {
-            (*mesh)->setJointIdx(k);
-            layer->addKinematicMesh(*mesh);
+          std::vector<Resource::Mesh *> meshes;
+          MeshesReader::read(meshes, stream, BODY_OFFSET, materials, vertexBuffers);
+          for (auto mesh : meshes) {
+            auto kinematic = resourceManager.createResource<Resource::KinematicMesh>();
+
+            model->addMesh(mesh);
+
+            kinematic->setJointIdx(k);
+            kinematic->setMesh(mesh);
+            layer->addKinematicMesh(kinematic);
           }
         }
       } else if (j == 1) {
-        std::vector<Resource::SkinMesh *> skinMeshes;
-        CommonReaders::MeshesReader::read<Resource::SkinMesh>(skinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
-        for (auto mesh = skinMeshes.begin(); mesh != skinMeshes.end(); mesh++) {
-          layer->addSkinMesh(*mesh);
+        std::vector<Resource::Mesh *> skinMeshes;
+        MeshesReader::read(skinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
+        for (auto mesh : skinMeshes) {
+          model->addMesh(mesh);
+          layer->addSkinMesh(mesh);
         }
       }
       else if (j == 3) {
-        std::vector<Resource::DeformableSkinMesh *> deformableSkinMeshes;
-        CommonReaders::MeshesReader::read<Resource::DeformableSkinMesh>(deformableSkinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
-        for (auto mesh = deformableSkinMeshes.begin(); mesh != deformableSkinMeshes.end(); mesh++) {
-          layer->addDeformableSkinMesh(*mesh);
+        std::vector<Resource::Mesh *> deformableSkinMeshes;
+        MeshesReader::read(deformableSkinMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
+        for (auto mesh : deformableSkinMeshes) {
+          model->addMesh(mesh);
+          layer->addDeformableSkinMesh(mesh);
         }
       }
     }

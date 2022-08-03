@@ -20,8 +20,8 @@ set(SRCS
   game/lsw/readers/anim.cpp
   game/lsw/readers/dds.cpp
   game/lsw/readers/hgp.cpp
-  game/lsw/readers/common.cpp
-  game/lsw/readers/meshes.cpp
+  game/lsw/readers/common/common.cpp
+  game/lsw/readers/common/meshes.cpp
   game/lsw/readers/nup.cpp
   math/matrix.cpp
   render/gl/renderer.cpp

@@ -34,9 +34,9 @@ namespace Mortar::Render::GL {
       void initialize() override;
       void shutDown() override;
 
-      void registerMeshes(const std::vector<Resource::Mesh *>& meshes) override;
-      void registerTextures(const std::vector<Resource::Texture *>& textures) override;
-      void registerVertexBuffers(const std::vector<Resource::VertexBuffer *>& vertexBuffers) override;
+      void registerMeshes(const std::vector<const Resource::Mesh *>& meshes) override;
+      void registerTextures(const std::vector<const Resource::Texture *>& textures) override;
+      void registerVertexBuffers(const std::vector<const Resource::VertexBuffer *>& vertexBuffers) override;
 
       void renderGeometry(const std::list<const Resource::GeomObject *>& geometry) override;
 

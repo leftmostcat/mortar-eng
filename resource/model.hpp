@@ -32,15 +32,19 @@ namespace Mortar::Resource {
       Model(ResourceHandle handle)
         : Resource { handle } {};
 
-      void addTexture(Texture *texture);
-      const std::vector<Texture *>& getTextures() const;
+      void addMesh(const Mesh *mesh);
+      const std::vector<const Mesh *>& getMeshes() const;
 
-      void addVertexBuffer(VertexBuffer *vertexBuffer);
-      const std::vector<VertexBuffer *>& getVertexBuffers() const;
+      void addTexture(const Texture *texture);
+      const std::vector<const Texture *>& getTextures() const;
+
+      void addVertexBuffer(const VertexBuffer *vertexBuffer);
+      const std::vector<const VertexBuffer *>& getVertexBuffers() const;
 
     private:
-      std::vector<Texture *> textures;
-      std::vector<VertexBuffer *> vertexBuffers;
+      std::vector<const Mesh *> meshes;
+      std::vector<const Texture *> textures;
+      std::vector<const VertexBuffer *> vertexBuffers;
   };
 }
 

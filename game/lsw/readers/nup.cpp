@@ -130,7 +130,7 @@ void NUPReader::read(Mortar::Resource::Scene *scene, Stream &stream) {
   /* Read texture block information. */
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
   std::vector<Resource::Texture *> textures;
-  CommonReaders::TexturesReader::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
+  TexturesReader::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
   for (auto texture = textures.begin(); texture != textures.end(); texture++) {
     model->addTexture(*texture);
   }
@@ -138,12 +138,12 @@ void NUPReader::read(Mortar::Resource::Scene *scene, Stream &stream) {
   /* Read materials. */
   stream.seek(BODY_OFFSET + file_header.material_header_offset, SEEK_SET);
   std::vector<Resource::Material *> materials;
-  CommonReaders::MaterialsReader::read(materials, stream, BODY_OFFSET, textures);
+  MaterialsReader::read(materials, stream, BODY_OFFSET, textures);
 
   /* Read vertex data. */
   stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
   std::vector<Resource::VertexBuffer *> vertexBuffers;
-  CommonReaders::VertexBufferReader::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
+  VertexBufferReader::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
   for (auto vertexBuffer = vertexBuffers.begin(); vertexBuffer != vertexBuffers.end(); vertexBuffer++) {
     model->addVertexBuffer(*vertexBuffer);
   }
@@ -161,11 +161,11 @@ void NUPReader::read(Mortar::Resource::Scene *scene, Stream &stream) {
     stream.seek(BODY_OFFSET + mesh_header_offsets[i], SEEK_SET);
 
     std::vector<Resource::Mesh *> blockMeshes;
-    CommonReaders::MeshesReader::read<Resource::Mesh>(blockMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
+    MeshesReader::read(blockMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
 
     std::forward_list<Resource::Mesh *> meshList;
     for (auto mesh = blockMeshes.begin(); mesh != blockMeshes.end(); mesh++) {
-      scene->addMesh(*mesh);
+      model->addMesh(*mesh);
       meshList.push_front(*mesh);
     }
     meshes.push_back(meshList);

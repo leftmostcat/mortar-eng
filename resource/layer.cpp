@@ -19,7 +19,7 @@
 
 using namespace Mortar::Resource;
 
-void Layer::addDeformableSkinMesh(DeformableSkinMesh *mesh) {
+void Layer::addDeformableSkinMesh(Mesh *mesh) {
   this->deformableSkinMeshes.push_back(mesh);
 }
 
@@ -27,11 +27,11 @@ void Layer::addKinematicMesh(KinematicMesh *mesh) {
   this->kinematicMeshes.push_back(mesh);
 }
 
-void Layer::addSkinMesh(SkinMesh *mesh) {
+void Layer::addSkinMesh(Mesh *mesh) {
   this->skinMeshes.push_back(mesh);
 }
 
-const std::vector<Mortar::Resource::DeformableSkinMesh *>& Layer::getDeformableSkinMeshes() const {
+const std::vector<Mortar::Resource::Mesh *>& Layer::getDeformableSkinMeshes() const {
   return this->deformableSkinMeshes;
 }
 
@@ -39,6 +39,6 @@ const std::vector<Mortar::Resource::KinematicMesh *>& Layer::getKinematicMeshes(
   return this->kinematicMeshes;
 }
 
-const std::vector<Mortar::Resource::SkinMesh *>& Layer::getSkinMeshes() const {
+const std::vector<Mortar::Resource::Mesh *>& Layer::getSkinMeshes() const {
   return this->skinMeshes;
 }
