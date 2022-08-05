@@ -171,8 +171,8 @@ void HGPReader::read(Resource::Character *character, Stream& stream) {
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
   std::vector<Resource::Texture *> textures;
   TexturesReader::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
-  for (auto texture = textures.begin(); texture != textures.end(); texture++) {
-    model->addTexture(*texture);
+  for (auto texture : textures) {
+    model->addTexture(texture);
   }
 
   /* Read materials. */
@@ -184,8 +184,8 @@ void HGPReader::read(Resource::Character *character, Stream& stream) {
   stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
   std::vector<Resource::VertexBuffer *> vertexBuffers;
   VertexBufferReader::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
-  for (auto vertexBuffer = vertexBuffers.begin(); vertexBuffer != vertexBuffers.end(); vertexBuffer++) {
-    model->addVertexBuffer(*vertexBuffer);
+  for (auto vertexBuffer : vertexBuffers) {
+    model->addVertexBuffer(vertexBuffer);
   }
 
   /* Read skeleton. */

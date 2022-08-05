@@ -282,9 +282,9 @@ void ShaderManager::initialize() {
 }
 
 void ShaderManager::shutDown() {
-  for (auto program = this->shaderPrograms.begin(); program != this->shaderPrograms.end(); program++) {
-    (*program)->shutDown();
-    delete *program;
+  for (auto program : this->shaderPrograms) {
+    program->shutDown();
+    delete program;
   }
 
   this->shaderPrograms.clear();

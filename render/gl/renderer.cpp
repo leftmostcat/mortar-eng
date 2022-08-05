@@ -172,15 +172,15 @@ void Renderer::registerMeshes(const std::vector<const Resource::Mesh *>& meshes)
 
     unsigned stride = vertexLayout.getStride();
     const std::vector<Resource::VertexLayout::VertexProperty>& vertexProperties = vertexLayout.getProperties();
-    for (auto property = vertexProperties.begin(); property != vertexProperties.end(); property++) {
-      const char *attribName = getVertexPropertyParamName(property->getUsage());
+    for (auto& property : vertexProperties) {
+      const char *attribName = getVertexPropertyParamName(property.getUsage());
       GLint attr = glGetAttribLocation(shaderProgram, attribName);
       if (attr == -1) {
         continue;
       }
 
-      const struct GLVertexPropertyType glType = getVertexPropertyType(property->getDataType());
-      glVertexAttribPointer(attr, glType.size, glType.type, GL_TRUE, stride, (GLvoid *)property->getOffset());
+      const struct GLVertexPropertyType glType = getVertexPropertyType(property.getDataType());
+      glVertexAttribPointer(attr, glType.size, glType.type, GL_TRUE, stride, (GLvoid *)property.getOffset());
       glEnableVertexAttribArray(attr);
     }
 
@@ -222,15 +222,15 @@ void Renderer::registerTextures(const std::vector<const Resource::Texture *> &te
     this->textureIds[texture->getHandle()] = *textureIdPtr;
 
     const std::vector<Resource::Texture::Level *>& levels = texture->getLevels();
-    for (auto level = levels.begin(); level != levels.end(); level++) {
-      GLsizei width = texture->getWidth() >> (*level)->getLevel();
-      GLsizei height = texture->getHeight() >> (*level)->getLevel();
+    for (auto level : levels) {
+      GLsizei width = texture->getWidth() >> level->getLevel();
+      GLsizei height = texture->getHeight() >> level->getLevel();
 
       if (!texture->getIsCompressed()) {
         throw std::runtime_error("not expecting uncompressed data");
       }
 
-      glCompressedTexImage2D(GL_TEXTURE_2D, (*level)->getLevel(), texture->getInternalFormat(), width, height, 0, (*level)->getSize(), (*level)->getData());
+      glCompressedTexImage2D(GL_TEXTURE_2D, level->getLevel(), texture->getInternalFormat(), width, height, 0, level->getSize(), level->getData());
     }
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -349,17 +349,17 @@ void Renderer::renderGeometry(const std::list<const Resource::GeomObject *>& geo
     std::vector<Math::Matrix> skinTransforms = geom->getSkinTransforms();
 
     const std::vector<Resource::Surface *>& surfaces = mesh->getSurfaces();
-    for (auto surface = surfaces.begin(); surface != surfaces.end(); surface++) {
+    for (auto surface : surfaces) {
       if (skinMtcesUnif != -1) {
-        const std::vector<ushort>& indices = (*surface)->getSkinTransformIndices();
-        unsigned count = (*surface)->getSkinTransformCount();
+        const std::vector<ushort>& indices = surface->getSkinTransformIndices();
+        unsigned count = surface->getSkinTransformCount();
 
         assert(count <= 16);
 
         float floats[256];
         float *floatPtr = floats;
         for (int i = 0; i < count; i++, floatPtr += 16) {
-          if (State::printNextFrame && (*surface)->getIndexBuffer()->getCount() == 30) {
+          if (State::printNextFrame && surface->getIndexBuffer()->getCount() == 30) {
             DEBUG("index at %d is %d", i, indices.at(i));
             DEBUG("base 0x%lx, 0x%lx", (unsigned long)floats, (unsigned long)floatPtr);
           }
@@ -371,13 +371,13 @@ void Renderer::renderGeometry(const std::list<const Resource::GeomObject *>& geo
         glUniformMatrix4fv(skinMtcesUnif, count, GL_TRUE, floats);
       }
 
-      Resource::ResourceHandle surfaceHandle = (*surface)->getHandle();
+      Resource::ResourceHandle surfaceHandle = surface->getHandle();
 
       GLuint elementBufferId = this->elementBufferIds.at(surfaceHandle);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferId);
 
-      GLenum glPrimitiveType = getGLPrimitiveType((*surface)->getPrimitiveType());
-      glDrawElements(glPrimitiveType, (*surface)->getIndexBuffer()->getCount(), GL_UNSIGNED_SHORT, 0);
+      GLenum glPrimitiveType = getGLPrimitiveType(surface->getPrimitiveType());
+      glDrawElements(glPrimitiveType, surface->getIndexBuffer()->getCount(), GL_UNSIGNED_SHORT, 0);
     }
 
     if (material->isAlphaBlended()) {

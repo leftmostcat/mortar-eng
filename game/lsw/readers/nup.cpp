@@ -130,8 +130,8 @@ void NUPReader::read(Mortar::Resource::Scene *scene, Stream &stream) {
   stream.seek(BODY_OFFSET + file_header.texture_header_offset, SEEK_SET);
   std::vector<Resource::Texture *> textures;
   TexturesReader::read(textures, stream, BODY_OFFSET + file_header.texture_header_offset + 12);
-  for (auto texture = textures.begin(); texture != textures.end(); texture++) {
-    model->addTexture(*texture);
+  for (auto texture : textures) {
+    model->addTexture(texture);
   }
 
   /* Read materials. */
@@ -143,8 +143,8 @@ void NUPReader::read(Mortar::Resource::Scene *scene, Stream &stream) {
   stream.seek(BODY_OFFSET + file_header.vertex_header_offset, SEEK_SET);
   std::vector<Resource::VertexBuffer *> vertexBuffers;
   VertexBufferReader::read(vertexBuffers, stream, BODY_OFFSET + file_header.vertex_header_offset);
-  for (auto vertexBuffer = vertexBuffers.begin(); vertexBuffer != vertexBuffers.end(); vertexBuffer++) {
-    model->addVertexBuffer(*vertexBuffer);
+  for (auto vertexBuffer : vertexBuffers) {
+    model->addVertexBuffer(vertexBuffer);
   }
 
   /* Break the layers down into meshes and add those to the model's list. */
@@ -163,9 +163,9 @@ void NUPReader::read(Mortar::Resource::Scene *scene, Stream &stream) {
     MeshesReader::read(blockMeshes, stream, BODY_OFFSET, materials, vertexBuffers);
 
     std::forward_list<Resource::Mesh *> meshList;
-    for (auto mesh = blockMeshes.begin(); mesh != blockMeshes.end(); mesh++) {
-      model->addMesh(*mesh);
-      meshList.push_front(*mesh);
+    for (auto mesh : blockMeshes) {
+      model->addMesh(mesh);
+      meshList.push_front(mesh);
     }
     meshes.push_back(meshList);
   }

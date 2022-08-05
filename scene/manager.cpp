@@ -245,18 +245,18 @@ void SceneManager::render() {
 
   float timeDelta = State::getClock().getTimeDelta() * State::animRate;
 
-  for (auto actor = this->actors.begin(); actor != this->actors.end(); actor++) {
-    if (State::animEnabled && (*actor)->getAnimation() != Resource::Character::Character::AnimationType::IDLE) {
-      (*actor)->setAnimation(Resource::Character::Character::AnimationType::IDLE);
+  for (auto actor : this->actors) {
+    if (State::animEnabled && actor->getAnimation() != Resource::Character::Character::AnimationType::IDLE) {
+      actor->setAnimation(Resource::Character::Character::AnimationType::IDLE);
     } else if (!State::animEnabled) {
-      (*actor)->setAnimation(Resource::Character::Character::AnimationType::NONE);
+      actor->setAnimation(Resource::Character::Character::AnimationType::NONE);
     }
 
-    const Resource::Character *character = (*actor)->getCharacter();
+    const Resource::Character *character = actor->getCharacter();
 
-    (*actor)->advanceAnimation(timeDelta);
+    actor->advanceAnimation(timeDelta);
 
-    const std::vector<Math::Matrix> pose = calculatePose(*actor);
+    const std::vector<Math::Matrix> pose = calculatePose(actor);
 
     const std::vector<Resource::Joint *> joints = character->getJoints();
 
@@ -276,7 +276,7 @@ void SceneManager::render() {
         }
         boneTransforms[i] = pose.at(i) * boneTransforms[parentIdx];
       } else {
-        boneTransforms[i] = pose.at(i) * (*actor)->getWorldTransform();
+        boneTransforms[i] = pose.at(i) * actor->getWorldTransform();
       }
 
       if (State::printNextFrame) {
@@ -342,14 +342,14 @@ void SceneManager::render() {
   }
 
   const std::vector<Resource::Instance *>& instances = this->scene->getInstances();
-  for (auto instance = instances.begin(); instance != instances.end(); instance++) {
-    std::forward_list<Resource::Mesh *> meshes = (*instance)->getMeshes();
+  for (auto instance : instances) {
+    std::forward_list<Resource::Mesh *> meshes = instance->getMeshes();
     for (auto mesh : meshes) {
       Resource::GeomObject *geom = this->geomPool->getResource();
       geom->reset();
 
       geom->setMesh(mesh);
-      geom->setWorldTransform((*instance)->getWorldTransform());
+      geom->setWorldTransform(instance->getWorldTransform());
 
       if (mesh->getMaterial()->isAlphaBlended()) {
         alphaGeoms.push_back(geom);
