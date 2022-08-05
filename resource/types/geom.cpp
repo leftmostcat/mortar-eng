@@ -20,15 +20,28 @@ using namespace Mortar::Resource;
 
 void GeomObject::reset() {
   this->mesh = nullptr;
+  this->skinTransforms.clear();
   this->worldTransform = Math::Matrix();
+}
+
+const Mesh *GeomObject::getMesh() const {
+  return this->mesh;
 }
 
 void GeomObject::setMesh(const Mortar::Resource::Mesh *mesh) {
   this->mesh = mesh;
 }
 
+const Mortar::Math::Matrix& GeomObject::getWorldTransform() const {
+  return this->worldTransform;
+}
+
 void GeomObject::setWorldTransform(Math::Matrix worldTransform) {
   this->worldTransform = worldTransform;
+}
+
+const std::vector<Mortar::Math::Matrix>& GeomObject::getSkinTransforms() const {
+  return this->skinTransforms;
 }
 
 void GeomObject::setSkinTransforms(std::vector<Math::Matrix> skinTransforms) {

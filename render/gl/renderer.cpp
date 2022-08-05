@@ -276,7 +276,7 @@ void Renderer::renderGeometry(const std::list<const Resource::GeomObject *>& geo
   Math::Matrix projViewMtx = view * d3dTransform * proj;
 
   for (auto geom : geometry) {
-    const Resource::Mesh *mesh = geom->mesh;
+    const Resource::Mesh *mesh = geom->getMesh();
 
     GLuint shaderProgram = this->shaderManager.getShaderProgram(mesh->getShaderType());
     glUseProgram(shaderProgram);
@@ -338,7 +338,7 @@ void Renderer::renderGeometry(const std::list<const Resource::GeomObject *>& geo
     glUniform3fv(color_unif, 1, adjustedColor);
 
     if (worldTransformUnif != -1) {
-      glUniformMatrix4fv(worldTransformUnif, 1, GL_FALSE, geom->worldTransform.f);
+      glUniformMatrix4fv(worldTransformUnif, 1, GL_FALSE, geom->getWorldTransform().f);
     }
 
     Resource::ResourceHandle meshHandle = mesh->getHandle();
@@ -346,7 +346,7 @@ void Renderer::renderGeometry(const std::list<const Resource::GeomObject *>& geo
     GLuint vertexArrayId = this->vertexArrayIds.at(meshHandle);
     glBindVertexArray(vertexArrayId);
 
-    std::vector<Math::Matrix> skinTransforms = geom->skinTransforms;
+    std::vector<Math::Matrix> skinTransforms = geom->getSkinTransforms();
 
     const std::vector<Resource::Surface *>& surfaces = mesh->getSurfaces();
     for (auto surface = surfaces.begin(); surface != surfaces.end(); surface++) {

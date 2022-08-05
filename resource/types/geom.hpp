@@ -29,20 +29,26 @@ namespace Mortar::Resource {
     public:
       void reset();
 
+      const Mesh *getMesh() const;
       void setMesh(const Mesh *mesh);
+
+      const Math::Matrix& getWorldTransform() const;
       void setWorldTransform(Math::Matrix worldTransform);
+
+      const std::vector<Math::Matrix>& getSkinTransforms() const;
       void setSkinTransforms(std::vector<Math::Matrix> skinTransforms);
-
-      const Mesh *mesh;
-      Math::Matrix worldTransform;
-
-      std::vector<Math::Matrix> skinTransforms;
 
       friend class ResourceManager;
 
     protected:
       GeomObject(ResourceHandle& handle)
         : Resource { handle } {};
+
+    private:
+      const Mesh *mesh;
+      Math::Matrix worldTransform;
+
+      std::vector<Math::Matrix> skinTransforms;
   };
 }
 
